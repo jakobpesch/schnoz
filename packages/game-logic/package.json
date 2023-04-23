@@ -1,0 +1,13 @@
+{
+  "name": "game-logic",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "database": "workspace:*",
+    "coordinate-utils": "workspace:*",
+    "types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}

@@ -1,0 +1,86 @@
+import {
+  GameSettings,
+  Map as SchnozMap,
+  Match,
+  Participant,
+  User,
+} from "database"
+import { useEffect, useState } from "react"
+import { socketApi } from "../services/SocketService"
+import { ParticipantWithUser } from "../types/Participant"
+import { TileWithUnit } from "../types/Tile"
+import { coordinatesAreEqual } from "../utils/coordinateUtils"
+
+export function useMatch(userId: User["id"], matchId: Match["id"]) {
+  const [match, setMatch] = useState<Match>()
+  const [gameSettings, setGameSettings] = useState<GameSettings>()
+  const [map, setMap] = useState<SchnozMap>()
+  const [updatedTilesWithUnits, setUpdatedTilesWithUnits] =
+    useState<TileWithUnit[]>()
+  const [tilesWithUnits, setTilesWithUnits] = useState<TileWithUnit[]>()
+  const [participants, setParticipants] = useState<ParticipantWithUser[]>()
+  const [connectedParticipants, setConnectedParticipants] =
+    useState<ParticipantWithUser[]>()
+
+  useEffect(() => {
+    if (!updatedTilesWithUnits || !tilesWithUnits) {
+      return
+    }
+    const tilesWithUnitsClone = [...tilesWithUnits]
+    updatedTilesWithUnits.forEach((updatedTileWithUnit) => {
+      const index = tilesWithUnits?.findIndex((t) =>
+        coordinatesAreEqual(
+          [t.row, t.col],
+          [updatedTileWithUnit.row, updatedTileWithUnit.col]
+        )
+      )
+      if (!index) {
+        tilesWithUnitsClone.push(updatedTileWithUnit)
+        return
+      }
+      tilesWithUnitsClone[index] = updatedTileWithUnit
+    })
+    setTilesWithUnits(tilesWithUnitsClone)
+  }, [updatedTilesWithUnits])
+
+  useEffect(() => {
+    if (socketApi.IsConnected) {
+      // console.log("useMatch socketApi.IsConnected", socketApi.IsConnected)
+      return
+    }
+
+    if (socketApi.IsConnecting) {
+      // console.log("useMatch socketApi.IsConnecting", socketApi.IsConnecting)
+      return
+    }
+
+    if (!userId || !matchId) {
+      // console.log("useMatch no userId or matchId", userId, matchId)
+      return
+    }
+
+    socketApi.setCallbacks({
+      setMatch,
+      setGameSettings,
+      setMap,
+      setTilesWithUnits,
+      setUpdatedTilesWithUnits,
+      setParticipants,
+      setConnectedParticipants,
+    })
+    socketApi.connectToMatch(userId, matchId)
+
+    return () => {
+      socketApi.disconnect()
+    }
+  }, [matchId, userId])
+  return {
+    match,
+    gameSettings,
+    map,
+    tilesWithUnits,
+    updatedTilesWithUnits,
+    participants,
+    connectedParticipants,
+  }
+}

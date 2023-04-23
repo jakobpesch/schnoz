@@ -1,0 +1,3 @@
+CREATE DATABASE schnoz;
+CREATE USER postgres WITH PASSWORD 'admin';
+GRANT ALL PRIVILEGES ON DATABASE schnoz TO postgres;

@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  name           String?       @db.VarChar(255)
+  email          String?       @unique @db.VarChar(255)
+  hash           String?
+  createdMatches Match[]
+  participations Participant[]
+}
+
+model Participant {
+  id           String @id @default(uuid())
+  matchId      String
+  match        Match  @relation(name: "match", fields: [matchId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score        Int    @default(0)
+  bonusPoints  Int    @default(0)
+  Unit         Unit[]
+  activePlayer Match? @relation("activePlayer")
+  winner       Match? @relation("winner")
+  playerNumber Int
+}
+
+model Match {
+  id             String              @id @default(uuid())
+  updatedAt      DateTime            @default(now()) @updatedAt
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime            @default(now())
+  createdById    String
+  createdBy      User                @relation(fields: [createdById], references: [id])
+  maxPlayers     Int
+  status         MatchStatus         @default(CREATED)
+  players        Participant[]       @relation("match")
+  activePlayer   Participant?        @relation(name: "activePlayer", fields: [activePlayerId], references: [id])
+  activePlayerId String?             @unique
+  winner         Participant?        @relation(name: "winner", fields: [winnerId], references: [id])
+  winnerId       String?             @unique
+  map            Map?
+  turn           Int                 @default(0)
+  openCards      UnitConstellation[] @default([])
+  Rule           Rule[]
+  gameSettings   GameSettings?
+  logs           MatchLog[]
+}
+
+model MatchLog {
+  id        String   @id @default(uuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  message   String
+  data      String?
+}
+
+model GameSettings {
+  id         String @id @default(uuid())
+  mapSize    Int    @default(11)
+  rules      Rule[]
+  waterRatio Int    @default(3)
+  stoneRatio Int    @default(1)
+  treeRatio  Int    @default(3)
+  maxTurns   Int    @default(12)
+  match      Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId    String @unique
+}
+
+model Map {
+  id       String @id @default(uuid())
+  rowCount Int
+  colCount Int
+  tiles    Tile[]
+  matchId  String @unique
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+}
+
+model Tile {
+  mapId   String
+  map     Map      @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  row     Int
+  col     Int
+  visible Boolean  @default(false)
+  terrain Terrain?
+  unit    Unit?
+
+  @@id([mapId, row, col])
+}
+
+model Unit {
+  id      String       @id @default(uuid())
+  type    UnitType
+  ownerId String?
+  owner   Participant? @relation(fields: [ownerId], references: [id])
+  mapId   String
+  row     Int
+  col     Int
+  tile    Tile         @relation(fields: [mapId, row, col], references: [mapId, row, col], onDelete: Cascade)
+
+  @@unique([mapId, row, col])
+}
+
+enum UnitConstellation {
+  r0c0_v0 // single piece: .
+  r0c0_r0c1_v4 // straight_2: --
+  r0c0_r1c1_v2 // diagonal_2: /
+  r0c0_r0c2_v2 // skip_2: - -
+  r0c0_r0c1_r1c1_v3 // r_3: r
+  r0c0_r0c1_r1c2_v1 // horse_3: -.
+  r0c0_r1c1_r2c0_v1 // arrow_3: _-_
+  r0c0_r0c1_r0c2_r1c2_v0 // L_4: L
+  r0c0_r0c1_r1c1_r1c2_v0 // Z_4: Z
+  r0c0_r0c1_r2c0_r2c1_v0 // skip_4: | |
+  r0c0_r0c1_r0c2_r1c0_r1c2_v0 // U_5: U
+}
+
+enum UnitType {
+  UNIT
+  MAIN_BUILDING
+}
+
+enum Terrain {
+  WATER
+  TREE
+  STONE
+}
+
+enum MatchStatus {
+  CREATED
+  STARTED
+  FINISHED
+}
+
+enum Rule {
+  TERRAIN_WATER_POSITIVE
+  TERRAIN_STONE_NEGATIVE
+  HOLE
+  DIAGONAL_NORTHEAST
+}

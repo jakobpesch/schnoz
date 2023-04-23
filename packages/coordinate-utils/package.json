@@ -1,0 +1,11 @@
+{
+  "name": "coordinate-utils",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "database": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}
