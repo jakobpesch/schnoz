@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Match, Prisma } from 'database';
-import { matchRich } from 'src/shared/types/database/match/match-rich.const';
+import { matchRich } from 'types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()

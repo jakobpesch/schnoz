@@ -1,18 +1,19 @@
-import { GameSettings, Map, Match, MatchStatus, Participant } from "database"
-import { defaultGame } from "../gameLogic/GameVariants"
-import { adjacentToAlly2, PlacementRuleName } from "../gameLogic/PlacementRule"
 import {
-  Coordinate2D,
-  IUnitConstellation,
-} from "../models/UnitConstellation.model"
-import { MapWithTiles } from "../types/Map"
-import { MatchRich, MatchWithPlayers } from "../types/Match"
-import { TileWithUnit } from "../types/Tile"
-import {
+  buildTileLookupId,
   transformCoordinates,
   translateCoordinatesTo,
-} from "../utils/constallationTransformer"
-import { buildTileLookupId, TileLookup } from "../utils/coordinateUtils"
+} from "coordinate-utils"
+import { GameSettings, Map, Match, MatchStatus, Participant } from "database"
+import { adjacentToAllyFactory, defaultGame } from "game-logic"
+import {
+  Coordinate,
+  MatchRich,
+  MatchWithPlayers,
+  PlacementRuleName,
+  TileLookup,
+  TileWithUnit,
+  TransformedConstellation,
+} from "types"
 import { setCookie } from "./CookieService"
 import { fetcher } from "./swrUtils"
 
@@ -282,7 +283,7 @@ export const makeMove = async (
   row: number,
   col: number,
   participantId: string,
-  unitConstellation: IUnitConstellation,
+  unitConstellation: TransformedConstellation,
   ignoredRules?: PlacementRuleName[],
   specials?: Special[]
 ) => {
@@ -312,8 +313,8 @@ export const makeMove = async (
 }
 
 export const checkConditionsForUnitConstellationPlacement = (
-  targetCoordinate: Coordinate2D,
-  unitConstellation: IUnitConstellation,
+  targetCoordinate: Coordinate,
+  unitConstellation: TransformedConstellation,
   match: Match | undefined,
   activePlayer: Participant | undefined,
   map: Map | undefined,
@@ -371,7 +372,10 @@ export const checkConditionsForUnitConstellationPlacement = (
     )
   ) {
     defaultGame.placementRuleMap.delete("ADJACENT_TO_ALLY")
-    defaultGame.placementRuleMap.set("ADJACENT_TO_ALLY_2", adjacentToAlly2)
+    defaultGame.placementRuleMap.set(
+      "ADJACENT_TO_ALLY_2",
+      adjacentToAllyFactory(2)
+    )
   }
 
   const canBePlaced = Array.from(defaultGame.placementRuleMap).every(

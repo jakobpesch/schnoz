@@ -32,7 +32,7 @@ const nextConfig = {
       },
     ]
   },
-  // transpilePackages: ["coordinate-utils", "database", "game-logic"],
+  transpilePackages: ["coordinate-utils", "database", "game-logic"],
 }
 
 module.exports = nextConfig

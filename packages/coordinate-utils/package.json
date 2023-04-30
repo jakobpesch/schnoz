@@ -1,11 +1,19 @@
 {
   "name": "coordinate-utils",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
   "dependencies": {
-    "database": "workspace:*"
+    "database": "workspace:*",
+    "types": "workspace:*",
+    "tsconfig": "workspace:*"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "jest": "^29.5.0",
     "typescript": "^5.0.4"
   }
 }

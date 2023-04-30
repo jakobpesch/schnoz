@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next"
 
 import assert from "assert"
 import bcrypt from "bcrypt"
-import { prisma } from "../../../prisma/client"
+import { prisma } from "../../../services/PrismaService"
 
 export default async function handler(
   req: NextApiRequest,

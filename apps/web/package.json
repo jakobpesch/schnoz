@@ -7,8 +7,7 @@
     "dev": "next dev -p 1337",
     "build": "next build",
     "start": "next start -p 1337",
-    "lint": "next lint",
-    "test": "jest --coverage"
+    "lint": "next lint"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.13",
@@ -17,19 +16,22 @@
     "@emotion/styled": "^11.10.4",
     "@prisma/client": "^4.8.0",
     "bcrypt": "^5.1.0",
+    "coordinate-utils": "workspace:*",
     "database": "workspace:*",
     "easy-peasy": "^5.2.0",
     "eslint-config-custom": "workspace:*",
     "formik": "^2.2.9",
     "framer-motion": "^7.5.3",
+    "game-logic": "workspace:*",
     "mongoose": "^6.6.5",
     "mousetrap": "^1.6.5",
-    "next": "12.3.1",
+    "next": "13.3.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "socket.io-client": "^4.6.0",
     "swr": "^2.0.0",
-    "tsconfig": "workspace:*"
+    "tsconfig": "workspace:*",
+    "types": "workspace:*"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",

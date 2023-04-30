@@ -8,8 +8,8 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { RenderSettings } from "../../services/SettingsService"
-import { Card } from "../../utils/constallationTransformer"
-import { viewFactorWidth } from "./UIScoreView"
+import { Card } from "coordinate-utils"
+import { scaled } from "./UIScoreView"
 
 interface CardViewProps extends BoxProps {
   selected: boolean
@@ -27,23 +27,14 @@ const CardView = (props: CardViewProps) => {
     ...boxProps
   } = props
 
-  const padding = 10
-  const containerSize = viewFactorWidth(
-    tileSize *
-      Math.max(
-        3,
-        Math.max(...card.coordinates.map(([row, col]) => Math.max(row, col))) +
-          1
-      ) +
-      2 * padding
-  )
+  const padding = 8
+  const maxTiles = 3
+  const containerSize = tileSize * maxTiles + 2 * padding + "px"
 
   return (
     <Box
-      background={selected ? "blue.300" : "gray.700"}
-      borderRadius={viewFactorWidth(5)}
-      borderWidth={viewFactorWidth(2)}
-      borderColor={selected ? "transparent" : "gray.500"}
+      background={selected ? "blue.300" : "gray.600"}
+      borderRadius={scaled(5)}
       _hover={{ borderColor: selected ? "transparent" : "blue.300" }}
       position="relative"
       width={containerSize}
@@ -56,10 +47,10 @@ const CardView = (props: CardViewProps) => {
           <Box
             key={"unitConstellation_" + row + "_" + col}
             position="absolute"
-            top={viewFactorWidth(tileSize * row + padding)}
-            left={viewFactorWidth(tileSize * col + padding)}
-            width={viewFactorWidth(tileSize)}
-            height={viewFactorWidth(tileSize)}
+            top={scaled(tileSize * row + padding) + "px"}
+            left={scaled(tileSize * col + padding) + "px"}
+            width={scaled(tileSize)}
+            height={scaled(tileSize)}
             background={selected ? "blue.50" : "gray.300"}
           />
         )
@@ -67,16 +58,12 @@ const CardView = (props: CardViewProps) => {
       {card.value > 0 && (
         <Circle
           position="absolute"
-          top={viewFactorWidth(-7)}
-          right={viewFactorWidth(-7)}
-          size={viewFactorWidth(20)}
-          bg="yellow.400"
+          top={scaled(-2)}
+          right={scaled(-2)}
+          size={scaled(6)}
+          background="yellow.400"
         >
-          <Text
-            fontSize={viewFactorWidth(15)}
-            fontWeight="bold"
-            color="yellow.800"
-          >
+          <Text fontSize={scaled(15)} fontWeight="bold" color="yellow.800">
             {card.value}
           </Text>
         </Circle>
@@ -84,10 +71,10 @@ const CardView = (props: CardViewProps) => {
 
       <Kbd
         position="absolute"
-        bottom={viewFactorWidth(-5)}
-        right={viewFactorWidth(-5)}
-        fontSize={viewFactorWidth(15)}
-        bg="gray.700"
+        bottom={scaled(-2)}
+        right={scaled(-2)}
+        fontSize={scaled(16)}
+        background="gray.700"
         color="gray.300"
         borderColor="gray.300"
       >
@@ -113,12 +100,12 @@ export const UICardsView = (props: UICardsViewProps) => (
     width="100vw"
   >
     <HStack
-      spacing={viewFactorWidth(10)}
-      p={viewFactorWidth(10)}
-      m={viewFactorWidth(10)}
-      bg="gray.700"
-      borderRadius={viewFactorWidth(5)}
-      borderWidth={viewFactorWidth(2)}
+      spacing={scaled(10)}
+      padding={scaled(2)}
+      margin={scaled(2)}
+      background="gray.700"
+      borderRadius={scaled(5)}
+      borderWidth={scaled(2)}
       opacity={props.readonly ? 0.5 : 1}
     >
       {props.cards.map((card, index) => {
@@ -131,7 +118,7 @@ export const UICardsView = (props: UICardsViewProps) => (
             hotkey={`${index + 1}`}
             card={card}
             pointerEvents={props.readonly ? "none" : "all"}
-            tileSize={20}
+            tileSize={21}
             onClick={() => props.onSelect(card)}
           />
         )

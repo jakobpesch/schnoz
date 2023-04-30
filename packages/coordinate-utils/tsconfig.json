@@ -1,0 +1,10 @@
+{
+  "extends": "tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "es5",
+    "downlevelIteration": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "jest.setup.js"],
+  "exclude": ["dist"]
+}

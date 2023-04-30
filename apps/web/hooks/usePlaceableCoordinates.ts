@@ -1,14 +1,13 @@
-import { Match, Participant, UnitType } from "database"
-import { useMemo } from "react"
-import { Coordinate2D } from "../models/UnitConstellation.model"
-import { Special } from "../services/GameManagerService"
-import { TileWithUnit } from "../types/Tile"
-import { Card } from "../utils/constallationTransformer"
 import {
+  Card,
   buildTileLookupId,
   coordinatesAreEqual,
   getAdjacentCoordinatesOfConstellation,
-} from "../utils/coordinateUtils"
+} from "coordinate-utils"
+import { Match, Participant, UnitType } from "database"
+import { useMemo } from "react"
+import { Coordinate, TileWithUnit } from "types"
+import { Special } from "../services/GameManagerService"
 import { useTiles } from "./useTiles"
 
 export function usePlaceableCoordinates(
@@ -30,7 +29,7 @@ export function usePlaceableCoordinates(
         selectedCard?.coordinates.length === 1 &&
         coordinatesAreEqual(selectedCard.coordinates[0], [0, 0])
       ) {
-        const visibleAndFreeTiles: Coordinate2D[] = Object.values(tileLookup)
+        const visibleAndFreeTiles: Coordinate[] = Object.values(tileLookup)
           .filter((tile) => tile.visible && !tile.unit && !tile.terrain)
           .map((tile) => [tile.row, tile.col])
         return visibleAndFreeTiles

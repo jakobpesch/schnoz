@@ -1,20 +1,20 @@
-import { MatchStatus, Prisma, Tile, UnitType } from "database"
 import assert from "assert"
-import type { NextApiRequest, NextApiResponse } from "next"
-import { createCustomGame } from "../../../../gameLogic/GameVariants"
-import { IUnitConstellation } from "../../../../models/UnitConstellation.model"
-import { prisma } from "../../../../prisma/client"
-import {
-  checkConditionsForUnitConstellationPlacement,
-  Special,
-  SPECIAL_TYPES,
-} from "../../../../services/GameManagerService"
-import { MatchRich, matchRichInclude } from "../../../../types/Match"
 import {
   buildTileLookupId,
   getNewlyRevealedTiles,
   getTileLookup,
-} from "../../../../utils/coordinateUtils"
+} from "coordinate-utils"
+import { MatchStatus, Prisma, Tile, UnitType } from "database"
+import { createCustomGame } from "game-logic"
+import type { NextApiRequest, NextApiResponse } from "next"
+import {
+  MatchRich,
+  SPECIAL_TYPES,
+  Special,
+  TransformedConstellation,
+  matchRich,
+} from "types"
+import { prisma } from "../../../../services/PrismaService"
 
 const getLeadingPlayer = (match: MatchRich) => {
   const isSameScore = match.players.every(
@@ -109,7 +109,7 @@ export default async function handler(
       // Create a new move
       match = await prisma.match.findUnique({
         where: { id: matchId },
-        include: matchRichInclude,
+        ...matchRich,
       })
 
       if (match === null) {
@@ -122,7 +122,7 @@ export default async function handler(
         break
       }
 
-      const unitConstellation: IUnitConstellation = body.unitConstellation
+      const unitConstellation: TransformedConstellation = body.unitConstellation
 
       assert(match.activePlayer)
       const currentBonusPoints =
@@ -206,7 +206,7 @@ export default async function handler(
       await Promise.all(updateTilesPromises)
       const matchWithPlacedTiles = await prisma.match.findUnique({
         where: { id: matchId },
-        include: matchRichInclude,
+        ...matchRich,
       })
 
       if (
@@ -288,7 +288,7 @@ export default async function handler(
             ? { winnerId, status: MatchStatus.FINISHED, finishedAt: new Date() }
             : {}),
         },
-        include: matchRichInclude,
+        ...matchRich,
       })
 
       res.status(201).json(updatedMatch)

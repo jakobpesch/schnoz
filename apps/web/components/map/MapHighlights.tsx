@@ -1,11 +1,11 @@
 import { Flex, FlexProps } from "@chakra-ui/react"
 
-import { Coordinate2D } from "../../models/UnitConstellation.model"
+import { Coordinate } from "types"
 import { RenderSettings } from "../../services/SettingsService"
 
 export const MapHighlights = (
   props: {
-    coordinates: Coordinate2D[]
+    coordinates: Coordinate[]
     color?: string
   } & FlexProps
 ) => {

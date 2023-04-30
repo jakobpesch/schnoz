@@ -1,5 +1,5 @@
 import { Match, Participant, Rule, UnitConstellation } from "database";
-import { GameType } from "types";
+import { GameType } from "./game-type.interface";
 import { placementRulesMap } from "./placementRules/placement-rule-map.const";
 import { ScoringRule } from "types";
 import { shuffleArray } from "coordinate-utils";

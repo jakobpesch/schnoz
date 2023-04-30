@@ -1,11 +1,19 @@
-import { Button, Center, Heading, HStack, Text, VStack } from "@chakra-ui/react"
+import {
+  Box,
+  Button,
+  Center,
+  Heading,
+  HStack,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
 import { Participant } from "database"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import KoFiLogo from "../../assets/images/kofi_logo.png"
 import { RenderSettings } from "../../services/SettingsService"
-import { viewFactorWidth } from "./UIScoreView"
+import { scaled } from "./UIScoreView"
 interface UIPostMatchViewProps {
   winner: Participant | null
 }
@@ -30,14 +38,16 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
 
         {props.winner ? (
           <HStack>
-            <Image
-              src={
-                RenderSettings.getPlayerAppearance(props.winner.playerNumber)
-                  .unit
-              }
-              width={viewFactorWidth(500)}
-              height={viewFactorWidth(500)}
-            />
+            <Box width={scaled(500)} height={scaled(500)}>
+              <Image
+                fill
+                src={
+                  RenderSettings.getPlayerAppearance(props.winner.playerNumber)
+                    .unit
+                }
+                alt=""
+              />
+            </Box>
             <Text>wins!</Text>
           </HStack>
         ) : (
@@ -59,8 +69,8 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
             <Image
               src={KoFiLogo}
               alt="Buy Me a Coffee at ko-fi.com"
-              width="36px"
-              height="36px"
+              width="36"
+              height="36"
             />
           }
         >

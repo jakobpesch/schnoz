@@ -1,14 +1,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { GameSettings, Prisma, Terrain } from "database"
-import type { NextApiRequest, NextApiResponse } from "next"
-import { Coordinate2D } from "../../models/UnitConstellation.model"
-import { prisma } from "../../prisma/client"
-import { matchRichInclude } from "../../types/Match"
-import { translateCoordinatesTo } from "../../utils/constallationTransformer"
 import {
   coordinateIncludedIn,
   getCoordinateCircle,
-} from "../../utils/coordinateUtils"
+  translateCoordinatesTo,
+} from "coordinate-utils"
+import { GameSettings, Prisma, Terrain } from "database"
+import type { NextApiRequest, NextApiResponse } from "next"
+import { Coordinate, matchRich } from "types"
+import { prisma } from "../../services/PrismaService"
 
 const getRandomTerrain = (gameSettings: GameSettings) => {
   const nullProbability = 30
@@ -34,7 +33,7 @@ const getRandomTerrain = (gameSettings: GameSettings) => {
 }
 const getInitialiseMapPayload = (gameSettings: GameSettings) => {
   const halfMapSize = Math.floor(gameSettings.mapSize / 2)
-  const centerCoordinate: Coordinate2D = [halfMapSize, halfMapSize]
+  const centerCoordinate: Coordinate = [halfMapSize, halfMapSize]
 
   const initialVisionRadius = 3
   const initialVision = translateCoordinatesTo(
@@ -53,7 +52,7 @@ const getInitialiseMapPayload = (gameSettings: GameSettings) => {
 
   indices.forEach((row) => {
     indices.forEach((col) => {
-      const coordinate: Coordinate2D = [row, col]
+      const coordinate: Coordinate = [row, col]
 
       const tilePayload: Prisma.TileCreateManyMapInput = {
         row,
@@ -184,7 +183,7 @@ export default async function handler(
       break
     case "GET":
       const matches = await prisma.match.findMany({
-        include: matchRichInclude,
+        ...matchRich,
       })
       res.status(200).json(matches)
       break

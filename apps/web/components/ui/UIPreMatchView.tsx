@@ -1,4 +1,4 @@
-import { CheckIcon, CloseIcon, LinkIcon } from "@chakra-ui/icons"
+import { CheckIcon, LinkIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -8,8 +8,8 @@ import {
   CloseButton,
   Grid,
   GridItem,
-  Heading,
   HStack,
+  Heading,
   Slider,
   SliderFilledTrack,
   SliderThumb,
@@ -18,13 +18,13 @@ import {
   Stack,
   StackProps,
   Text,
-  useClipboard,
   VStack,
+  useClipboard,
 } from "@chakra-ui/react"
-import { GameSettings, Match, Participant, Rule, Terrain } from "database"
+import { GameSettings, Match, Rule, Terrain } from "database"
 import { Fragment, useEffect, useState } from "react"
+import { ParticipantWithUser } from "types"
 import { UpdateGameSettingsPayload } from "../../services/SocketService"
-import { ParticipantWithUser } from "../../types/Participant"
 
 const getReadableRuleNames = (rule: Rule) => {
   switch (rule) {

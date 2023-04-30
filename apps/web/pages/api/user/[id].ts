@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import { prisma } from "../../../prisma/client"
+import { prisma } from "../../../services/PrismaService"
 import bcrypt from "bcrypt"
 const saltRounds = 10
 

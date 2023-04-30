@@ -1,35 +1,39 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
+  buildTileLookupId,
+  getNewlyRevealedTiles,
+  getTileLookup,
+  shuffleArray,
+} from 'coordinate-utils';
+import {
   GameSettings,
-  Map as SchnozMap,
   Match,
   MatchStatus,
   Participant,
+  Map as SchnozMap,
   Tile,
   Unit,
   UnitConstellation,
   UnitType,
   User,
 } from 'database';
-import { Socket } from 'socket.io';
-import { determineWinner } from 'src/gameLogic/determineWinner';
-import { createCustomGame } from 'src/gameLogic/GameVariants';
-import { isLastTurn } from 'src/gameLogic/isLastTurn';
-import { checkConditionsForUnitConstellationPlacement } from 'src/gameLogic/PlacementRule';
-import { Coordinate } from 'src/shared/types/coordinate.type';
-import { ParticipantWithUser } from 'src/shared/types/database/participant-with-user.type';
-import { TileWithUnit } from 'src/shared/types/database/tile-with-units.type';
-import { Error } from 'src/shared/types/error.interface';
-import { MatchInstanceEvent } from 'src/shared/types/events/match-instance-event.enum';
-import { PlacementRuleName } from 'src/shared/types/placementRule/placement-rule-name.type';
-import { Special } from 'src/shared/types/special/special.interface';
-import { IUnitConstellation } from 'src/shared/types/unit-constellation.interface';
-import { shuffleArray } from 'src/utils/arrayUtils';
 import {
-  buildTileLookupId,
-  getNewlyRevealedTiles,
-  getTileLookup,
-} from 'src/utils/coordinateUtils';
+  checkConditionsForUnitConstellationPlacement,
+  createCustomGame,
+  determineWinner,
+  isLastTurn,
+} from 'game-logic';
+import { Socket } from 'socket.io';
+import {
+  Coordinate,
+  Error,
+  MatchInstanceEvent,
+  ParticipantWithUser,
+  PlacementRuleName,
+  Special,
+  TileWithUnit,
+  TransformedConstellation,
+} from 'types';
 import { GameSettingsService } from '../game-settings/game-settings.service';
 import { MapsService } from '../maps/maps.service';
 import { MatchLogsService } from '../match-logs/match-logs.service';
@@ -39,7 +43,7 @@ import { UsersService } from '../users/users.service';
 import { MatchesService } from './matches.service';
 
 export class MatchInstance {
-  private match: Match;
+  private match!: Match;
   get Match() {
     return this.match;
   }
@@ -281,7 +285,7 @@ export class MatchInstance {
     targetRow: Coordinate[0],
     targetCol: Coordinate[1],
     ignoredRules: PlacementRuleName[],
-    unitConstellation: IUnitConstellation,
+    unitConstellation: TransformedConstellation,
     specials: Special[],
   ): Promise<
     | {
@@ -493,6 +497,4 @@ export class MatchInstance {
       },
     });
   }
-
-  public hover(coordinate: any, unitConstellation: any) {}
 }

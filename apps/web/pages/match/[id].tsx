@@ -7,10 +7,17 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
+import { coordinatesAreEqual, getNewlyRevealedTiles } from "coordinate-utils"
 import { Participant, UnitType } from "database"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useState } from "react"
+import {
+  Coordinate,
+  TransformedConstellation,
+  PlacementRuleName,
+  TileWithUnit,
+} from "types"
 import { MapContainer } from "../../components/map/MapContainer"
 import { MapFog } from "../../components/map/MapFog"
 import { MapHoveredHighlights } from "../../components/map/MapHoveredHighlights"
@@ -25,32 +32,22 @@ import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
 import { UIPreMatchView } from "../../components/ui/UIPreMatchView"
 import { UIScoreView } from "../../components/ui/UIScoreView"
 import { UITurnsView } from "../../components/ui/UITurnsView"
-import { PlacementRuleName } from "../../gameLogic/PlacementRule"
 import { useCards } from "../../hooks/useCards"
 import { useMatch } from "../../hooks/useMatch"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
 import { usePlaceableCoordinates } from "../../hooks/usePlaceableCoordinates"
 import { useTiles } from "../../hooks/useTiles"
-import {
-  Coordinate2D,
-  IUnitConstellation,
-} from "../../models/UnitConstellation.model"
 import { getCookie } from "../../services/CookieService"
 import {
+  Special,
   checkConditionsForUnitConstellationPlacement,
   createMap,
   expandBuildRadiusByOne,
-  Special,
 } from "../../services/GameManagerService"
 import {
-  socketApi,
   UpdateGameSettingsPayload,
+  socketApi,
 } from "../../services/SocketService"
-import { TileWithUnit } from "../../types/Tile"
-import {
-  coordinatesAreEqual,
-  getNewlyRevealedTiles,
-} from "../../utils/coordinateUtils"
 
 export function useUserId() {
   try {
@@ -95,7 +92,7 @@ const MatchView = () => {
   const [statusLog, setStatusLog] = useState<string[]>([])
 
   const [showRuleEvaluationHighlights, setShowRuleEvaluationHighlights] =
-    useState<Coordinate2D[]>([])
+    useState<Coordinate[]>([])
 
   const { cards, selectedCard, setSelectedCard } = useCards(match, yourTurn)
   const { tileLookup, terrainTiles, unitTiles, fogTiles, halfFogTiles } =
@@ -174,8 +171,8 @@ const MatchView = () => {
   const onTileClick = async (
     row: number,
     col: number,
-    rotatedClockwise: IUnitConstellation["rotatedClockwise"],
-    mirrored: IUnitConstellation["mirrored"]
+    rotatedClockwise: TransformedConstellation["rotatedClockwise"],
+    mirrored: TransformedConstellation["mirrored"]
   ) => {
     if (isUpdatingMatch) {
       return
@@ -189,7 +186,7 @@ const MatchView = () => {
       return
     }
 
-    const unitConstellation: IUnitConstellation = {
+    const unitConstellation: TransformedConstellation = {
       coordinates: selectedCard.coordinates,
       value: selectedCard.value,
       rotatedClockwise,

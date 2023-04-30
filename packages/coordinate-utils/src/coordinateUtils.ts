@@ -1,5 +1,4 @@
-import { Coordinate } from "src/shared/types/coordinate.type";
-import { TileWithUnit } from "src/shared/types/database/tile-with-units.type";
+import { Coordinate, TileLookup, TileWithUnit } from "types";
 import {
   addCoordinates,
   translateCoordinatesTo,

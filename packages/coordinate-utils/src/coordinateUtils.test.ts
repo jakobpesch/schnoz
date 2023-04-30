@@ -1,6 +1,5 @@
-import { Terrain } from 'database';
-import { Coordinate } from 'src/shared/types/coordinate.type';
-import { TileWithUnit } from 'src/shared/types/database/tile-with-units.type';
+import { Terrain } from "database";
+import { Coordinate, TileLookup, TileWithUnit } from "types";
 import {
   buildTileLookupId,
   coordinateIncludedIn,
@@ -13,14 +12,13 @@ import {
   getNewlyRevealedTiles,
   getSquareMatrix,
   getTileLookup,
-  TileLookup,
-} from './coordinateUtils';
+} from "./coordinateUtils";
 
 const tiles: TileWithUnit[] = [
   {
     row: 0,
     col: 0,
-    mapId: '0',
+    mapId: "0",
     visible: false,
     terrain: Terrain.STONE,
     unit: null,
@@ -28,7 +26,7 @@ const tiles: TileWithUnit[] = [
   {
     row: 0,
     col: 1,
-    mapId: '0',
+    mapId: "0",
     visible: false,
     terrain: Terrain.STONE,
     unit: null,
@@ -36,19 +34,19 @@ const tiles: TileWithUnit[] = [
 ];
 
 const tileLookup: TileLookup = {
-  '0_0': tiles[0],
-  '0_1': tiles[1],
+  "0_0": tiles[0],
+  "0_1": tiles[1],
 };
 
-test('properly derives a lookup id', () => {
-  expect(buildTileLookupId([0, 1])).toEqual('0_1');
+test("properly derives a lookup id", () => {
+  expect(buildTileLookupId([0, 1])).toEqual("0_1");
 });
 
-test('create a tile lookup from tiles array', () => {
+test("create a tile lookup from tiles array", () => {
   expect(getTileLookup(tiles)).toEqual(tileLookup);
 });
 
-test('create a square matrix from a radius', () => {
+test("create a square matrix from a radius", () => {
   expect(getSquareMatrix(1)).toEqual([
     [-1, -1],
     [-1, 0],
@@ -223,7 +221,7 @@ test('create a square matrix from a radius', () => {
   ]);
 });
 
-test('get circle for radius', () => {
+test("get circle for radius", () => {
   expect(getCoordinateCircle(1)).toEqual([
     [-1, -1],
     [-1, 0],
@@ -370,7 +368,7 @@ test('get circle for radius', () => {
   ]);
 });
 
-test('coordinate included in array', () => {
+test("coordinate included in array", () => {
   const coordinates: Coordinate[] = [
     [0, 0],
     [0, 1],
@@ -382,12 +380,12 @@ test('coordinate included in array', () => {
   expect(coordinateIncludedIn(coordinates, [1, 0])).toBe(false);
 });
 
-test('coordinate equality', () => {
+test("coordinate equality", () => {
   expect(coordinatesAreEqual([0, 0], [0, 0])).toBe(true);
   expect(coordinatesAreEqual([0, 0], [0, 1])).toBe(false);
 });
 
-test('coordinates are adjacent', () => {
+test("coordinates are adjacent", () => {
   expect(coordinatesAreAdjacent([0, 0], [0, 1])).toBe(true);
   expect(coordinatesAreAdjacent([-1, 0], [0, 0])).toBe(true);
   expect(coordinatesAreAdjacent([0, 0], [0, -1])).toBe(true);
@@ -395,7 +393,7 @@ test('coordinates are adjacent', () => {
   expect(coordinatesAreAdjacent([1, 1], [2, 2])).toBe(false);
 });
 
-test('get adjacent coordinates', () => {
+test("get adjacent coordinates", () => {
   expect(getAdjacentCoordinates([0, 0])).toEqual([
     [1, 0],
     [0, 1],
@@ -404,7 +402,7 @@ test('get adjacent coordinates', () => {
   ]);
 });
 
-test('get diagonally adjacent coordinates', () => {
+test("get diagonally adjacent coordinates", () => {
   expect(getDiagonallyAdjacentCoordinates([0, 0])).toEqual([
     [1, 1],
     [-1, 1],
@@ -420,13 +418,13 @@ test('get diagonally adjacent coordinates', () => {
   ]);
 });
 
-test('get adjacent coordinates of constellation', () => {
+test("get adjacent coordinates of constellation", () => {
   expect(
     getAdjacentCoordinatesOfConstellation([
       [0, 0],
       [0, 1],
       [1, 1],
-    ]),
+    ])
   ).toEqual([
     [1, 0],
     [-1, 0],
@@ -438,11 +436,11 @@ test('get adjacent coordinates of constellation', () => {
   ]);
 });
 
-test('get newly revealed tiles', () => {
+test("get newly revealed tiles", () => {
   expect(JSON.stringify(getNewlyRevealedTiles(tileLookup, [[0, 0]]))).toBe(
-    '{"tiles":[{"row":0,"col":0,"mapId":"0","visible":true,"terrain":"STONE","unit":null},{"row":0,"col":1,"mapId":"0","visible":true,"terrain":"STONE","unit":null}]}',
+    '{"tiles":[{"row":0,"col":0,"mapId":"0","visible":true,"terrain":"STONE","unit":null},{"row":0,"col":1,"mapId":"0","visible":true,"terrain":"STONE","unit":null}]}'
   );
   expect(JSON.stringify(getNewlyRevealedTiles(tileLookup, [[0, 2]]))).toBe(
-    '{"error":{"message":"Error while placing","statusCode":400}}',
+    '{"error":{"message":"Error while placing","statusCode":400}}'
   );
 });

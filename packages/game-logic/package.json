@@ -1,11 +1,17 @@
 {
   "name": "game-logic",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest"
+  },
   "dependencies": {
     "database": "workspace:*",
     "coordinate-utils": "workspace:*",
-    "types": "workspace:*"
+    "types": "workspace:*",
+    "tsconfig": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.4"

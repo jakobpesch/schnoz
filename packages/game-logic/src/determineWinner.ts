@@ -1,13 +1,13 @@
-import { GameSettings, Match, Participant } from 'database';
-import { getLeadingPlayer } from './getLeadingPlayer';
-import { isLastTurn } from './isLastTurn';
+import { GameSettings, Match, Participant } from "database";
+import { getLeadingPlayer } from "./getLeadingPlayer";
+import { isLastTurn } from "./isLastTurn";
 
 const maxScore = 5;
 
 export function determineWinner(
   match: Match,
   gameSettings: GameSettings,
-  players: Participant[],
+  players: Participant[]
 ) {
   const leadingPlayer = getLeadingPlayer(players);
   if (!leadingPlayer) {

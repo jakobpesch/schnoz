@@ -13,7 +13,7 @@ import {
   Tr,
 } from "@chakra-ui/react"
 import { MatchStatus } from "database"
-import { MatchWithPlayers } from "../types/Match"
+import { MatchWithPlayers } from "types"
 import { MinusIcon } from "@chakra-ui/icons"
 
 interface MatchListProps {

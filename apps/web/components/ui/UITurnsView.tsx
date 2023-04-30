@@ -1,12 +1,12 @@
-import { Box, Flex, Heading, HStack, Stack } from "@chakra-ui/react"
-import { GameSettings, Match, Participant } from "database"
+import { Flex, Heading, HStack, Stack } from "@chakra-ui/react"
 import assert from "assert"
+import { GameSettings, Match, Participant } from "database"
+import { defaultGame } from "game-logic"
 import Image, { StaticImageData } from "next/image"
 import { useMemo } from "react"
-import { defaultGame } from "../../gameLogic/GameVariants"
 import { RenderSettings } from "../../services/SettingsService"
 
-import { viewFactorWidth } from "./UIScoreView"
+import { scaled } from "./UIScoreView"
 
 const getTurns = (
   match: Match,
@@ -70,15 +70,15 @@ export const UITurnsView = (props: {
     <Flex position="fixed" top="0" left="0">
       <Stack
         bg="gray.700"
-        borderWidth={viewFactorWidth(1)}
-        borderRadius={viewFactorWidth(10)}
-        spacing={viewFactorWidth(16)}
-        p={viewFactorWidth(10)}
-        m={viewFactorWidth(10)}
+        borderWidth={scaled(5)}
+        borderRadius={scaled(8)}
+        spacing={scaled(16)}
+        p={scaled(4)}
+        m={scaled(4)}
         maxWidth="50vw"
         overflowX="hidden"
       >
-        <HStack position="relative" spacing={viewFactorWidth(16)}>
+        <HStack position="relative" spacing={scaled(1)}>
           {turnsUI.map((turnUI, index) => {
             const borderStyle =
               index === 0
@@ -94,9 +94,7 @@ export const UITurnsView = (props: {
                 <Heading
                   key={index + "eval"}
                   textAlign="center"
-                  fontSize={
-                    index === 0 ? viewFactorWidth(35) : viewFactorWidth(20)
-                  }
+                  fontSize={scaled(16)}
                   {...borderStyle}
                 >
                   ⭐️
@@ -110,14 +108,12 @@ export const UITurnsView = (props: {
                   key={index + "player"}
                   {...borderStyle}
                 >
-                  <Box
-                    width={viewFactorWidth(40)}
-                    height={viewFactorWidth(40)}
-                    minWidth={viewFactorWidth(40)}
-                    minHeight={viewFactorWidth(40)}
-                  >
-                    <Image src={turnUI.icon} />
-                  </Box>
+                  <Image
+                    src={turnUI.icon}
+                    alt=""
+                    minWidth={scaled(10)}
+                    minHeight={scaled(10)}
+                  />
                 </Flex>
               )
             }

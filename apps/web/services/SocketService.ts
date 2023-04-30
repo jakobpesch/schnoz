@@ -1,16 +1,15 @@
 import { GameSettings, Map, Match, Participant, Unit, User } from "database"
-import { io, Socket } from "socket.io-client"
-import { PlacementRuleName } from "../gameLogic/PlacementRule"
+import { Socket, io } from "socket.io-client"
 import {
-  Coordinate2D,
-  IUnitConstellation,
-} from "../models/UnitConstellation.model"
-import { ClientEvent } from "../shared-server/client-event.enum"
-import { ServerEvent } from "../shared-server/server-event.enum"
-import { MatchRich } from "../types/Match"
-import { ParticipantWithUser } from "../types/Participant"
-import { TileWithUnit } from "../types/Tile"
-import { Special } from "./GameManagerService"
+  ClientEvent,
+  Coordinate,
+  TransformedConstellation,
+  ParticipantWithUser,
+  PlacementRuleName,
+  ServerEvent,
+  Special,
+  TileWithUnit,
+} from "types"
 
 // TODO: Make type proper
 export type UpdateGameSettingsPayload = Partial<Omit<GameSettings, "id">>
@@ -36,7 +35,7 @@ export class SocketIOApi {
     setUnits?: (units: Unit[]) => void
     setParticipants?: (players: ParticipantWithUser[]) => void
     setConnectedParticipants?: (players: ParticipantWithUser[]) => void
-    setOpponentsHoveredTiles?: (hoveringTiles: Coordinate2D[] | null) => void
+    setOpponentsHoveredTiles?: (hoveringTiles: Coordinate[] | null) => void
     setLastSynced?: (lastSynced: string) => void
   } = {}
 
@@ -164,7 +163,7 @@ export class SocketIOApi {
     this.callbacks.setParticipants?.(remainingParticipants)
     this.callbacks.setConnectedParticipants?.(remainingParticipants)
   }
-  private onHovered = (hoveredCoordinates: Coordinate2D[] | null) => {
+  private onHovered = (hoveredCoordinates: Coordinate[] | null) => {
     this.callbacks.setOpponentsHoveredTiles?.(hoveredCoordinates)
   }
 
@@ -246,7 +245,7 @@ export class SocketIOApi {
     row: number
     col: number
     participantId: string
-    unitConstellation: IUnitConstellation
+    unitConstellation: TransformedConstellation
     ignoredRules?: PlacementRuleName[]
     specials?: Special[]
   }) {
@@ -256,7 +255,7 @@ export class SocketIOApi {
     })
   }
 
-  async sendHoveredCoordinates(hoveredCoordinates: Coordinate2D[] | null) {
+  async sendHoveredCoordinates(hoveredCoordinates: Coordinate[] | null) {
     await socketApi.sendRequest({
       event: ClientEvent.HOVER,
       data: hoveredCoordinates,

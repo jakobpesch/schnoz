@@ -1,8 +1,8 @@
-import { Participant } from 'database';
+import { Participant } from "database";
 
 export function getLeadingPlayer(players: Participant[]) {
   const isSameScore = players.every(
-    (player) => player.score === players[0].score,
+    (player) => player.score === players[0].score
   );
 
   if (isSameScore) {

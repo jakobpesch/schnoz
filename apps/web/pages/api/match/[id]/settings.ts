@@ -1,7 +1,7 @@
 import { MatchStatus } from "database"
 import type { NextApiRequest, NextApiResponse } from "next"
-import { prisma } from "../../../../prisma/client"
-import { MatchRich, matchRichInclude } from "../../../../types/Match"
+import { prisma } from "../../../../services/PrismaService"
+import { MatchRich, matchRich } from "types"
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,7 +35,7 @@ export default async function handler(
       // Create a new move
       match = await prisma.match.findUnique({
         where: { id: matchId },
-        include: matchRichInclude,
+        ...matchRich,
       })
 
       if (match === null) {
@@ -62,7 +62,7 @@ export default async function handler(
           },
           updatedAt: new Date(),
         },
-        include: matchRichInclude,
+        ...matchRich,
       })
 
       res.status(201).json(updatedMatch)

@@ -1,11 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next"
-
-import { Match, MatchStatus, Participant, UnitConstellation } from "database"
 import assert from "assert"
-import { prisma } from "../../../prisma/client"
-import { MatchRich, matchRichInclude } from "../../../types/Match"
-import { shuffleArray } from "../../../utils/arrayUtils"
+import { shuffleArray } from "coordinate-utils"
+import { Match, MatchStatus, Participant, UnitConstellation } from "database"
+import { MatchRich, matchRich } from "types"
+import { prisma } from "../../../services/PrismaService"
 
 const checkConditionsForCreation = (match: MatchRich, userId: string) => {
   if (match.status === MatchStatus.STARTED) {
@@ -62,16 +61,16 @@ export default async function handler(
   switch (method) {
     case "PUT":
       console.time("getMatch")
-      const matchRich = await prisma.match.findUnique({
+      const richMatch = await prisma.match.findUnique({
         where: { id: matchId },
-        include: matchRichInclude,
+        ...matchRich,
       })
       console.timeEnd("getMatch")
-      if (matchRich === null) {
+      if (richMatch === null) {
         res.status(404).end(`Match with id ${matchId} not found.`)
         return
       }
-      if (matchRich.gameSettings === null) {
+      if (richMatch.gameSettings === null) {
         res.status(500).end("Settings missing")
         return
       }
@@ -79,7 +78,7 @@ export default async function handler(
       switch (body.action) {
         case "join":
           const { error: joinError } = checkConditionsForJoining(
-            matchRich.players,
+            richMatch.players,
             body.userId
           )
 
@@ -99,14 +98,14 @@ export default async function handler(
                 },
               },
             },
-            include: matchRichInclude,
+            ...matchRich,
           })
           res.status(200).json(joinedMatch)
           break
 
         case "start":
           const { error: startError } = checkConditionsForCreation(
-            matchRich,
+            richMatch,
             body.userId
           )
 
@@ -118,7 +117,7 @@ export default async function handler(
           const status = MatchStatus.STARTED
           const startedAt = new Date()
 
-          const activePlayerId = matchRich.players.find(
+          const activePlayerId = richMatch.players.find(
             (player) => player.userId === body.userId
           )?.id
 
@@ -132,7 +131,7 @@ export default async function handler(
 
           console.time("updateMatch")
           const startedMatch = await prisma.match.update({
-            where: { id: matchRich.id },
+            where: { id: richMatch.id },
             data: {
               openCards,
               status,
@@ -140,7 +139,7 @@ export default async function handler(
               activePlayerId,
               turn,
             },
-            include: matchRichInclude,
+            ...matchRich,
           })
           console.timeEnd("updateMatch")
 

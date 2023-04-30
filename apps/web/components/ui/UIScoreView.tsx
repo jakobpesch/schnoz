@@ -1,3 +1,4 @@
+import { NotAllowedIcon } from "@chakra-ui/icons"
 import {
   Box,
   Divider,
@@ -8,24 +9,17 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
-import { GameSettings, Participant, Rule, Terrain } from "database"
 import assert from "assert"
-import { NotAllowedIcon } from "@chakra-ui/icons"
+import { getSquareMatrix, getTileLookup } from "coordinate-utils"
+import { GameSettings, Participant, Rule, Terrain } from "database"
+import { createCustomGame } from "game-logic"
 import Image from "next/image"
 import { ReactNode } from "react"
-import { createCustomGame } from "../../gameLogic/GameVariants"
-import { RuleEvaluation } from "../../gameLogic/ScoringRule"
-import { Coordinate2D } from "../../models/UnitConstellation.model"
+import { Coordinate, RuleEvaluation, TileWithUnit } from "types"
 import { RenderSettings } from "../../services/SettingsService"
-import { MapWithTiles } from "../../types/Map"
-import { TileWithUnit } from "../../types/Tile"
-import { getSquareMatrix, getTileLookup } from "../../utils/coordinateUtils"
 import { HoveredTooltip } from "../HoveredTooltip"
 
-export const viewFactorWidth = (
-  value: number,
-  viewPortWidthFactor: number = 0.1
-) => viewPortWidthFactor * value + "vmin"
+export const scaled = (value: number) => value * RenderSettings.uiScale
 
 const getEvaluationsMap = (
   tilesWithUnits: TileWithUnit[],
@@ -59,8 +53,8 @@ const ruleExplainations = new Map<Rule, ReactNode>([
       const size = 50
       const radius = 2
       return (
-        <Stack width={viewFactorWidth((radius * 2 + 1) * size)}>
-          <Text fontSize={viewFactorWidth(20)}>
+        <Stack width={scaled((radius * 2 + 1) * size)}>
+          <Text fontSize={scaled(20)}>
             Gain a rule point for each water tile that is touched by at least
             one of your units.
           </Text>
@@ -68,15 +62,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
             overflow="hidden"
             flexWrap="wrap"
             position="relative"
-            borderRadius={viewFactorWidth(10)}
+            borderRadius={scaled(10)}
           >
             {getSquareMatrix(radius).map((coordinate, index) => (
               <Box
                 key={"tut_map_" + Rule.TERRAIN_WATER_POSITIVE + coordinate}
-                minWidth={viewFactorWidth(size)}
-                minHeight={viewFactorWidth(size)}
-                maxWidth={viewFactorWidth(size)}
-                maxHeight={viewFactorWidth(size)}
+                minWidth={scaled(size)}
+                minHeight={scaled(size)}
+                maxWidth={scaled(size)}
+                maxHeight={scaled(size)}
                 bg={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
@@ -98,13 +92,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance(0).unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance(0).unit}
+                  />
                 </Flex>
               )
             })}
@@ -126,14 +123,14 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image src={terrain} width="100%" height="100%" />
+                    <Image alt="" src={terrain} width="100%" height="100%" />
                   )}
                 </Flex>
               )
@@ -154,15 +151,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="start"
                   justify="end"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   <Text
                     textShadow="1px 1px 0px black,-1px -1px 0px black,1px -1px 0px black,-1px 1px 0px black;"
-                    fontSize={viewFactorWidth(25)}
+                    fontSize={scaled(25)}
                   >
                     ⭐️
                   </Text>
@@ -180,8 +177,8 @@ const ruleExplainations = new Map<Rule, ReactNode>([
       const size = 50
       const radius = 2
       return (
-        <Stack width={viewFactorWidth((radius * 2 + 1) * size)}>
-          <Text fontSize={viewFactorWidth(20)}>
+        <Stack width={scaled((radius * 2 + 1) * size)}>
+          <Text fontSize={scaled(20)}>
             Lose a rule point for each stone tile that is touched by at least
             one of your units.
           </Text>
@@ -189,15 +186,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
             overflow="hidden"
             flexWrap="wrap"
             position="relative"
-            borderRadius={viewFactorWidth(10)}
+            borderRadius={scaled(10)}
           >
             {getSquareMatrix(radius).map((coordinate, index) => (
               <Box
                 key={"tut_map_" + Rule.TERRAIN_STONE_NEGATIVE + coordinate}
-                minWidth={viewFactorWidth(size)}
-                minHeight={viewFactorWidth(size)}
-                maxWidth={viewFactorWidth(size)}
-                maxHeight={viewFactorWidth(size)}
+                minWidth={scaled(size)}
+                minHeight={scaled(size)}
+                maxWidth={scaled(size)}
+                maxHeight={scaled(size)}
                 bg={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
@@ -218,13 +215,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance(0).unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance(0).unit}
+                  />
                 </Flex>
               )
             })}
@@ -240,14 +240,14 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image src={terrain} width="100%" height="100%" />
+                    <Image alt="" src={terrain} width="100%" height="100%" />
                   )}
                 </Flex>
               )
@@ -268,15 +268,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="start"
                   justify="end"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   <Text
                     textShadow="1px 1px 0px black,-1px -1px 0px black,1px -1px 0px black,-1px 1px 0px black;"
-                    fontSize={viewFactorWidth(25)}
+                    fontSize={scaled(25)}
                   >
                     💩
                   </Text>
@@ -294,16 +294,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
       const size = 50
       const radius = 2
       return (
-        <Stack width={viewFactorWidth((radius * 2 + 1) * size)}>
-          <Text fontSize={viewFactorWidth(20)}>
+        <Stack width={scaled((radius * 2 + 1) * size)}>
+          <Text fontSize={scaled(20)}>
             Gain a rule point for each tile, that is only surrounded by allied
             units or terrain.
           </Text>
-          <Text
-            fontSize={viewFactorWidth(10)}
-            fontStyle="italic"
-            color="gray.400"
-          >
+          <Text fontSize={scaled(10)} fontStyle="italic" color="gray.400">
             The main building in the center of the map counts as an allied unit.
             Also, the boundaries of the map make it easier to form holes.
           </Text>
@@ -311,15 +307,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
             overflow="hidden"
             flexWrap="wrap"
             position="relative"
-            borderRadius={viewFactorWidth(10)}
+            borderRadius={scaled(10)}
           >
             {getSquareMatrix(radius).map((coordinate, index) => (
               <Box
                 key={"tut_map_" + Rule.HOLE + coordinate}
-                minWidth={viewFactorWidth(size)}
-                minHeight={viewFactorWidth(size)}
-                maxWidth={viewFactorWidth(size)}
-                maxHeight={viewFactorWidth(size)}
+                minWidth={scaled(size)}
+                minHeight={scaled(size)}
+                maxWidth={scaled(size)}
+                maxHeight={scaled(size)}
                 bg={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
@@ -335,13 +331,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance(0).unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance(0).unit}
+                  />
                 </Flex>
               )
             })}
@@ -356,13 +355,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance(1).unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance(1).unit}
+                  />
                 </Flex>
               )
             })}
@@ -373,13 +375,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance().unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance().unit}
+                  />
                 </Flex>
               )
             })}
@@ -391,14 +396,14 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image src={terrain} width="100%" height="100%" />
+                    <Image alt="" src={terrain} width="100%" height="100%" />
                   )}
                 </Flex>
               )
@@ -414,15 +419,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   <Text
                     textShadow="1px 1px 0px black,-1px -1px 0px black,1px -1px 0px black,-1px 1px 0px black;"
-                    fontSize={viewFactorWidth(25)}
+                    fontSize={scaled(25)}
                   >
                     ⭐️
                   </Text>
@@ -440,16 +445,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
       const size = 50
       const radius = 2
       return (
-        <Stack width={viewFactorWidth((radius * 2 + 1) * size)}>
-          <Text fontSize={viewFactorWidth(20)}>
+        <Stack width={scaled((radius * 2 + 1) * size)}>
+          <Text fontSize={scaled(20)}>
             Gain a rule point for every diagonal from bottom-left to the
             top-right that constists of at least three units.
           </Text>
-          <Text
-            fontSize={viewFactorWidth(10)}
-            fontStyle="italic"
-            color="gray.400"
-          >
+          <Text fontSize={scaled(10)} fontStyle="italic" color="gray.400">
             Note: Diagonals that go from the top-left to the bottom-right do not
             count! Also, extending the diagonal to four or more units does not
             give more points.
@@ -458,15 +459,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
             overflow="hidden"
             flexWrap="wrap"
             position="relative"
-            borderRadius={viewFactorWidth(10)}
+            borderRadius={scaled(10)}
           >
             {getSquareMatrix(radius).map((coordinate, index) => (
               <Box
                 key={"tut_map_" + Rule.DIAGONAL_NORTHEAST + coordinate}
-                minWidth={viewFactorWidth(size)}
-                minHeight={viewFactorWidth(size)}
-                maxWidth={viewFactorWidth(size)}
-                maxHeight={viewFactorWidth(size)}
+                minWidth={scaled(size)}
+                minHeight={scaled(size)}
+                maxWidth={scaled(size)}
+                maxHeight={scaled(size)}
                 bg={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
@@ -495,13 +496,16 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
-                  <Image src={RenderSettings.getPlayerAppearance(0).unit} />
+                  <Image
+                    alt=""
+                    src={RenderSettings.getPlayerAppearance(0).unit}
+                  />
                 </Flex>
               )
             })}
@@ -519,14 +523,14 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image src={terrain} width="100%" height="100%" />
+                    <Image alt="" src={terrain} width="100%" height="100%" />
                   )}
                 </Flex>
               )
@@ -535,12 +539,10 @@ const ruleExplainations = new Map<Rule, ReactNode>([
               position="absolute"
               align="center"
               justify="center"
-              top={viewFactorWidth(0.5 * size)}
-              left={viewFactorWidth(0.5 * size)}
-              width={viewFactorWidth(
-                Math.sqrt((2 * size) ** 2 + (2 * size) ** 2)
-              )}
-              height={viewFactorWidth(3 * size)}
+              top={scaled(0.5 * size)}
+              left={scaled(0.5 * size)}
+              width={scaled(Math.sqrt((2 * size) ** 2 + (2 * size) ** 2))}
+              height={scaled(3 * size)}
               borderBottomWidth="5px"
               borderColor="yellow.300"
               transform={"rotate(-45deg)"}
@@ -551,12 +553,10 @@ const ruleExplainations = new Map<Rule, ReactNode>([
               position="absolute"
               align="center"
               justify="center"
-              top={viewFactorWidth(1.5 * size)}
-              left={viewFactorWidth(0.5 * size)}
-              width={viewFactorWidth(
-                Math.sqrt((3 * size) ** 2 + (3 * size) ** 2)
-              )}
-              height={viewFactorWidth(3 * size)}
+              top={scaled(1.5 * size)}
+              left={scaled(0.5 * size)}
+              width={scaled(Math.sqrt((3 * size) ** 2 + (3 * size) ** 2))}
+              height={scaled(3 * size)}
               borderBottomWidth="5px"
               borderColor="yellow.300"
               transform={"rotate(-45deg)"}
@@ -575,15 +575,15 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   position="absolute"
                   align="center"
                   justify="center"
-                  top={viewFactorWidth(row * size)}
-                  left={viewFactorWidth(col * size)}
-                  width={viewFactorWidth(size)}
-                  height={viewFactorWidth(size)}
+                  top={scaled(row * size)}
+                  left={scaled(col * size)}
+                  width={scaled(size)}
+                  height={scaled(size)}
                   pointerEvents="none"
                 >
                   <Text
                     textShadow="1px 1px 0px black,-1px -1px 0px black,1px -1px 0px black,-1px 1px 0px black;"
-                    fontSize={viewFactorWidth(25)}
+                    fontSize={scaled(25)}
                   >
                     ⭐️
                   </Text>
@@ -602,7 +602,7 @@ export const UIScoreView = (props: {
   connectedParticipants: Participant[]
   tilesWithUnits: TileWithUnit[]
   rules: GameSettings["rules"]
-  onRuleHover: (coordinates: Coordinate2D[]) => void
+  onRuleHover: (coordinates: Coordinate[]) => void
 }) => {
   const player1 = props.participants.find((player) => player.playerNumber === 0)
   assert(player1)
@@ -623,26 +623,27 @@ export const UIScoreView = (props: {
     <VStack position="fixed" top="0" right="0">
       <VStack
         bg="gray.700"
-        borderWidth={viewFactorWidth(1)}
-        borderRadius={viewFactorWidth(10)}
-        spacing={viewFactorWidth(10)}
-        p={viewFactorWidth(10)}
-        m={viewFactorWidth(10)}
+        borderWidth={scaled(1)}
+        borderRadius={scaled(10)}
+        spacing={scaled(4)}
+        p={scaled(2)}
+        m={scaled(4)}
       >
-        <HStack spacing={viewFactorWidth(16)}>
+        <HStack spacing={scaled(4)}>
           <Flex
             key={player1.id}
             align="center"
             justify="center"
-            gap={viewFactorWidth(16)}
+            gap={scaled(4)}
           >
             <Box position="relative">
               <Image
+                alt=""
                 src={
                   RenderSettings.getPlayerAppearance(player1.playerNumber).unit
                 }
-                width={viewFactorWidth(300)}
-                height={viewFactorWidth(300)}
+                width={scaled(50)}
+                height={scaled(50)}
               />
               {!player1Connected && (
                 <NotAllowedIcon
@@ -650,27 +651,28 @@ export const UIScoreView = (props: {
                   left="0"
                   top="0"
                   color="red"
-                  boxSize={viewFactorWidth(45)}
+                  boxSize={scaled(50)}
                 />
               )}
             </Box>
-            <Heading fontSize={viewFactorWidth(25)}>{player1.score}</Heading>
+            <Heading fontSize={scaled(30)}>{player1.score}</Heading>
           </Flex>
           <Divider orientation="vertical"></Divider>
           <Flex
             key={player2.id}
             align="center"
             justify="center"
-            gap={viewFactorWidth(16)}
+            gap={scaled(4)}
           >
-            <Heading fontSize={viewFactorWidth(25)}>{player2.score}</Heading>
+            <Heading fontSize={scaled(30)}>{player2.score}</Heading>
             <Box position="relative">
               <Image
+                alt=""
                 src={
                   RenderSettings.getPlayerAppearance(player2.playerNumber).unit
                 }
-                width={viewFactorWidth(300)}
-                height={viewFactorWidth(300)}
+                width={scaled(50)}
+                height={scaled(50)}
               />
               {!player2Connected && (
                 <NotAllowedIcon
@@ -678,7 +680,7 @@ export const UIScoreView = (props: {
                   left="0"
                   top="0"
                   color="red"
-                  boxSize={viewFactorWidth(45)}
+                  boxSize={scaled(50)}
                 />
               )}
             </Box>
@@ -686,14 +688,14 @@ export const UIScoreView = (props: {
         </HStack>
         <Divider />
         {rulesMap && (
-          <Stack spacing={viewFactorWidth(5)} width="full">
+          <Stack spacing={scaled(2)} width="full">
             {Array.from(rulesMap.values()).map(
               (ruleEvaluations, ruleEvalsIndex) => {
                 return (
                   <VStack
                     key={"ruleEvals_" + ruleEvalsIndex}
-                    p={viewFactorWidth(5)}
-                    borderRadius={viewFactorWidth(10)}
+                    p={scaled(1)}
+                    borderRadius={scaled(10)}
                     bg={
                       ruleEvaluations[0].points === ruleEvaluations[1].points
                         ? "none"
@@ -707,17 +709,17 @@ export const UIScoreView = (props: {
                     }
                   >
                     <Flex
-                      gap={viewFactorWidth(16)}
+                      gap={scaled(2)}
                       align="center"
                       justify="space-around"
                       width="full"
                       color="white"
                     >
                       <Heading
-                        minWidth={viewFactorWidth(30)}
+                        minWidth={scaled(30)}
                         textAlign="center"
                         cursor="default"
-                        fontSize={viewFactorWidth(25)}
+                        fontSize={scaled(30)}
                         size="md"
                         onMouseEnter={() =>
                           props.onRuleHover(
@@ -731,28 +733,30 @@ export const UIScoreView = (props: {
                       <HoveredTooltip
                         trigger={
                           <Image
+                            alt=""
                             src={RenderSettings.getRuleAppearance(
                               ruleEvaluations[0].type
                             )}
-                            width={viewFactorWidth(300)}
-                            height={viewFactorWidth(300)}
+                            width={scaled(40)}
+                            height={scaled(40)}
                           />
                         }
                         header={
                           <HStack>
                             <Box
-                              minWidth={viewFactorWidth(40)}
-                              minHeight={viewFactorWidth(40)}
-                              width={viewFactorWidth(40)}
-                              height={viewFactorWidth(40)}
+                              minWidth={scaled(40)}
+                              minHeight={scaled(40)}
+                              width={scaled(40)}
+                              height={scaled(40)}
                             >
                               <Image
+                                alt=""
                                 src={RenderSettings.getRuleAppearance(
                                   ruleEvaluations[0].type
                                 )}
                               />
                             </Box>
-                            <Heading fontSize={viewFactorWidth(25)}>
+                            <Heading fontSize={scaled(25)}>
                               {RenderSettings.getRuleName(
                                 ruleEvaluations[0].type
                               )}
@@ -763,10 +767,10 @@ export const UIScoreView = (props: {
                       />
 
                       <Heading
-                        minWidth={viewFactorWidth(30)}
+                        minWidth={scaled(30)}
                         textAlign="center"
                         cursor="default"
-                        fontSize={viewFactorWidth(25)}
+                        fontSize={scaled(25)}
                         size="md"
                         onMouseEnter={() =>
                           props.onRuleHover(

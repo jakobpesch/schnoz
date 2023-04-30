@@ -1,8 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { Rule } from "database"
 import type { NextApiRequest, NextApiResponse } from "next"
-import { prisma } from "../../prisma/client"
-import { matchRichInclude } from "../../types/Match"
+import { prisma } from "../../services/PrismaService"
+import { matchRich } from "types"
 
 export default async function handler(
   req: NextApiRequest,
@@ -29,7 +29,7 @@ export default async function handler(
             },
           },
         },
-        include: matchRichInclude,
+        ...matchRich,
       })
       res.status(201).json(match)
       break

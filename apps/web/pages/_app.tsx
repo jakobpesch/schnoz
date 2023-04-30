@@ -1,11 +1,12 @@
-import "../styles/globals.css"
-import type { AppProps } from "next/app"
-import { ChakraProvider, extendTheme } from "@chakra-ui/react"
-import { theme as defaultTheme } from "@chakra-ui/react"
-import { useEffect } from "react"
-import { SocketIOApi } from "../services/SocketService"
+import {
+  ChakraProvider,
+  theme as defaultTheme,
+  extendTheme,
+} from "@chakra-ui/react"
 import { StoreProvider } from "easy-peasy"
+import type { AppProps } from "next/app"
 import { store } from "../store"
+import "../styles/globals.css"
 const config = {
   ...defaultTheme.config,
   initialColorMode: "dark",

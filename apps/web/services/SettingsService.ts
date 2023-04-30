@@ -14,6 +14,10 @@ import terrainWater from "../assets/sprites/terrain_water.png"
 
 export const RenderSettings = {
   tileSize: 50,
+  uiScale: 1,
+  setUIScale: (scale: number) => {
+    RenderSettings.uiScale = scale
+  },
   getPlayerAppearance: (playerNumber?: Participant["playerNumber"]) => {
     let unit: StaticImageData = bob
     let color: string

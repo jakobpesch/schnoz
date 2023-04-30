@@ -1,11 +1,11 @@
 import { useMemo } from "react"
-import { Coordinate2D } from "../models/UnitConstellation.model"
-import { TileWithUnit } from "../types/Tile"
+import { Coordinate } from "types"
+import { TileWithUnit } from "types"
 import {
   buildTileLookupId,
   getAdjacentCoordinates,
   getTileLookup,
-} from "../utils/coordinateUtils"
+} from "coordinate-utils"
 
 export function useTiles(tilesWithUnits: TileWithUnit[] | undefined) {
   const tileLookup =
@@ -34,7 +34,7 @@ export function useTiles(tilesWithUnits: TileWithUnit[] | undefined) {
         if (!tile.visible) {
           return false
         }
-        const coordinate: Coordinate2D = [tile.row, tile.col]
+        const coordinate: Coordinate = [tile.row, tile.col]
         const adjacentCoordinates = getAdjacentCoordinates(coordinate)
         const hasHiddenAdjacentTile = adjacentCoordinates.some(
           (adjacentCoordinate) => {

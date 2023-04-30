@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next"
-import { prisma } from "../../../../prisma/client"
-import { matchRichInclude } from "../../../../types/Match"
+import { prisma } from "../../../../services/PrismaService"
+import { matchRich } from "types"
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,7 +19,7 @@ export default async function handler(
     case "GET":
       const match = await prisma.match.findUnique({
         where: { id: matchId },
-        include: matchRichInclude,
+        ...matchRich,
       })
       if (!match) {
         res.status(404).end(`Match with id ${matchId} not found.`)

@@ -8,14 +8,16 @@ import {
 } from '@nestjs/websockets';
 import { Match, Participant, User } from 'database';
 import { Server, Socket } from 'socket.io';
-import { Coordinate } from 'src/shared/types/coordinate.type';
-import { ClientEvent } from 'src/shared/types/events/client-event.enum';
-import { MatchInstanceEvent } from 'src/shared/types/events/match-instance-event.enum';
-import { ServerEvent } from 'src/shared/types/events/server-event.enum';
-import { PlacementRuleName } from 'src/shared/types/placementRule/placement-rule-name.type';
-import { Special } from 'src/shared/types/special/special.interface';
-import { isSpecial } from 'src/shared/types/special/special.type-guard';
-import { IUnitConstellation } from 'src/shared/types/unit-constellation.interface';
+import {
+  ClientEvent,
+  Coordinate,
+  TransformedConstellation,
+  MatchInstanceEvent,
+  PlacementRuleName,
+  ServerEvent,
+  Special,
+  isSpecial,
+} from 'types';
 import { GameSettingsService } from '../game-settings/game-settings.service';
 import { AppLoggerService } from '../logger/logger.service';
 import { MapsService } from '../maps/maps.service';
@@ -31,7 +33,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private logger = new AppLoggerService(MatchGateway.name);
 
   @WebSocketServer()
-  server: Server;
+  server!: Server;
   private clients = new Map<
     Socket['id'],
     { userId: User['id']; matchInstance: MatchInstance }
@@ -274,7 +276,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       col: Coordinate[1];
       ignoredRules: PlacementRuleName[];
       specials: Special[];
-      unitConstellation: IUnitConstellation;
+      unitConstellation: TransformedConstellation;
     },
   ) {
     console.log('MAKE MOVE');

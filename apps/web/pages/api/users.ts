@@ -1,8 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next"
-import { prisma } from "../../prisma/client"
-import bcrypt from "bcrypt"
 import { faker } from "@faker-js/faker"
+import bcrypt from "bcrypt"
+import type { NextApiRequest, NextApiResponse } from "next"
+import { prisma } from "../../services/PrismaService"
 const saltRounds = 10
 function capitalize(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1)

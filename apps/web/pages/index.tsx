@@ -6,8 +6,8 @@ import {
   Container,
   Flex,
   FormControl,
-  Heading,
   HStack,
+  Heading,
   Input,
   Modal,
   ModalBody,
@@ -26,12 +26,14 @@ import {
   Tooltip,
 } from "@chakra-ui/react"
 import { MatchStatus } from "database"
+import { Formik } from "formik"
 import type { NextPage } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import useSWR from "swr"
+import { MatchWithPlayers } from "types"
 import KoFiLogo from "../assets/images/kofi_logo.png"
 import MatchList from "../components/MatchList"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
@@ -43,12 +45,7 @@ import {
   signInAnonymously,
 } from "../services/GameManagerService"
 import { fetcher } from "../services/swrUtils"
-import { MatchWithPlayers } from "../types/Match"
 import { useUser } from "./account"
-import React from "react"
-import { Formik } from "formik"
-import { socketApi } from "../services/SocketService"
-import { log } from "console"
 
 const Home: NextPage = () => {
   const router = useRouter()
@@ -381,8 +378,8 @@ const Home: NextPage = () => {
               <Image
                 src={KoFiLogo}
                 alt="Buy Me a Coffee at ko-fi.com"
-                width="36px"
-                height="36px"
+                width="32"
+                height="32"
               />
             </Box>
           </Link>

@@ -5,7 +5,7 @@ import terrainStone from "../../assets/sprites/terrain_stone.png"
 import terrainTree from "../../assets/sprites/terrain_tree.png"
 import terrainWater from "../../assets/sprites/terrain_water.png"
 import { RenderSettings } from "../../services/SettingsService"
-import { TileWithUnit } from "../../types/Tile"
+import { TileWithUnit } from "types"
 
 export const MapTerrains = (props: { terrainTiles: TileWithUnit[] }) => {
   let terrain: StaticImageData
@@ -33,7 +33,12 @@ export const MapTerrains = (props: { terrainTiles: TileWithUnit[] }) => {
             height={RenderSettings.tileSize + "px"}
             pointerEvents="none"
           >
-            <Image src={terrain} height="100%" width="100%" />
+            <Image
+              src={terrain}
+              height={RenderSettings.tileSize}
+              width={RenderSettings.tileSize}
+              alt="tile"
+            />
             {/* <MapObject object={terrain} /> */}
           </Flex>
         )

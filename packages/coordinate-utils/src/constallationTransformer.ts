@@ -1,5 +1,5 @@
-import { UnitConstellation } from 'database';
-import { Coordinate } from 'src/shared/types/coordinate.type';
+import { UnitConstellation } from "database";
+import { Coordinate } from "types";
 
 type TransformationFunction = (coordinates: Coordinate[]) => Coordinate[];
 
@@ -10,7 +10,7 @@ export const normaliseCoordinates: TransformationFunction = (coordinates) => {
   });
 
   return coordinates.map((coordinate) =>
-    addCoordinates([-minRow, -minCol], coordinate),
+    addCoordinates([-minRow, -minCol], coordinate)
   );
 };
 
@@ -21,7 +21,7 @@ export const transformCoordinates = (
   transformation: {
     rotatedClockwise?: number;
     mirrored?: boolean;
-  },
+  }
 ) => {
   let transformedCoordinates: Coordinate[] = coordinates;
   if (transformation.rotatedClockwise) {
@@ -41,28 +41,28 @@ export const addCoordinates = (x: Coordinate, y: Coordinate) =>
 /** Translates the coordinates to the target tile. */
 export const translateCoordinatesTo = (
   target: Coordinate,
-  constellation: Coordinate[],
+  constellation: Coordinate[]
 ) => {
   return constellation.map((coordinate) => addCoordinates(coordinate, target));
 };
 
 export const rotateClockwise: TransformationFunction = (
-  coordinates: Coordinate[],
+  coordinates: Coordinate[]
 ) => coordinates.map(([row, col]) => [col, -row]);
 
 export const rotateCounterClockwise: TransformationFunction = (
-  coordinates: Coordinate[],
+  coordinates: Coordinate[]
 ) => coordinates.map(([row, col]) => [-col, row]);
 
 export const mirrorAlongYAxis: TransformationFunction = (
-  coordinates: Coordinate[],
+  coordinates: Coordinate[]
 ) => coordinates.map(([row, col]) => [-row, col]);
 
 export const mirrorAlongXAxis: TransformationFunction = (
-  coordinates: Coordinate[],
+  coordinates: Coordinate[]
 ) => coordinates.map(([row, col]) => [row, -col]);
 
-export type SeparatedCoordinates = [Coordinate['0'][], Coordinate['1'][]];
+export type SeparatedCoordinates = [Coordinate["0"][], Coordinate["1"][]];
 
 export const separateCoordinates = (coordinates: Coordinate[]) => {
   return coordinates.reduce(
@@ -71,19 +71,19 @@ export const separateCoordinates = (coordinates: Coordinate[]) => {
       acc[1].push(cur[1]);
       return acc;
     },
-    [[], []] as SeparatedCoordinates,
+    [[], []] as SeparatedCoordinates
   );
 };
 
 export const encodeUnitConstellation = (
   coordinates: Coordinate[],
-  value: number,
+  value: number
 ) => {
   const encoded: UnitConstellation | undefined = { ...UnitConstellation }[
-    coordinates.map(([row, col]) => `r${row}c${col}`).join('_') + '_v' + value
+    coordinates.map(([row, col]) => `r${row}c${col}`).join("_") + "_v" + value
   ];
   if (!encoded) {
-    throw new Error('Could not encode unit constellation');
+    throw new Error("Could not encode unit constellation");
   }
   return encoded;
 };
@@ -94,11 +94,11 @@ export interface Card {
 }
 
 export const decodeUnitConstellation = (
-  unitConstellationString: UnitConstellation,
+  unitConstellationString: UnitConstellation
 ) => {
-  const value = unitConstellationString.split('_v').pop();
+  const value = unitConstellationString.split("_v").pop();
   if (!value) {
-    throw new Error('Could not deencode unit constellation');
+    throw new Error("Could not deencode unit constellation");
   }
   const regexp = /r(?<row>[0-9]+)c(?<col>[0-9]+)_?/g;
   const regExpMatch = [...unitConstellationString.matchAll(regexp)];
@@ -106,7 +106,7 @@ export const decodeUnitConstellation = (
     value: parseInt(value),
     coordinates: regExpMatch.map((match) => {
       if (!match.groups) {
-        throw new Error('Could not deencode unit constellation');
+        throw new Error("Could not deencode unit constellation");
       }
       const coordinate: Coordinate = [
         parseInt(match.groups.row),

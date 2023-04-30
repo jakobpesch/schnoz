@@ -1,11 +1,7 @@
 import { Match } from "database"
 import Mousetrap from "mousetrap"
 import { useEffect, useMemo, useState } from "react"
-
-import {
-  Card,
-  decodeUnitConstellation,
-} from "../utils/constallationTransformer"
+import { Card, decodeUnitConstellation } from "coordinate-utils"
 
 export function useCards(match: Match | undefined, yourTurn: boolean) {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)

@@ -1,5 +1,5 @@
 import { Box, BoxProps, Center } from "@chakra-ui/react"
-import { Map, Match } from "database"
+import { Map } from "database"
 import { RenderSettings } from "../../services/SettingsService"
 
 interface MapContainerProps extends BoxProps {

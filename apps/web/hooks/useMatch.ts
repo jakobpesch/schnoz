@@ -1,15 +1,8 @@
-import {
-  GameSettings,
-  Map as SchnozMap,
-  Match,
-  Participant,
-  User,
-} from "database"
+import { coordinatesAreEqual } from "coordinate-utils"
+import { GameSettings, Match, Map as SchnozMap, User } from "database"
 import { useEffect, useState } from "react"
+import { ParticipantWithUser, TileWithUnit } from "types"
 import { socketApi } from "../services/SocketService"
-import { ParticipantWithUser } from "../types/Participant"
-import { TileWithUnit } from "../types/Tile"
-import { coordinatesAreEqual } from "../utils/coordinateUtils"
 
 export function useMatch(userId: User["id"], matchId: Match["id"]) {
   const [match, setMatch] = useState<Match>()

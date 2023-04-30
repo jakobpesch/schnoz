@@ -2,10 +2,10 @@ import { Fade, Flex, Heading, ScaleFade, VStack } from "@chakra-ui/react"
 import assert from "assert"
 import Image from "next/image"
 import { useEffect, useState } from "react"
+import { MatchRich } from "types"
 import { useUserId } from "../../pages/match/[id]"
 import { RenderSettings } from "../../services/SettingsService"
-import { MatchRich } from "../../types/Match"
-import { viewFactorWidth } from "./UIScoreView"
+import { scaled } from "./UIScoreView"
 
 export const UITurnChangeIndicator = (props: {
   activePlayer: MatchRich["activePlayer"]
@@ -50,11 +50,11 @@ export const UITurnChangeIndicator = (props: {
           <ScaleFade initialScale={0.5} in={isOpen} delay={0.5}>
             <VStack
               bg="gray.700"
-              borderWidth={viewFactorWidth(1)}
-              borderRadius={viewFactorWidth(10)}
-              spacing={viewFactorWidth(16)}
-              p={viewFactorWidth(10)}
-              m={viewFactorWidth(10)}
+              borderWidth={scaled(1)}
+              borderRadius={scaled(10)}
+              spacing={scaled(16)}
+              p={scaled(10)}
+              m={scaled(10)}
               boxShadow="dark-lg"
             >
               <Image
@@ -63,8 +63,8 @@ export const UITurnChangeIndicator = (props: {
                     props.activePlayer.playerNumber
                   ).unit
                 }
-                width={viewFactorWidth(1000)}
-                height={viewFactorWidth(1000)}
+                width={scaled(1000)}
+                height={scaled(1000)}
               />
               <Heading>
                 {yourTurn

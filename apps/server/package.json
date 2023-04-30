@@ -23,6 +23,9 @@
   "dependencies": {
     "tsconfig": "workspace:*",
     "database": "workspace:*",
+    "types": "workspace:*",
+    "game-logic": "workspace:*",
+    "coordinate-utils": "workspace:*",
     "@nestjs/common": "^9.3.8",
     "@nestjs/core": "^9.3.8",
     "@nestjs/event-emitter": "^1.4.1",

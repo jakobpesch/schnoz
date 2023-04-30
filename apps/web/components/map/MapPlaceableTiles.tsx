@@ -1,9 +1,9 @@
 import { Box } from "@chakra-ui/react"
-import { Coordinate2D } from "../../models/UnitConstellation.model"
+import { Coordinate } from "types"
 import { MapHighlights } from "./MapHighlights"
 
 interface MapPlaceableTilesProps {
-  placeableCoordinates: Coordinate2D[]
+  placeableCoordinates: Coordinate[]
 }
 export const MapPlaceableTiles = (props: MapPlaceableTilesProps) => (
   <MapHighlights
