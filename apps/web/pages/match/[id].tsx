@@ -1,9 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
+  Box,
   Button,
   Center,
+  Circle,
   Container,
+  HStack,
   Heading,
+  Kbd,
+  Stack,
   Text,
   VStack,
 } from "@chakra-ui/react"
@@ -17,6 +22,7 @@ import {
   TransformedConstellation,
   PlacementRuleName,
   TileWithUnit,
+  SpecialType,
 } from "types"
 import { MapContainer } from "../../components/map/MapContainer"
 import { MapFog } from "../../components/map/MapFog"
@@ -30,7 +36,7 @@ import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
 import { UILoggingView } from "../../components/ui/UILoggingView"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
 import { UIPreMatchView } from "../../components/ui/UIPreMatchView"
-import { UIScoreView } from "../../components/ui/UIScoreView"
+import { UIScoreView, scaled } from "../../components/ui/UIScoreView"
 import { UITurnsView } from "../../components/ui/UITurnsView"
 import { useCards } from "../../hooks/useCards"
 import { useMatch } from "../../hooks/useMatch"
@@ -48,6 +54,7 @@ import {
   UpdateGameSettingsPayload,
   socketApi,
 } from "../../services/SocketService"
+import { ArrowForwardIcon } from "@chakra-ui/icons"
 
 export function useUserId() {
   try {
@@ -350,8 +357,25 @@ const MatchView = () => {
     }
   }
 
+  const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
+    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1"
+  )
+
+  const availableBonusPoints = you.bonusPoints + (selectedCard?.value ?? 0)
+
+  const specialsCost = activatedSpecials.reduce((a, s) => a + s.cost, 0)
+  const bonusFromSelectedCard = selectedCard?.value ?? 0
+  const resultingBonusPoints =
+    you.bonusPoints + bonusFromSelectedCard - specialsCost
+  const setSpecial = (specialType: SpecialType, active: boolean) => {
+    if (active) {
+      setActivatedSpecials([expandBuildRadiusByOne])
+    } else {
+      setActivatedSpecials([])
+    }
+  }
   return (
-    <Container height="100vh" color="white">
+    <Container width="100vw" height="100vh" color="white">
       {isPreMatch && (
         <UIPreMatchView
           py="16"
@@ -372,6 +396,7 @@ const MatchView = () => {
           <MapContainer
             id="map-container"
             map={map}
+            bg="green"
             cursor={selectedCard ? "none" : "default"}
           >
             {isOngoing && /*!isLoadingMatch && */ !isUpdatingMatch && (
@@ -398,20 +423,114 @@ const MatchView = () => {
                     hide={isFinished}
                     specials={[expandBuildRadiusByOne]}
                     activeSpecials={activatedSpecials}
-                    setSpecial={(specialType, active) => {
-                      if (active) {
-                        setActivatedSpecials([expandBuildRadiusByOne])
-                      } else {
-                        setActivatedSpecials([])
-                      }
-                    }}
+                    setSpecial={setSpecial}
                     card={selectedCard}
                     onTileClick={onTileClick}
                   />
                 )
             }
           </MapContainer>
+          <Box
+            position="fixed"
+            left={scaled(4)}
+            top={scaled(120)}
+            cursor="default"
+          >
+            <Stack spacing={scaled(0)}>
+              <HStack
+                position="relative"
+                spacing={scaled(2)}
+                padding={scaled(2)}
+                color="gray.100"
+              >
+                <Circle size={scaled(8)} background="yellow.400">
+                  <Text
+                    fontSize={scaled(16)}
+                    fontWeight="bold"
+                    color="yellow.800"
+                  >
+                    {you.bonusPoints}
+                  </Text>
+                </Circle>
+                {(specialsCost || bonusFromSelectedCard) && (
+                  <>
+                    <ArrowForwardIcon width={scaled(8)} height={scaled(8)} />
+                    <Circle size={scaled(8)} background="yellow.400">
+                      <Text
+                        fontSize={scaled(16)}
+                        fontWeight="bold"
+                        color="yellow.800"
+                      >
+                        {resultingBonusPoints}
+                      </Text>
+                    </Circle>
+                  </>
+                )}
+              </HStack>
+              {selectedCard && (
+                <>
+                  {[
+                    { hotkey: "R", label: "Rotate" },
+                    { hotkey: "E", label: "Mirror" },
+                  ].map((s) => (
+                    <HStack key={s.label} padding={scaled(2)} color="gray.100">
+                      <Kbd
+                        borderColor="gray.100"
+                        fontSize={scaled(20)}
+                        userSelect="none"
+                      >
+                        <Text>{s.hotkey}</Text>
+                      </Kbd>
+                      <Text fontSize={scaled(16)} userSelect="none">
+                        {s.label}
+                      </Text>
+                    </HStack>
+                  ))}
 
+                  <HStack
+                    padding={scaled(2)}
+                    borderRadius={scaled(10)}
+                    borderWidth={scaled(2)}
+                    color={
+                      availableBonusPoints >= expandBuildRadiusByOne.cost
+                        ? "gray.100"
+                        : "gray.400"
+                    }
+                    opacity={
+                      availableBonusPoints >= expandBuildRadiusByOne.cost
+                        ? 1
+                        : 0.5
+                    }
+                    background={
+                      hasExpandBuildRaidusByOneActive ? "green.500" : "gray.700"
+                    }
+                    cursor="pointer"
+                    onClick={() => {
+                      if (availableBonusPoints >= expandBuildRadiusByOne.cost) {
+                        setSpecial(
+                          "EXPAND_BUILD_RADIUS_BY_1",
+                          !hasExpandBuildRaidusByOneActive
+                        )
+                      }
+                    }}
+                  >
+                    <Circle size={scaled(8)} background="yellow.400">
+                      <Text
+                        fontSize={scaled(16)}
+                        fontWeight="bold"
+                        color="yellow.800"
+                      >
+                        {expandBuildRadiusByOne.cost}
+                      </Text>
+                    </Circle>
+                    <Text fontSize={scaled(16)} userSelect="none">
+                      +1 Reach
+                    </Text>
+                  </HStack>
+                </>
+              )}
+            </Stack>
+          </Box>
           <UIScoreView
             participants={participants}
             connectedParticipants={connectedParticipants ?? []}

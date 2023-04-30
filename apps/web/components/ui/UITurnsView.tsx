@@ -111,8 +111,8 @@ export const UITurnsView = (props: {
                   <Image
                     src={turnUI.icon}
                     alt=""
-                    minWidth={scaled(10)}
-                    minHeight={scaled(10)}
+                    width={scaled(40)}
+                    height={scaled(40)}
                   />
                 </Flex>
               )

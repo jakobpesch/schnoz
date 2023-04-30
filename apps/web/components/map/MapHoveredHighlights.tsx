@@ -129,7 +129,13 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
 
   return (
     <>
-      <Box position="fixed" left={scaled(4)} top={scaled(100)} cursor="default">
+      {/* <Box
+        bg="red"
+        position="fixed"
+        left={scaled(4)}
+        top={scaled(100)}
+        cursor="default"
+      >
         <Stack spacing={scaled(0)}>
           <HStack
             position="relative"
@@ -199,7 +205,9 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
                 opacity={
                   availableBonusPoints >= expandBuildRadiusByOne.cost ? 1 : 0.5
                 }
-                bg={hasExpandBuildRaidusByOneActive ? "green.500" : "gray.700"}
+                background={
+                  hasExpandBuildRaidusByOneActive ? "green.500" : "gray.700"
+                }
                 cursor="pointer"
                 onClick={() => {
                   if (availableBonusPoints >= expandBuildRadiusByOne.cost) {
@@ -210,7 +218,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
                   }
                 }}
               >
-                <Circle size={scaled(8)} bg="yellow.400">
+                <Circle size={scaled(8)} background="yellow.400">
                   <Text
                     fontSize={scaled(16)}
                     fontWeight="bold"
@@ -226,7 +234,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
             </>
           )}
         </Stack>
-      </Box>
+      </Box> */}
 
       {hoveredCoordinates.map(([row, col]) => {
         return (
@@ -239,7 +247,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
             left={col * RenderSettings.tileSize + "px"}
             width={RenderSettings.tileSize + "px"}
             height={RenderSettings.tileSize + "px"}
-            bg={"whiteAlpha.500"}
+            background={"whiteAlpha.500"}
             opacity={0.6}
             onClick={() =>
               props.onTileClick(row, col, rotatedClockwise, mirrored)
@@ -254,6 +262,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
               height={RenderSettings.tileSize}
               width={RenderSettings.tileSize}
               alt="tile"
+              draggable={false}
             />
             {/* <MapObject
               object={
@@ -275,7 +284,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
             left={col * RenderSettings.tileSize + "px"}
             width={RenderSettings.tileSize + "px"}
             height={RenderSettings.tileSize + "px"}
-            bg={"whiteAlpha.500"}
+            background={"whiteAlpha.500"}
             opacity={0.6}
             onClick={() =>
               props.onTileClick(row, col, rotatedClockwise, mirrored)

@@ -28,14 +28,15 @@ export const MapUnits = (props: {
             width={RenderSettings.tileSize + "px"}
             height={RenderSettings.tileSize + "px"}
             pointerEvents="none"
-            // bg={color}
-            bg={
+            // background={color}
+            background={
               props.updatedUnitTiles.find((ut) =>
                 coordinatesAreEqual([ut.row, ut.col], [tile.row, tile.col])
               )
                 ? "rgba(0,0,0,0.2)"
                 : "rgba(0,0,0,0.1)"
             }
+            userSelect="none"
           >
             <Image
               src={unit}
