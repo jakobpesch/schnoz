@@ -71,7 +71,7 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                 minHeight={scaled(size)}
                 maxWidth={scaled(size)}
                 maxHeight={scaled(size)}
-                bg={index % 2 === 0 ? "green.800" : "green.900"}
+                background={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
             {[
@@ -130,7 +130,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image alt="" src={terrain} width="100%" height="100%" />
+                    <Image
+                      alt=""
+                      src={terrain}
+                      width={scaled(size)}
+                      height={scaled(size)}
+                    />
                   )}
                 </Flex>
               )
@@ -195,7 +200,7 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                 minHeight={scaled(size)}
                 maxWidth={scaled(size)}
                 maxHeight={scaled(size)}
-                bg={index % 2 === 0 ? "green.800" : "green.900"}
+                background={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
             {[
@@ -247,7 +252,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image alt="" src={terrain} width="100%" height="100%" />
+                    <Image
+                      alt=""
+                      src={terrain}
+                      width={scaled(size)}
+                      height={scaled(size)}
+                    />
                   )}
                 </Flex>
               )
@@ -316,7 +326,7 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                 minHeight={scaled(size)}
                 maxWidth={scaled(size)}
                 maxHeight={scaled(size)}
-                bg={index % 2 === 0 ? "green.800" : "green.900"}
+                background={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
             {[
@@ -403,7 +413,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image alt="" src={terrain} width="100%" height="100%" />
+                    <Image
+                      alt=""
+                      src={terrain}
+                      width={scaled(size)}
+                      height={scaled(size)}
+                    />
                   )}
                 </Flex>
               )
@@ -468,7 +483,7 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                 minHeight={scaled(size)}
                 maxWidth={scaled(size)}
                 maxHeight={scaled(size)}
-                bg={index % 2 === 0 ? "green.800" : "green.900"}
+                background={index % 2 === 0 ? "green.800" : "green.900"}
               />
             ))}
             {[
@@ -530,7 +545,12 @@ const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   {terrain && (
-                    <Image alt="" src={terrain} width="100%" height="100%" />
+                    <Image
+                      alt=""
+                      src={terrain}
+                      width={scaled(size)}
+                      height={scaled(size)}
+                    />
                   )}
                 </Flex>
               )
@@ -622,12 +642,12 @@ export const UIScoreView = (props: {
   return (
     <VStack position="fixed" top="0" right="0">
       <VStack
-        bg="gray.700"
+        background="gray.700"
         borderWidth={scaled(1)}
         borderRadius={scaled(10)}
         spacing={scaled(4)}
-        p={scaled(2)}
-        m={scaled(4)}
+        padding={scaled(2)}
+        margin={scaled(4)}
       >
         <HStack spacing={scaled(4)}>
           <Flex
@@ -694,9 +714,9 @@ export const UIScoreView = (props: {
                 return (
                   <VStack
                     key={"ruleEvals_" + ruleEvalsIndex}
-                    p={scaled(1)}
+                    padding={scaled(1)}
                     borderRadius={scaled(10)}
-                    bg={
+                    background={
                       ruleEvaluations[0].points === ruleEvaluations[1].points
                         ? "none"
                         : ruleEvaluations[0].points > ruleEvaluations[1].points
@@ -743,19 +763,15 @@ export const UIScoreView = (props: {
                         }
                         header={
                           <HStack>
-                            <Box
-                              minWidth={scaled(40)}
-                              minHeight={scaled(40)}
+                            <Image
+                              alt=""
+                              src={RenderSettings.getRuleAppearance(
+                                ruleEvaluations[0].type
+                              )}
                               width={scaled(40)}
                               height={scaled(40)}
-                            >
-                              <Image
-                                alt=""
-                                src={RenderSettings.getRuleAppearance(
-                                  ruleEvaluations[0].type
-                                )}
-                              />
-                            </Box>
+                            />
+
                             <Heading fontSize={scaled(25)}>
                               {RenderSettings.getRuleName(
                                 ruleEvaluations[0].type
