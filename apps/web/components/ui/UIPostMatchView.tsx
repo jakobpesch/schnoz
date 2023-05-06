@@ -25,8 +25,8 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
   return (
     <Center width="full">
       <VStack
-        p="1vw"
-        bg="gray.800"
+        padding="1vw"
+        background="gray.800"
         spacing="1vw"
         position="absolute"
         borderRadius="0.5vw"
@@ -38,16 +38,16 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
 
         {props.winner ? (
           <HStack>
-            <Box width={scaled(500)} height={scaled(500)}>
-              <Image
-                fill
-                src={
-                  RenderSettings.getPlayerAppearance(props.winner.playerNumber)
-                    .unit
-                }
-                alt=""
-              />
-            </Box>
+            <Image
+              src={
+                RenderSettings.getPlayerAppearance(props.winner.playerNumber)
+                  .unit
+              }
+              alt=""
+              width={scaled(100)}
+              height={scaled(100)}
+            />
+
             <Text>wins!</Text>
           </HStack>
         ) : (
@@ -63,7 +63,7 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
           Back to menu
         </Button>
         <Button
-          bg="#13C3FF"
+          background="#13C3FF"
           _hover={{ bg: "#47d1ff" }}
           leftIcon={
             <Image
