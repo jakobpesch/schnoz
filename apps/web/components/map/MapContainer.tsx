@@ -12,9 +12,6 @@ export const MapContainer = (props: MapContainerProps) => {
     x: 0,
     y: 0,
   })
-  if (!map) {
-    return null
-  }
   useEffect(() => {
     // mouse event that moves the map when mouse is down
     const moveMap = (e: MouseEvent) => {
@@ -50,6 +47,9 @@ export const MapContainer = (props: MapContainerProps) => {
       window.removeEventListener("mousemove", moveMap)
     }
   }, [])
+  if (!map) {
+    return null
+  }
   const { rowCount, colCount } = map
   const mapWidth = RenderSettings.tileSize * rowCount
   const mapHeight = RenderSettings.tileSize * colCount

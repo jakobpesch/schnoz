@@ -65,6 +65,7 @@ export const UITurnChangeIndicator = (props: {
                 }
                 width={scaled(1000)}
                 height={scaled(1000)}
+                alt=""
               />
               <Heading>
                 {yourTurn
