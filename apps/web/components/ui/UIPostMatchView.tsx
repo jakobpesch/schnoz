@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  Center,
-  Heading,
-  HStack,
-  Text,
-  VStack,
-} from "@chakra-ui/react"
+import { Button, Center, Heading, HStack, Text, VStack } from "@chakra-ui/react"
 import { Participant } from "database"
 import Image from "next/image"
 import Link from "next/link"
