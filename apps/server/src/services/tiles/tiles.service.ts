@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Tile, Prisma } from 'database';
+import { Prisma } from 'database';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,6 +9,7 @@ export class TilesService {
   async findOne(tileWhereUniqueInput: Prisma.TileWhereUniqueInput) {
     const tile = await this.prisma.tile.findUnique({
       where: tileWhereUniqueInput,
+      include: { unit: true },
     });
     if (!tile) {
       throw new NotFoundException();
@@ -56,7 +57,7 @@ export class TilesService {
     });
   }
 
-  async deleteTile(where: Prisma.TileWhereUniqueInput) {
+  async delete(where: Prisma.TileWhereUniqueInput) {
     return await this.prisma.tile.delete({
       where,
     });

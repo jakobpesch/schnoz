@@ -469,7 +469,7 @@ export class MatchInstance {
     };
     this.matchLogService.create({
       matchId: this.Id,
-      message: `Player  ${
+      message: `Player ${
         this.activePlayer.id
       } placed units on tiles ${translatedCoordinates.map(
         ([row, col]) => `(${row},${col})`,

@@ -8,8 +8,22 @@ import { TilesService } from '../tiles/tiles.service';
 import { UsersService } from '../users/users.service';
 import { MatchGateway } from './matches.gateway';
 import { MatchesService } from './matches.service';
+import { MatchesController } from './matches.controller';
+import { MapsController } from '../maps/maps.controller';
+import { GameSettingsController } from '../game-settings/game-settings.controller';
+import { TilesController } from '../tiles/tiles.controller';
+import { UsersController } from '../users/users.controller';
+import { MatchLogsController } from '../match-logs/match-logs.controller';
 
 @Module({
+  controllers: [
+    MatchesController,
+    MapsController,
+    GameSettingsController,
+    TilesController,
+    UsersController,
+    MatchLogsController,
+  ],
   providers: [
     MatchGateway,
     MatchesService,

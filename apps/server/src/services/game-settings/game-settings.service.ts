@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { GameSettings, Prisma } from 'database';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from 'database';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()

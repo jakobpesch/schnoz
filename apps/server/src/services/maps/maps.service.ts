@@ -7,9 +7,14 @@ export class MapsService {
   constructor(private prisma: PrismaService) {}
 
   async findOne(mapWhereUniqueInput: Prisma.MapWhereUniqueInput) {
-    return await this.prisma.map.findUnique({
+    const map = await this.prisma.map.findUnique({
       where: mapWhereUniqueInput,
     });
+
+    if (!map) {
+      throw new NotFoundException();
+    }
+    return map;
   }
 
   async findMany(params: {

@@ -21,5 +21,6 @@ export * from "./src/special/special-types.const";
 export * from "./src/special/special.interface";
 export * from "./src/special/special.type-guard";
 export * from "./src/tile-with-units.type";
+export * from "./src/user-without-hash.type";
 export * from "./src/transformed-constellation.interface";
 export * from "./src/tile-lookup.type";
