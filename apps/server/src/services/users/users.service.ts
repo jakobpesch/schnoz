@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from 'database';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, User } from 'database';
 import { PrismaService } from '../prisma/prisma.service';
+import bcrypt from 'bcrypt';
+import { faker } from '@faker-js/faker';
+import { UserWithoutHash } from 'types';
 
 const withoutHashSelect = {
   select: {
@@ -14,6 +22,55 @@ const withoutHashSelect = {
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  async createGuestUser() {
+    const name = this.generateRandomName();
+
+    const user = await this.prisma.user.create({
+      data: { name },
+    });
+
+    return user;
+  }
+
+  async register(params: {
+    guestUserId: User['id'];
+    email: string;
+    name: string;
+    password: string;
+  }): Promise<UserWithoutHash> {
+    const { guestUserId, email, password, name } = params;
+
+    const isValidEmail = (email: string) => {
+      const re = /\S+@\S+\.\S+/;
+      return re.test(email);
+    };
+
+    if (!isValidEmail(email)) {
+      throw new BadRequestException('Invalid email');
+    }
+
+    try {
+      const salt = await bcrypt.genSalt();
+      const hash = await bcrypt.hash(password, salt);
+      const updatedUser = await this.prisma.user.update({
+        where: { id: guestUserId },
+        data: {
+          email,
+          hash,
+          name,
+        },
+        ...withoutHashSelect,
+      });
+      return updatedUser;
+    } catch (error: any) {
+      const RECORD_TO_UPDATE_NOT_FOUND_ERROR_CODE = 'P2025';
+      if (error.code === RECORD_TO_UPDATE_NOT_FOUND_ERROR_CODE) {
+        throw new BadRequestException();
+      }
+      throw new InternalServerErrorException();
+    }
+  }
+
   async findOne(userWhereUniqueInput: Prisma.UserWhereUniqueInput) {
     const user = await this.prisma.user.findUnique({
       where: userWhereUniqueInput,
@@ -26,12 +83,15 @@ export class UsersService {
   }
 
   async findOneWithHash(userWhereUniqueInput: Prisma.UserWhereUniqueInput) {
+    console.log('findOneWithHash', userWhereUniqueInput);
     const user = await this.prisma.user.findUnique({
       where: userWhereUniqueInput,
     });
     if (!user) {
+      console.log('findOneWithHash user not found');
       throw new NotFoundException();
     }
+    console.log('findOneWithHash user found', user);
     return user;
   }
 
@@ -77,5 +137,17 @@ export class UsersService {
       where,
       ...withoutHashSelect,
     });
+  }
+
+  private generateRandomName() {
+    const capitalize = (string: string) =>
+      string.charAt(0).toUpperCase() + string.slice(1);
+
+    const adjective = capitalize(
+      faker.word.adjective({ length: { min: 3, max: 6 } }),
+    );
+    const noun = capitalize(faker.word.noun({ length: { min: 3, max: 6 } }));
+
+    return adjective + ' ' + noun;
   }
 }

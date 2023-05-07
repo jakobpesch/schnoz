@@ -21,21 +21,27 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "tsconfig": "workspace:*",
-    "database": "workspace:*",
-    "types": "workspace:*",
-    "game-logic": "workspace:*",
-    "coordinate-utils": "workspace:*",
+    "@faker-js/faker": "^7.6.0",
     "@nestjs/common": "^9.3.8",
+    "@nestjs/config": "^2.3.1",
     "@nestjs/core": "^9.3.8",
     "@nestjs/event-emitter": "^1.4.1",
+    "@nestjs/jwt": "^10.0.3",
+    "@nestjs/passport": "^9.0.3",
     "@nestjs/platform-express": "^9.3.8",
     "@nestjs/platform-socket.io": "^9.3.8",
     "@nestjs/websockets": "^9.3.8",
     "@prisma/client": "^4.10.1",
+    "@types/bcrypt": "^5.0.0",
+    "bcrypt": "^5.1.0",
+    "coordinate-utils": "workspace:*",
+    "database": "workspace:*",
+    "game-logic": "workspace:*",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
-    "socket.io": "^4.6.0"
+    "socket.io": "^4.6.0",
+    "tsconfig": "workspace:*",
+    "types": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.2.0",

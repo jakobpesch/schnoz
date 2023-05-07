@@ -12,7 +12,6 @@ import { MatchesController } from './matches.controller';
 import { MapsController } from '../maps/maps.controller';
 import { GameSettingsController } from '../game-settings/game-settings.controller';
 import { TilesController } from '../tiles/tiles.controller';
-import { UsersController } from '../users/users.controller';
 import { MatchLogsController } from '../match-logs/match-logs.controller';
 
 @Module({
@@ -21,7 +20,6 @@ import { MatchLogsController } from '../match-logs/match-logs.controller';
     MapsController,
     GameSettingsController,
     TilesController,
-    UsersController,
     MatchLogsController,
   ],
   providers: [

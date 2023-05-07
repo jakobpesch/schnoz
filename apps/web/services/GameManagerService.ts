@@ -22,6 +22,11 @@ export const BASE_URL =
     ? "http://localhost:1337/api"
     : "https://schnoz-web-jakobpesch.vercel.app/api"
 
+export const BASE_API_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://schnoz-web-jakobpesch.vercel.app/api"
+
 export const signInAnonymously = async () => {
   const options = {
     method: "POST",
@@ -51,7 +56,7 @@ export const updateUser = async (
     body: JSON.stringify(payload),
   }
 
-  const response = await fetch(BASE_URL + "/user/" + userId, options)
+  const response = await fetch(BASE_API_URL + "/auth/login" + userId, options)
 
   if (response.status !== 200) {
     throw new Error("Failed to update user")
