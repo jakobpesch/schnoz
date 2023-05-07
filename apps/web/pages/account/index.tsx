@@ -17,7 +17,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import useSWR, { mutate } from "swr"
 import { getCookie } from "../../services/CookieService"
-import { updateUser } from "../../services/GameManagerService"
+import { registerUser } from "../../services/GameManagerService"
 import { fetcher } from "../../services/swrUtils"
 
 //@ts-ignore
@@ -90,7 +90,7 @@ const UserPage: NextPage = () => {
     if (user && payload.email && payload.name && payload.password) {
       mutate(
         async () =>
-          await updateUser(user.id, {
+          await registerUser(user.id, {
             email: payload.email!,
             name: payload.name!,
             password: payload.password,

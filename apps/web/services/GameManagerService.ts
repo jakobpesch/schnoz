@@ -42,7 +42,7 @@ export const signInAnonymously = async () => {
   }
 }
 
-export const updateUser = async (
+export const registerUser = async (
   userId: string,
   payload: {
     email: string
@@ -56,7 +56,10 @@ export const updateUser = async (
     body: JSON.stringify(payload),
   }
 
-  const response = await fetch(BASE_API_URL + "/auth/login" + userId, options)
+  const response = await fetch(
+    `${BASE_API_URL}/users/${userId}/register`,
+    options
+  )
 
   if (response.status !== 200) {
     throw new Error("Failed to update user")
