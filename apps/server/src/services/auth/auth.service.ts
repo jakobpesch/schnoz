@@ -1,15 +1,14 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import { User } from 'database';
 import { UsersService } from 'src/services/users/users.service';
 import { jwtConstants } from './auth.constants';
-import { User } from 'database';
+import { UserWithoutHash } from 'types';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +31,7 @@ export class AuthService {
     return user;
   }
 
-  generateToken(user: User) {
+  generateToken(user: UserWithoutHash) {
     return {
       access_token: this.jwtService.sign({
         email: user.email,

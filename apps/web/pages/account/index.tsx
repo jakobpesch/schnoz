@@ -30,6 +30,9 @@ async function sendReupdateUserquest(url, { arg }) {
 export const useUser = () => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<User>(() => {
     const userId = getCookie("userId")
+    if (!userId) {
+      throw new Error("No id")
+    }
     return "/api/user/" + userId
   }, fetcher)
 
@@ -90,7 +93,8 @@ const UserPage: NextPage = () => {
     if (user && payload.email && payload.name && payload.password) {
       mutate(
         async () =>
-          await registerUser(user.id, {
+          await registerUser({
+            guestUserId: user.id,
             email: payload.email!,
             name: payload.name!,
             password: payload.password,

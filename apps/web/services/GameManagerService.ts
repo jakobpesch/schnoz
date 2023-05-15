@@ -42,47 +42,68 @@ export const signInAnonymously = async () => {
   }
 }
 
-export const registerUser = async (
-  userId: string,
-  payload: {
-    email: string
-    name: string
-    password: string
+export const registerGuestUser: () => Promise<string> = async () => {
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
   }
-) => {
+
+  const response = await fetch(`${BASE_API_URL}/users/register/guest`, options)
+
+  if (response.status !== 201) {
+    throw new Error("Failed to create guest user")
+  }
+
+  const { access_token } = await response.json()
+  setCookie("jwt", access_token, 30)
+  return access_token
+}
+export const registerUser = async (params: {
+  guestUserId?: string
+  email: string
+  name: string
+  password: string
+}) => {
+  const { guestUserId, email, name, password } = params
   const options = {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ id: guestUserId, email, name, password }),
   }
 
-  const response = await fetch(
-    `${BASE_API_URL}/users/${userId}/register`,
-    options
-  )
+  const response = await fetch(`${BASE_API_URL}/users/register`, options)
 
   if (response.status !== 200) {
     throw new Error("Failed to update user")
   }
 
-  return await response.json()
+  const { access_token } = await response.json()
+  setCookie("jwt", access_token, 30)
+  return access_token
 }
-export const login = async (payload: { email: string; password: string }) => {
+export const loginUser = async (payload: {
+  email: string
+  password: string
+}) => {
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   }
 
-  const response = await fetch(BASE_URL + "/user/login", options)
+  const response = await fetch(BASE_API_URL + "/auth/login", options)
 
   if (response.status !== 200) {
+    console.log("test")
+
     throw new Error("Login failed", {
       cause: { status: response.status, message: await response.text() },
     })
   }
+  const { access_token } = await response.json()
+  setCookie("jwt", access_token, 30)
 
-  return await response.json()
+  return access_token
 }
 
 export const getMatches = async () => {
