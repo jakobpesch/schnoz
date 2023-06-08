@@ -40,9 +40,9 @@ export function usePlaceableCoordinates(props: {
         return []
       }
 
-      const isCardWithSingleUnit =
-        selectedCard?.coordinates.length === 1 &&
-        coordinatesAreEqual(selectedCard.coordinates[0], [0, 0])
+      // const isCardWithSingleUnit =
+      //   selectedCard?.coordinates.length === 1 &&
+      //   coordinatesAreEqual(selectedCard.coordinates[0], [0, 0])
 
       // if (isCardWithSingleUnit) {
       //   const visibleAndFreeTiles: Coordinate[] = Object.values(tileLookup)
@@ -73,51 +73,9 @@ export function usePlaceableCoordinates(props: {
         )
         .filter((v) => typeof v.error === "undefined")
         .map((v) => v.translatedCoordinates?.[0] ?? null)
-        .filter(Boolean)
-      console.log(placeableCoordiantes)
+        .filter(Boolean) as Coordinate[]
 
       return placeableCoordiantes
-
-      const alliedTiles =
-        tilesWithUnits.filter(
-          (tile) =>
-            tile.unit?.ownerId === match.activePlayerId ||
-            tile?.unit?.type === UnitType.MAIN_BUILDING
-        ) ?? []
-
-      let placeableCoordiantes2 = getAdjacentCoordinatesOfConstellation(
-        alliedTiles.map((tile) => [tile.row, tile.col])
-      ).filter((coordinate) => {
-        const hasTerrain =
-          tileLookup[buildTileLookupId(coordinate)]?.terrain ?? false
-        const hasUnit = tileLookup[buildTileLookupId(coordinate)]?.unit ?? false
-        return !hasTerrain && !hasUnit
-      })
-
-      const usesSpecial = activatedSpecials.find((special) => {
-        return (
-          special.type === "EXPAND_BUILD_RADIUS_BY_1" &&
-          (participants.find((player) => player.id === match.activePlayerId)
-            ?.bonusPoints ?? 0) +
-            (selectedCard?.value ?? 0) >=
-            special.cost
-        )
-      })
-      if (usesSpecial) {
-        placeableCoordiantes2 = [
-          ...placeableCoordiantes,
-          ...getAdjacentCoordinatesOfConstellation(
-            placeableCoordiantes2
-          ).filter((coordinate) => {
-            const hasTerrain =
-              tileLookup[buildTileLookupId(coordinate)]?.terrain ?? false
-            const hasUnit =
-              tileLookup[buildTileLookupId(coordinate)]?.unit ?? false
-            return !hasTerrain && !hasUnit
-          }),
-        ]
-      }
-      return placeableCoordiantes2
     }, [match, tilesWithUnits, selectedCard, activatedSpecials]) ?? []
   return { placeableCoordinates }
 }
