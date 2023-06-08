@@ -34,18 +34,20 @@ export class MatchesService {
     cursor?: Prisma.MatchWhereUniqueInput;
     where?: Prisma.MatchWhereInput;
     orderBy?: Prisma.MatchOrderByWithRelationInput;
+    include?: Prisma.MatchInclude;
   }): Promise<Match[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.match.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 
-  async create(data: Prisma.MatchCreateInput): Promise<Match> {
+  async create(data: Prisma.MatchUncheckedCreateInput): Promise<Match> {
     return this.prisma.match.create({
       data,
     });

@@ -19,14 +19,14 @@ export const RenderSettings = {
     RenderSettings.uiScale = scale
   },
   getPlayerAppearance: (playerNumber?: Participant["playerNumber"]) => {
-    let unit: StaticImageData = bob
+    let unit: StaticImageData
     let color: string
     if (playerNumber === 0) {
       unit = bob
-      color = "pink.900"
+      color = "pink.500"
     } else if (playerNumber === 1) {
       unit = maurice
-      color = "teal.800"
+      color = "teal.500"
     } else {
       unit = house
       color = "gray.700"

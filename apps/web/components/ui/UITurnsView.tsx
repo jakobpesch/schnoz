@@ -5,7 +5,6 @@ import { defaultGame } from "game-logic"
 import Image, { StaticImageData } from "next/image"
 import { useMemo } from "react"
 import { RenderSettings } from "../../services/SettingsService"
-
 import { scaled } from "./UIScoreView"
 
 const getTurns = (

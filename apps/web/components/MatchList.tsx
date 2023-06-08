@@ -1,3 +1,4 @@
+import { MinusIcon } from "@chakra-ui/icons"
 import {
   Badge,
   Button,
@@ -13,31 +14,33 @@ import {
   Tr,
 } from "@chakra-ui/react"
 import { MatchStatus } from "database"
-import { MatchWithPlayers } from "types"
-import { MinusIcon } from "@chakra-ui/icons"
+import { MatchWithPlayersAndUsers } from "types"
+import useAuth from "../hooks/useAuth"
+import { getRelativeTime } from "../services/DateService"
 
 interface MatchListProps {
-  userId: string
-  matches: MatchWithPlayers[]
+  matches: MatchWithPlayersAndUsers[]
   onJoinClick: (id: string) => void
   onDeleteClick: (id: string) => void
   onGoToMatchClick: (id: string) => void
 }
 
 const MatchList = (props: MatchListProps) => {
-  const { userId, matches, onJoinClick, onDeleteClick, onGoToMatchClick } =
-    props
-  const canJoin = (match: MatchWithPlayers) => {
+  const { profile } = useAuth()
+  const { matches, onJoinClick, onDeleteClick, onGoToMatchClick } = props
+  const canJoin = (match: MatchWithPlayersAndUsers) => {
     return (
       match.players.length === 1 &&
-      !match.players.some((player) => player.userId === userId)
+      !match.players.some((player) => player.userId === profile?.sub)
     )
   }
-  const canDelete = (match: MatchWithPlayers, userId: string) => {
-    return match.createdById === userId
+  const canDelete = (match: MatchWithPlayersAndUsers) => {
+    return match.createdById === profile?.sub
   }
-  const hasJoined = (match: MatchWithPlayers, userId: string) => {
-    return match.players.some((participant) => participant.userId === userId)
+  const hasJoined = (match: MatchWithPlayersAndUsers) => {
+    return match.players.some(
+      (participant) => participant.userId === profile?.sub
+    )
   }
   if (matches.length === 0) {
     return (
@@ -53,7 +56,6 @@ const MatchList = (props: MatchListProps) => {
         <Thead>
           <Tr>
             <Th>Created</Th>
-            <Th>Match ID</Th>
             <Th>Status</Th>
             <Th>Created by</Th>
             <Th>Players</Th>
@@ -62,16 +64,16 @@ const MatchList = (props: MatchListProps) => {
         </Thead>
         <Tbody>
           {matches?.map((match) => {
-            const [date, time] = new Date(match.createdAt)
-              .toLocaleString()
-              .split(", ")
+            const relativeTime = getRelativeTime(match.createdAt)
+            const createdByName = match.players.find(
+              (player) => match.createdById === player.userId
+            )?.user.name
             return (
               <Tr key={match.id}>
                 <Td>
-                  <Text>{date}</Text>
-                  <Text>{time}</Text>
+                  <Text>{relativeTime}</Text>
                 </Td>
-                <Td>{match.id.slice(-5)}</Td>
+
                 <Td>
                   <Badge
                     colorScheme={
@@ -85,11 +87,7 @@ const MatchList = (props: MatchListProps) => {
                     {match.status}
                   </Badge>
                 </Td>
-                <Td>
-                  {match.createdById === userId
-                    ? "Me"
-                    : match.createdById.slice(-5)}
-                </Td>
+                <Td>{createdByName}</Td>
                 <Td>{match.players.length} / 2</Td>
 
                 <Td>
@@ -97,25 +95,22 @@ const MatchList = (props: MatchListProps) => {
                     {canJoin(match) && (
                       <Button
                         variant="link"
-                        // disabled={!canJoin(match)}
                         onClick={() => onJoinClick(match.id)}
                       >
                         Join
                       </Button>
                     )}
-                    {canDelete(match, userId) && (
+                    {canDelete(match) && (
                       <Button
                         variant="link"
-                        // disabled={!canDelete(match, userId)}
                         onClick={() => onDeleteClick(match.id)}
                       >
                         Delete
                       </Button>
                     )}
-                    {hasJoined(match, userId) && (
+                    {hasJoined(match) && (
                       <Button
                         variant="link"
-                        // disabled={!hasJoined(match, userId)}
                         onClick={() => onGoToMatchClick(match.id)}
                       >
                         Go to match

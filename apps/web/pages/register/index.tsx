@@ -9,12 +9,12 @@ import {
 } from "@chakra-ui/react"
 import { Field, Formik } from "formik"
 import Link from "next/link"
-import { registerUser } from "../../services/GameManagerService"
 import {
   validateEmail,
   validateName,
   validatePassword,
 } from "../../components/form/form-validators"
+import useAuth from "../../hooks/useAuth"
 
 interface RegisterFormPayload {
   email: string
@@ -28,6 +28,7 @@ const initialValues: RegisterFormPayload = {
 }
 
 export default function RegisterPage() {
+  const { register } = useAuth()
   return (
     <Stack width="full" height="100vh" justify="center" align="center">
       <Heading>Register</Heading>
@@ -36,12 +37,9 @@ export default function RegisterPage() {
         // validate={validate}
         onSubmit={async (values, { setSubmitting, setStatus }) => {
           const { email, password, name } = values
-          await registerUser({
-            email,
-            name,
-            password,
-          })
-          setSubmitting(false)
+          register({ email, password, name }).finally(() =>
+            setSubmitting(false)
+          )
         }}
       >
         {({
@@ -56,7 +54,7 @@ export default function RegisterPage() {
           /* and other goodies */
         }) => (
           <form onSubmit={handleSubmit}>
-            <Stack maxWidth="300">
+            <Stack width="300" maxWidth="300">
               <FormControl
                 isInvalid={(!values.email || !!errors.email) && touched.email}
               >

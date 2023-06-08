@@ -17,6 +17,7 @@ import {
   ServerEvent,
   Special,
   isSpecial,
+  isErrorResponse,
 } from 'types';
 import { GameSettingsService } from '../game-settings/game-settings.service';
 import { AppLoggerService } from '../logger/logger.service';
@@ -68,6 +69,9 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     const { matchId, userId } = client.handshake.query;
+
+    this.logger.verbose(matchId + ' ---------- ' + userId);
+
     if (typeof matchId !== 'string' || typeof userId !== 'string') {
       this.logger.error(
         `Incomplete connection query. userId: "${userId}", match: "${matchId}"`,
@@ -98,6 +102,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.clients.set(client.id, { userId, matchInstance });
       this.matches.set(matchId, matchInstance);
       try {
+        this.logger.verbose(`Initializing match instance for "${matchId}"`);
         await matchInstance.init();
       } catch (e) {
         this.logger.error(e);
@@ -111,6 +116,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.clients.set(client.id, { userId, matchInstance });
     }
     try {
+      this.logger.verbose('connecting client', client, userId);
+
       await matchInstance.connect(client, userId);
       await this.cleanup();
     } catch (e) {
@@ -181,7 +188,12 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     try {
-      await matchInstance.startMatch(userId);
+      const apiResponse = await matchInstance.startMatch(userId);
+      if (isErrorResponse(apiResponse)) {
+        this.logger.error(apiResponse);
+        this.server.to(client.id).emit(ServerEvent.ERROR, apiResponse);
+        return;
+      }
       this.server.to(matchInstance.Match.id).emit(ServerEvent.STARTED_MATCH, {
         match: matchInstance.Match,
         map: matchInstance.Map,
@@ -279,7 +291,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       unitConstellation: TransformedConstellation;
     },
   ) {
-    console.log('MAKE MOVE');
+    this.logger.verbose('MAKE MOVE');
 
     const {
       participantId,

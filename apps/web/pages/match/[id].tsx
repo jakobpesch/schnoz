@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { ArrowForwardIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -8,21 +9,24 @@ import {
   HStack,
   Heading,
   Kbd,
+  Spinner,
   Stack,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react"
 import { coordinatesAreEqual, getNewlyRevealedTiles } from "coordinate-utils"
 import { Participant, UnitType } from "database"
+import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useState } from "react"
 import {
   Coordinate,
-  TransformedConstellation,
   PlacementRuleName,
-  TileWithUnit,
   SpecialType,
+  TileWithUnit,
+  TransformedConstellation,
 } from "types"
 import { MapContainer } from "../../components/map/MapContainer"
 import { MapFog } from "../../components/map/MapFog"
@@ -33,20 +37,19 @@ import { MapTerrains } from "../../components/map/MapTerrains"
 import { MapUnits } from "../../components/map/MapUnits"
 import { UICardsView } from "../../components/ui/UICardsView"
 import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
-import { UILoggingView } from "../../components/ui/UILoggingView"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
 import { UIPreMatchView } from "../../components/ui/UIPreMatchView"
 import { UIScoreView, scaled } from "../../components/ui/UIScoreView"
+import { UITurnChangeIndicator } from "../../components/ui/UITurnChangeIndicator"
 import { UITurnsView } from "../../components/ui/UITurnsView"
+import useAuth from "../../hooks/useAuth"
 import { useCards } from "../../hooks/useCards"
 import { useMatch } from "../../hooks/useMatch"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
 import { usePlaceableCoordinates } from "../../hooks/usePlaceableCoordinates"
 import { useTiles } from "../../hooks/useTiles"
-import { getCookie } from "../../services/CookieService"
 import {
   Special,
-  checkConditionsForUnitConstellationPlacement,
   createMap,
   expandBuildRadiusByOne,
 } from "../../services/GameManagerService"
@@ -54,22 +57,13 @@ import {
   UpdateGameSettingsPayload,
   socketApi,
 } from "../../services/SocketService"
-import { ArrowForwardIcon } from "@chakra-ui/icons"
-
-export function useUserId() {
-  try {
-    return getCookie("userId")
-  } catch (e) {
-    return null
-  }
-}
 
 const MatchView = () => {
   const router = useRouter()
-  const userId = useUserId()
-
+  const { profile } = useAuth()
+  const userId = profile?.sub ?? ""
   const matchId = typeof router.query.id === "string" ? router.query.id : ""
-
+  const toast = useToast()
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
   const [isChangingTurns, setIsChangingTurns] = useState(false)
   const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
@@ -82,21 +76,14 @@ const MatchView = () => {
     tilesWithUnits,
     updatedTilesWithUnits,
     connectedParticipants,
-  } = useMatch(userId ?? "", matchId)
+  } = useMatch(userId, matchId)
 
   const you = participants?.find((player) => player.userId === userId)
+
   const activePlayer = participants?.find(
     (player) => player.id === match?.activePlayerId
   )
   const yourTurn = userId === activePlayer?.userId
-
-  const setStatus = (status: string) => {
-    setStatusLog([
-      new Date().toLocaleTimeString() + ": " + status,
-      ...statusLog,
-    ])
-  }
-  const [statusLog, setStatusLog] = useState<string[]>([])
 
   const [showRuleEvaluationHighlights, setShowRuleEvaluationHighlights] =
     useState<Coordinate[]>([])
@@ -104,21 +91,31 @@ const MatchView = () => {
   const { cards, selectedCard, setSelectedCard } = useCards(match, yourTurn)
   const { tileLookup, terrainTiles, unitTiles, fogTiles, halfFogTiles } =
     useTiles(tilesWithUnits)
-  const { placeableCoordinates } = usePlaceableCoordinates(
+  const { placeableCoordinates } = usePlaceableCoordinates({
     match,
+    map,
+    activePlayer,
     tilesWithUnits,
-    participants,
     yourTurn,
+    participants,
     selectedCard,
-    activatedSpecials
-  )
+    activatedSpecials,
+    you,
+  })
 
   const { isPreMatch, wasStarted, isOngoing, isFinished } = useMatchStatus(
     match?.status
   )
 
+  if (!match) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" />
+      </Center>
+    )
+  }
+
   if (!you) {
-    // you are not a participant of this match
     return (
       <Center height="100vh">
         <VStack>
@@ -225,8 +222,14 @@ const MatchView = () => {
           activatedSpecials
         )
 
+      console.log({ translatedCoordinates, error })
+
       if (error) {
-        setStatus(error.message)
+        toast({
+          title: error.message,
+          status: "info",
+          position: "bottom-left",
+        })
         return
       }
       const tilesWithUnitsClone = JSON.parse(
@@ -254,7 +257,6 @@ const MatchView = () => {
         getNewlyRevealedTiles(tileLookup, translatedCoordinates)
 
       if (revealedError) {
-        setStatus(revealedError.message)
         return
       }
 
@@ -312,9 +314,7 @@ const MatchView = () => {
       setIsUpdatingMatch(false)
       setSelectedCard(null)
       setActivatedSpecials([])
-      setStatus(`Placed unit on tile (${row}|${col})`)
     } catch (e: any) {
-      setStatus(e.message)
       console.error(e.message)
     }
   }
@@ -342,19 +342,13 @@ const MatchView = () => {
   ) => {
     try {
       await socketApi.updateGameSettings(settings)
-      setStatus("Updated Settings")
-    } catch (e: any) {
-      setStatus(e.message)
-    }
+    } catch (e: any) {}
   }
 
   const handleKick = async (participant: Participant) => {
     try {
       await socketApi.kickParticipant(participant)
-      setStatus("Kicked Participant")
-    } catch (e: any) {
-      setStatus(e.message)
-    }
+    } catch (e: any) {}
   }
 
   const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
@@ -430,107 +424,117 @@ const MatchView = () => {
                 )
             }
           </MapContainer>
-          <Box
-            position="fixed"
-            left={scaled(4)}
-            top={scaled(120)}
-            cursor="default"
-          >
-            <Stack spacing={scaled(0)}>
-              <HStack
-                position="relative"
-                spacing={scaled(2)}
-                padding={scaled(2)}
-                color="gray.100"
-              >
-                <Circle size={scaled(8)} background="yellow.400">
-                  <Text
-                    fontSize={scaled(16)}
-                    fontWeight="bold"
-                    color="yellow.800"
-                  >
-                    {you.bonusPoints}
-                  </Text>
-                </Circle>
-                {(specialsCost || bonusFromSelectedCard) && (
+          {!isFinished && (
+            <Box
+              position="fixed"
+              left={scaled(4)}
+              top={scaled(120)}
+              cursor="default"
+            >
+              <Stack spacing={scaled(0)}>
+                <HStack
+                  position="relative"
+                  spacing={scaled(2)}
+                  padding={scaled(2)}
+                  color="gray.100"
+                >
+                  <Circle size={scaled(8)} background="yellow.400">
+                    <Text
+                      fontSize={scaled(16)}
+                      fontWeight="bold"
+                      color="yellow.800"
+                    >
+                      {you.bonusPoints}
+                    </Text>
+                  </Circle>
+                  {(specialsCost || bonusFromSelectedCard) && (
+                    <>
+                      <ArrowForwardIcon width={scaled(8)} height={scaled(8)} />
+                      <Circle size={scaled(8)} background="yellow.400">
+                        <Text
+                          fontSize={scaled(16)}
+                          fontWeight="bold"
+                          color="yellow.800"
+                        >
+                          {resultingBonusPoints}
+                        </Text>
+                      </Circle>
+                    </>
+                  )}
+                </HStack>
+                {selectedCard && (
                   <>
-                    <ArrowForwardIcon width={scaled(8)} height={scaled(8)} />
-                    <Circle size={scaled(8)} background="yellow.400">
-                      <Text
-                        fontSize={scaled(16)}
-                        fontWeight="bold"
-                        color="yellow.800"
+                    {[
+                      { hotkey: "R", label: "Rotate" },
+                      { hotkey: "E", label: "Mirror" },
+                    ].map((s) => (
+                      <HStack
+                        key={s.label}
+                        padding={scaled(2)}
+                        color="gray.100"
                       >
-                        {resultingBonusPoints}
-                      </Text>
-                    </Circle>
-                  </>
-                )}
-              </HStack>
-              {selectedCard && (
-                <>
-                  {[
-                    { hotkey: "R", label: "Rotate" },
-                    { hotkey: "E", label: "Mirror" },
-                  ].map((s) => (
-                    <HStack key={s.label} padding={scaled(2)} color="gray.100">
-                      <Kbd
-                        borderColor="gray.100"
-                        fontSize={scaled(20)}
-                        userSelect="none"
-                      >
-                        <Text>{s.hotkey}</Text>
-                      </Kbd>
+                        <Kbd
+                          borderColor="gray.100"
+                          fontSize={scaled(20)}
+                          userSelect="none"
+                        >
+                          <Text>{s.hotkey}</Text>
+                        </Kbd>
+                        <Text fontSize={scaled(16)} userSelect="none">
+                          {s.label}
+                        </Text>
+                      </HStack>
+                    ))}
+
+                    <HStack
+                      padding={scaled(2)}
+                      borderRadius={scaled(10)}
+                      borderWidth={scaled(2)}
+                      color={
+                        availableBonusPoints >= expandBuildRadiusByOne.cost
+                          ? "gray.100"
+                          : "gray.400"
+                      }
+                      opacity={
+                        availableBonusPoints >= expandBuildRadiusByOne.cost
+                          ? 1
+                          : 0.5
+                      }
+                      background={
+                        hasExpandBuildRaidusByOneActive
+                          ? "green.500"
+                          : "gray.700"
+                      }
+                      cursor="pointer"
+                      onClick={() => {
+                        if (
+                          availableBonusPoints >= expandBuildRadiusByOne.cost
+                        ) {
+                          setSpecial(
+                            "EXPAND_BUILD_RADIUS_BY_1",
+                            !hasExpandBuildRaidusByOneActive
+                          )
+                        }
+                      }}
+                    >
+                      <Circle size={scaled(8)} background="yellow.400">
+                        <Text
+                          fontSize={scaled(16)}
+                          fontWeight="bold"
+                          color="yellow.800"
+                        >
+                          {expandBuildRadiusByOne.cost}
+                        </Text>
+                      </Circle>
                       <Text fontSize={scaled(16)} userSelect="none">
-                        {s.label}
+                        +1 Reach
                       </Text>
                     </HStack>
-                  ))}
-
-                  <HStack
-                    padding={scaled(2)}
-                    borderRadius={scaled(10)}
-                    borderWidth={scaled(2)}
-                    color={
-                      availableBonusPoints >= expandBuildRadiusByOne.cost
-                        ? "gray.100"
-                        : "gray.400"
-                    }
-                    opacity={
-                      availableBonusPoints >= expandBuildRadiusByOne.cost
-                        ? 1
-                        : 0.5
-                    }
-                    background={
-                      hasExpandBuildRaidusByOneActive ? "green.500" : "gray.700"
-                    }
-                    cursor="pointer"
-                    onClick={() => {
-                      if (availableBonusPoints >= expandBuildRadiusByOne.cost) {
-                        setSpecial(
-                          "EXPAND_BUILD_RADIUS_BY_1",
-                          !hasExpandBuildRaidusByOneActive
-                        )
-                      }
-                    }}
-                  >
-                    <Circle size={scaled(8)} background="yellow.400">
-                      <Text
-                        fontSize={scaled(16)}
-                        fontWeight="bold"
-                        color="yellow.800"
-                      >
-                        {expandBuildRadiusByOne.cost}
-                      </Text>
-                    </Circle>
-                    <Text fontSize={scaled(16)} userSelect="none">
-                      +1 Reach
-                    </Text>
-                  </HStack>
-                </>
-              )}
-            </Stack>
-          </Box>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
           <UIScoreView
             participants={participants}
             connectedParticipants={connectedParticipants ?? []}
@@ -579,7 +583,7 @@ const MatchView = () => {
             }}
           />
 
-          {/* {activePlayer && (
+          {activePlayer && (
             <UITurnChangeIndicator
               activePlayer={activePlayer}
               onChangingTurnsStart={() => {
@@ -589,10 +593,10 @@ const MatchView = () => {
                 setIsChangingTurns(false)
               }}
             />
-          )} */}
+          )}
         </>
       )}
-      <UILoggingView statusLog={statusLog} />
+      {/* <UILoggingView statusLog={[]} /> */}
       <UILoadingIndicator
         loading={/*!isLoadingMatch ||  isLoadingUpdate || */ isUpdatingMatch}
       />

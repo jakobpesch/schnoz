@@ -1,47 +1,20 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next"
 import assert from "assert"
 import { shuffleArray } from "coordinate-utils"
 import { Match, MatchStatus, Participant, UnitConstellation } from "database"
-import { MatchRich, matchRich } from "types"
+import type { NextApiRequest, NextApiResponse } from "next"
+import { API_ERROR_CODES, matchRich } from "types"
 import { prisma } from "../../../services/PrismaService"
 
-const checkConditionsForCreation = (match: MatchRich, userId: string) => {
-  if (match.status === MatchStatus.STARTED) {
-    return { error: "Match has already started" }
-  }
-
-  if (match.createdById !== userId) {
-    return { error: "Only the match's creator can start the match" }
-  }
-
-  if (!match.map) {
-    return { error: "No map" }
-  }
-
-  if (match.players.length < 2) {
-    return { error: "Match is not full yet" }
-  }
-  if (!match.gameSettings) {
-    return { error: "No game settings" }
-  }
-
-  const isEven = (x: number) => x % 2 === 0
-  if (isEven(match.gameSettings.mapSize)) {
-    return { error: "mapSize needs to be an odd integer" }
-  }
-
-  return { error: null }
-}
 const checkConditionsForJoining = (
   participants: Participant[],
   userId: string
 ) => {
+  if (participants.some((participant) => participant.userId === userId)) {
+    return { error: API_ERROR_CODES.CANNOT_JOIN_TWICE }
+  }
   if (participants.length === 2) {
     return { error: "Match already full" }
-  }
-  if (participants.some((participant) => participant.userId === userId)) {
-    return { error: "Cannot join twice" }
   }
   return { error: null }
 }
@@ -60,12 +33,10 @@ export default async function handler(
 
   switch (method) {
     case "PUT":
-      console.time("getMatch")
       const richMatch = await prisma.match.findUnique({
         where: { id: matchId },
         ...matchRich,
       })
-      console.timeEnd("getMatch")
       if (richMatch === null) {
         res.status(404).end(`Match with id ${matchId} not found.`)
         return
@@ -83,7 +54,7 @@ export default async function handler(
           )
 
           if (joinError) {
-            res.status(500).end(joinError)
+            res.status(500).json({ error: joinError })
             break
           }
 
@@ -104,15 +75,15 @@ export default async function handler(
           break
 
         case "start":
-          const { error: startError } = checkConditionsForCreation(
-            richMatch,
-            body.userId
-          )
+          // const { error: startError } = checkConditionsForCreation(
+          //   richMatch,
+          //   body.userId
+          // )
 
-          if (startError) {
-            res.status(500).end(startError)
-            break
-          }
+          // if (startError) {
+          //   res.status(500).end(startError)
+          //   break
+          // }
 
           const status = MatchStatus.STARTED
           const startedAt = new Date()

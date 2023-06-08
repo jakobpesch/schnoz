@@ -8,6 +8,11 @@ export const setCookie = (name: any, value: any, days: any) => {
   document.cookie = name + "=" + (value || "") + expires + "; path=/"
 }
 export const getCookie = (name: any) => {
+  if (typeof window === "undefined") {
+    console.log("window undefined")
+
+    return null
+  }
   const nameWithEqualSign = name + "="
   const cookies = document.cookie.split(";")
   for (let i = 0; i < cookies.length; i++) {

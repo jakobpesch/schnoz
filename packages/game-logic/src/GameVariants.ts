@@ -34,7 +34,10 @@ export const createCustomGame: (scoringRuleNames: Rule[] | null) => GameType = (
 };
 
 const defaultGamePlacementRulesMap = new Map(placementRulesMap);
+defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY");
 defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY_2");
+// defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY");
+defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY_2");
 
 export const defaultGame: GameType = {
   shouldChangeActivePlayer: (turn: Match["turn"]) => {

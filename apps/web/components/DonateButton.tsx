@@ -10,7 +10,7 @@ export const DonateButton = () => (
     placement="bottom"
     label="Buy me a coffee"
   >
-    <Link href="https://ko-fi.com/I2I1FR7RZ">
+    <Link href="https://ko-fi.com/I2I1FR7RZ" target="_blank">
       <Box cursor="pointer">
         <Image
           src={KoFiLogo}

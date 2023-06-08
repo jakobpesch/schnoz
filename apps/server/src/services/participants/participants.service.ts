@@ -37,7 +37,7 @@ export class ParticipantsService {
     });
   }
 
-  async create(data: Prisma.ParticipantCreateInput) {
+  async create(data: Prisma.ParticipantUncheckedCreateInput) {
     return await this.prisma.participant.create({
       data,
       include: { user: true },

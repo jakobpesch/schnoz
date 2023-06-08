@@ -109,7 +109,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
           {slots.map((participant, index) => {
             if (!participant) {
               return (
-                <>
+                <Fragment key={index}>
                   <HStack
                     width="full"
                     borderWidth={2}
@@ -118,21 +118,20 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                     borderColor="gray.600"
                     paddingX="4"
                     minHeight="16"
-                    key="empty"
                   >
                     <Text fontWeight="bold" fontStyle="italic" color="gray.600">
                       Empty
                     </Text>
                   </HStack>
                   {index === 0 && <Text fontWeight="bold">vs.</Text>}
-                </>
+                </Fragment>
               )
             }
             const isConnected = connectedParticipants.some(
               (p) => p.id === participant.id
             )
             return (
-              <>
+              <Fragment key={participant.id}>
                 <HStack
                   width="full"
                   borderWidth={2}
@@ -141,7 +140,6 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                   backgroundColor={isConnected ? "green.900" : "gray.800"}
                   paddingX="4"
                   minHeight="16"
-                  key={participant.id}
                 >
                   <Text
                     fontWeight="bold"
@@ -158,7 +156,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                   )}
                 </HStack>
                 {index === 0 && <Text fontWeight="bold">vs.</Text>}
-              </>
+              </Fragment>
             )
           })}
         </HStack>

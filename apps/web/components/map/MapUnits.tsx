@@ -1,4 +1,4 @@
-import { Flex } from "@chakra-ui/react"
+import { Flex, useToken } from "@chakra-ui/react"
 import { Participant } from "database"
 import Image from "next/image"
 import { RenderSettings } from "../../services/SettingsService"
@@ -10,13 +10,24 @@ export const MapUnits = (props: {
   unitTiles: TileWithUnit[]
   updatedUnitTiles: TileWithUnit[]
 }) => {
+  const playerColors = useToken("colors", [
+    RenderSettings.getPlayerAppearance(0).color,
+    RenderSettings.getPlayerAppearance(1).color,
+  ])
+
   return (
     <>
       {props.unitTiles.map((tile) => {
-        const { unit, color } = RenderSettings.getPlayerAppearance(
-          props.players.find((player) => player.id === tile.unit?.ownerId)
-            ?.playerNumber
-        )
+        const playerNumber = props.players.find(
+          (player) => player.id === tile.unit?.ownerId
+        )?.playerNumber
+        const { unit } = RenderSettings.getPlayerAppearance(playerNumber)
+
+        const hexColor =
+          playerNumber != null ? playerColors[playerNumber] : "transparent"
+
+        console.log("hexColor", hexColor, "playerNumber", playerNumber)
+
         return (
           <Flex
             key={tile.row + "_" + tile.col}
@@ -33,8 +44,8 @@ export const MapUnits = (props: {
               props.updatedUnitTiles.find((ut) =>
                 coordinatesAreEqual([ut.row, ut.col], [tile.row, tile.col])
               )
-                ? "rgba(0,0,0,0.2)"
-                : "rgba(0,0,0,0.1)"
+                ? hexColor + "dd"
+                : hexColor + "80"
             }
             userSelect="none"
           >

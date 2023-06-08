@@ -25,8 +25,10 @@ import {
 } from 'game-logic';
 import { Socket } from 'socket.io';
 import {
+  API_ERROR_CODES,
+  ApiResponse,
   Coordinate,
-  Error,
+  ErrorResponse,
   MatchInstanceEvent,
   ParticipantWithUser,
   PlacementRuleName,
@@ -35,6 +37,7 @@ import {
   TransformedConstellation,
 } from 'types';
 import { GameSettingsService } from '../game-settings/game-settings.service';
+import { AppLoggerService } from '../logger/logger.service';
 import { MapsService } from '../maps/maps.service';
 import { MatchLogsService } from '../match-logs/match-logs.service';
 import { ParticipantsService } from '../participants/participants.service';
@@ -44,6 +47,7 @@ import { MatchesService } from './matches.service';
 
 export class MatchInstance {
   private match!: Match;
+  private logger = new AppLoggerService(MatchInstance.name);
   get Match() {
     return this.match;
   }
@@ -100,7 +104,9 @@ export class MatchInstance {
   }
 
   private async sync() {
+    this.logger.verbose('sync');
     this.match = await this.matchesService.findOne({ id: this.Id });
+    this.logger.verbose(this.match);
     this.gameSettings = await this.gameSettingsService.findOne({
       matchId: this.Id,
     });
@@ -113,7 +119,9 @@ export class MatchInstance {
     }
     this.participants = participants;
 
-    this.map = await this.mapsService.findOne({ matchId: this.Id });
+    try {
+      this.map = await this.mapsService.findOne({ matchId: this.Id });
+    } catch (e) {}
     if (this.map) {
       this.tilesWithUnits = await this.tilesService.findMany({
         where: { mapId: this.map.id },
@@ -194,47 +202,115 @@ export class MatchInstance {
     return this.gameSettings;
   }
 
-  private checkConditionsForCreation(userId: string): { error?: Error } {
+  private checkConditionsForCreation(userId: string): {
+    error: ErrorResponse | null;
+  } {
     if (this.match.status === MatchStatus.STARTED) {
       return {
-        error: { message: 'Match has already started', statusCode: 400 },
+        error: {
+          message: 'Match has already started',
+          statusCode: 400,
+          error: API_ERROR_CODES.MATCH_ALREADY_STARTED,
+        },
       };
     }
     if (this.match.createdById !== userId) {
       return {
         error: {
           message: "Only the match's creator can start the match",
-          statusCode: 400,
+          error: API_ERROR_CODES.CANNOT_START_MATCH,
+          statusCode: 403,
         },
       };
     }
     if (!this.map) {
-      return { error: { message: 'No map', statusCode: 500 } };
+      return {
+        error: {
+          error: API_ERROR_CODES.MAP_NOT_FOUND,
+          message: 'No map',
+          statusCode: 500,
+        },
+      };
     }
     if (!this.participants) {
-      return { error: { message: 'Players array is null', statusCode: 500 } };
+      return {
+        error: {
+          error: API_ERROR_CODES.NO_PLAYERS,
+          message: 'Players array is null',
+          statusCode: 500,
+        },
+      };
     }
     if (this.participants.length < 2) {
-      return { error: { message: 'Match is not full yet', statusCode: 400 } };
+      return {
+        error: {
+          error: API_ERROR_CODES.MATCH_NOT_FULL,
+          message: 'Match is not full yet',
+          statusCode: 400,
+        },
+      };
     }
     if (!this.gameSettings) {
-      return { error: { message: 'No game settings', statusCode: 500 } };
+      return {
+        error: {
+          error: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
+          message: 'No game settings',
+          statusCode: 500,
+        },
+      };
     }
 
     const isMapSizeEven = this.gameSettings.mapSize % 2 === 0;
     if (isMapSizeEven) {
       return {
         error: {
+          error: API_ERROR_CODES.INVALID_MAP_SIZE,
           message: 'mapSize needs to be an odd integer',
           statusCode: 400,
         },
       };
     }
 
-    return {};
+    return { error: null };
   }
 
-  public async startMatch(userId: User['id']) {
+  private checkConditionsForJoining = (
+    participants: Participant[],
+    userId: string,
+  ): { error: API_ERROR_CODES | null } => {
+    if (participants.some((participant) => participant.userId === userId)) {
+      return { error: API_ERROR_CODES.CANNOT_JOIN_TWICE };
+    }
+    if (participants.length === 2) {
+      return { error: API_ERROR_CODES.MATCH_FULL };
+    }
+    return { error: null };
+  };
+
+  public async joinMatch(userId: User['id']) {
+    await this.sync();
+    const { error: joinError } = this.checkConditionsForJoining(
+      this.participants,
+      userId,
+    );
+    if (joinError) {
+      return joinError;
+    }
+    const playerNumber = this.participants.length + 1;
+    const participant = await this.participantsService.create({
+      userId,
+      matchId: this.Id,
+      playerNumber,
+    });
+    await this.matchLogService.create({
+      matchId: this.Id,
+      message: `Player ${userId} joined the match.`,
+    });
+    this.participants.push(participant);
+    return participant;
+  }
+
+  public async startMatch(userId: User['id']): Promise<ApiResponse<Match>> {
     await this.sync();
     const { error: startError } = this.checkConditionsForCreation(userId);
 
@@ -245,7 +321,7 @@ export class MatchInstance {
     const status = MatchStatus.STARTED;
     const startedAt = new Date();
 
-    const activePlayerId = this.participants!.find(
+    const activePlayerId = this.participants.find(
       (player) => player.userId === userId,
     )?.id;
 
@@ -287,30 +363,47 @@ export class MatchInstance {
     ignoredRules: PlacementRuleName[],
     unitConstellation: TransformedConstellation,
     specials: Special[],
-  ): Promise<
-    | {
-        updatedMatch: Match;
-        updatedTilesWithUnits: TileWithUnit[];
-        updatedPlayers: ParticipantWithUser[];
-      }
-    | Error
-  > {
+  ) {
     await this.sync();
 
     if (!this.map) {
-      return { message: 'Map is missing', statusCode: 500 };
+      return {
+        error: {
+          error: API_ERROR_CODES.MAP_NOT_FOUND,
+          message: 'Map is missing',
+          statusCode: 500,
+        },
+      };
     }
 
     if (!this.activePlayer) {
-      return { message: 'Active player is not set', statusCode: 500 };
+      return {
+        error: {
+          error: API_ERROR_CODES.ACTIVE_PLAYER_NOT_SET,
+          message: 'Active player is not set',
+          statusCode: 500,
+        },
+      };
     }
 
     if (!this.tilesWithUnits) {
-      return { message: 'No tiles', statusCode: 500 };
+      return {
+        error: {
+          error: API_ERROR_CODES.TILES_NOT_FOUND,
+          message: 'No tiles',
+          statusCode: 500,
+        },
+      };
     }
 
     if (!this.gameSettings) {
-      return { message: 'No game settings', statusCode: 500 };
+      return {
+        error: {
+          error: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
+          message: 'No game settings',
+          statusCode: 500,
+        },
+      };
     }
 
     const currentBonusPoints =
@@ -324,8 +417,11 @@ export class MatchInstance {
 
     if (!canAffordSpecials) {
       return {
-        message: 'Not enough bonus points for specials',
-        statusCode: 400,
+        error: {
+          error: API_ERROR_CODES.BONUS_POINTS_NOT_ENOUGH,
+          message: 'Not enough bonus points for specials',
+          statusCode: 400,
+        },
       };
     }
 
@@ -343,6 +439,9 @@ export class MatchInstance {
         participantId,
         specials,
       );
+
+    this.logger.verbose('wtf');
+    this.logger.verbose({ translatedCoordinates, error });
 
     if (error) {
       return error;

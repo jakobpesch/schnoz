@@ -54,20 +54,22 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
         >
           Back to menu
         </Button>
-        <Button
-          background="#13C3FF"
-          _hover={{ bg: "#47d1ff" }}
-          leftIcon={
-            <Image
-              src={KoFiLogo}
-              alt="Buy Me a Coffee at ko-fi.com"
-              width="36"
-              height="36"
-            />
-          }
-        >
-          <Link href="https://ko-fi.com/I2I1FR7RZ">Support me</Link>
-        </Button>
+        <Link href="https://ko-fi.com/I2I1FR7RZ" target="_blank">
+          <Button
+            background="#13C3FF"
+            _hover={{ bg: "#47d1ff" }}
+            leftIcon={
+              <Image
+                src={KoFiLogo}
+                alt="Buy Me a Coffee at ko-fi.com"
+                width="36"
+                height="36"
+              />
+            }
+          >
+            Support me
+          </Button>
+        </Link>
       </VStack>
     </Center>
   )

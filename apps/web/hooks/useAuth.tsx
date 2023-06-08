@@ -1,0 +1,161 @@
+import { useToast } from "@chakra-ui/react"
+import { useRouter } from "next/router"
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
+import {
+  AccessTokenResponse,
+  isDataResponse,
+  isErrorResponse,
+  Profile,
+} from "types"
+import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
+import { fetchApi } from "../services/FetchService"
+import { BASE_API_URL } from "../services/GameManagerService"
+
+interface AuthContextType {
+  profile?: Profile
+  playAsGuest: () => Promise<Profile | undefined>
+  logout: () => void
+  login: (email: string, password: string) => Promise<void>
+  register: (props: {
+    guestUserId?: string
+    email: string
+    name: string
+    password: string
+  }) => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType)
+
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode
+}): JSX.Element {
+  const [profile, setProfile] = useState<Profile>()
+  const [loadingInitial, setLoadingInitial] = useState<boolean>(true)
+  const toast = useToast()
+  const router = useRouter()
+
+  const fetchProfile = async () => {
+    const url = `${BASE_API_URL}/auth/profile`
+    const profile = await fetchApi<Profile>({ url })
+
+    if (isDataResponse(profile)) {
+      setProfile(profile)
+      return profile
+    }
+
+    toast({
+      title: "Could not fetch user profile",
+      status: "error",
+    })
+  }
+
+  useEffect(() => {
+    const jwt = getCookie("jwt")
+    if (!jwt) {
+      setLoadingInitial(false)
+      router.replace("/welcome")
+      return
+    }
+
+    fetchProfile().finally(() => {
+      setLoadingInitial(false)
+    })
+  }, [])
+
+  const logout: AuthContextType["logout"] = () => {
+    eraseCookie("jwt")
+    router.push("/welcome")
+    setProfile(undefined)
+  }
+
+  const login: AuthContextType["login"] = async (email, password) => {
+    const response = await fetchApi<{ access_token: string }>({
+      url: `${BASE_API_URL}/auth/login`,
+      method: "POST",
+      body: {
+        email,
+        password,
+      },
+    })
+
+    if (isDataResponse(response)) {
+      setCookie("jwt", response.access_token, 30)
+      await fetchProfile()
+      router.push("/")
+      return
+    }
+
+    toast({
+      title: "Failed to login",
+      status: "error",
+    })
+  }
+
+  const playAsGuest: AuthContextType["playAsGuest"] = async () => {
+    const url = `${BASE_API_URL}/users/register/guest`
+    const response = await fetchApi<AccessTokenResponse>({
+      url,
+      method: "POST",
+    })
+
+    if (isDataResponse(response)) {
+      setCookie("jwt", response.access_token, 30)
+      return fetchProfile()
+    }
+
+    toast({
+      title: "Failed to create guest user",
+      status: "error",
+    })
+  }
+
+  const register: AuthContextType["register"] = async (props) => {
+    const { guestUserId, email, name, password } = props
+    const response = await fetchApi<{ access_token: string }>({
+      url: `${BASE_API_URL}/users/register`,
+      method: "PUT",
+      body: { email, name, password, guestUserId },
+    })
+
+    if (isDataResponse(response)) {
+      setCookie("jwt", response.access_token, 30)
+      router.push("/")
+      return
+    }
+
+    toast({
+      title: "Failed to register",
+      status: "error",
+    })
+  }
+
+  const memoedValue = useMemo(
+    () => ({
+      profile,
+      playAsGuest,
+      login,
+      logout,
+      register,
+    }),
+    [profile]
+  )
+
+  return (
+    <AuthContext.Provider value={memoedValue}>
+      {!loadingInitial && children}
+    </AuthContext.Provider>
+  )
+}
+
+export default function useAuth() {
+  return useContext(AuthContext)
+}

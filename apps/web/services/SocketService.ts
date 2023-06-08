@@ -50,6 +50,8 @@ export class SocketIOApi {
       autoConnect: false,
     })
     this.socket.on("connect", () => {
+      console.log("connectToMatch socket.on('connect')")
+
       this.isConnecting = false
     })
     this.socket.on(

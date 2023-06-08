@@ -1,6 +1,5 @@
 import {
   Badge,
-  Box,
   Button,
   Container,
   Divider,
@@ -16,35 +15,8 @@ import { NextPage } from "next"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import useSWR, { mutate } from "swr"
-import { getCookie } from "../../services/CookieService"
-import { registerUser } from "../../services/GameManagerService"
+import useAuth from "../../hooks/useAuth"
 import { fetcher } from "../../services/swrUtils"
-
-//@ts-ignore
-async function sendReupdateUserquest(url, { arg }) {
-  return fetch(url, {
-    method: "POST",
-    body: JSON.stringify(arg),
-  }).then((res) => res.json())
-}
-export const useUser = () => {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<User>(() => {
-    const userId = getCookie("userId")
-    if (!userId) {
-      throw new Error("No id")
-    }
-    return "/api/user/" + userId
-  }, fetcher)
-
-  return {
-    user: data,
-    isLoading,
-    isAnonymous: !data?.email || !data.name,
-    isError: error,
-    isValidating,
-    mutate,
-  }
-}
 
 function useParticipations(userId?: string) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
@@ -70,8 +42,8 @@ function useParticipations(userId?: string) {
 }
 
 const UserPage: NextPage = () => {
-  const { user } = useUser()
-  const { participations } = useParticipations(user?.id)
+  const { profile, register } = useAuth()
+  const { participations } = useParticipations(profile?.sub)
   const [payload, setPayload] = useState<{
     id: User["id"]
     name: User["name"]
@@ -84,30 +56,34 @@ const UserPage: NextPage = () => {
     password: "",
   })
   useEffect(() => {
-    if (user) {
-      setPayload({ ...user, password: "" })
+    if (profile) {
+      setPayload({
+        id: profile.sub,
+        email: profile.email,
+        name: profile.name,
+        password: "",
+      })
     }
-  }, [user])
+  }, [profile])
 
   const createAccount = () => {
-    if (user && payload.email && payload.name && payload.password) {
-      mutate(
-        async () =>
-          await registerUser({
-            guestUserId: user.id,
-            email: payload.email!,
-            name: payload.name!,
-            password: payload.password,
-          })
+    if (profile && payload.email && payload.name && payload.password) {
+      mutate(async () =>
+        register({
+          guestUserId: profile.sub,
+          email: payload.email!,
+          name: payload.name!,
+          password: payload.password,
+        })
       )
     }
   }
 
-  if (!user || !participations) {
+  if (!profile) {
     return null
   }
 
-  const hasAccount = user.email && user.name
+  const hasAccount = profile.email && profile.name
 
   return (
     <Container>
@@ -118,11 +94,11 @@ const UserPage: NextPage = () => {
               <Heading>Profile</Heading>
               <Stack direction={"row"}>
                 <Text fontWeight="bold">Name:</Text>
-                <Text>{user.name}</Text>
+                <Text>{profile.name}</Text>
               </Stack>
               <Stack direction={"row"}>
                 <Text fontWeight="bold">Email:</Text>
-                <Text>{user.email}</Text>
+                <Text>{profile.email}</Text>
               </Stack>
             </>
           ) : (
@@ -156,7 +132,7 @@ const UserPage: NextPage = () => {
                   variant="outline"
                   placeholder="Email"
                   type="email"
-                  readOnly={!user || !!user.email}
+                  readOnly={!profile || !!profile.email}
                   value={payload.email ?? ""}
                   onChange={(e) => {
                     setPayload({ ...payload, email: e.target.value })
@@ -189,7 +165,7 @@ const UserPage: NextPage = () => {
         </Stack>
         <Stack spacing="4">
           <Heading>Match History</Heading>
-          {participations.length === 0 ? (
+          {participations?.length === 0 ? (
             <Text>{"You haven't played in any matches yet."}</Text>
           ) : (
             <SimpleGrid gap="2" columns={4} alignItems="center">

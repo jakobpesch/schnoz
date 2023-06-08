@@ -1,6 +1,5 @@
 import {
   Button,
-  Flex,
   FormControl,
   FormErrorMessage,
   Heading,
@@ -9,12 +8,10 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { Field, Formik } from "formik"
-import { FC } from "react"
-import { setCookie } from "../../services/CookieService"
-import { loginUser, registerUser } from "../../services/GameManagerService"
 import Link from "next/link"
-import { validateEmail } from "../../components/form/form-validators"
 import { useRouter } from "next/router"
+import { validateEmail } from "../../components/form/form-validators"
+import useAuth from "../../hooks/useAuth"
 
 interface LoginFormPayload {
   email: string
@@ -27,6 +24,7 @@ const initialValues: LoginFormPayload = {
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   return (
     <Stack width="full" height="100vh" justify="center" align="center">
       <Heading>Sign in</Heading>
@@ -35,10 +33,7 @@ export default function LoginPage() {
         onSubmit={async (values, { setSubmitting, setStatus }) => {
           const { email, password } = values
           try {
-            await loginUser({
-              email,
-              password,
-            })
+            await login(email, password)
             router.push("/")
           } catch (error) {
             setStatus("Incorrect combination of credentials.")
@@ -60,7 +55,7 @@ export default function LoginPage() {
           /* and other goodies */
         }) => (
           <form onSubmit={handleSubmit}>
-            <Stack maxWidth="300">
+            <Stack width="300" maxWidth="300">
               <FormControl
                 isInvalid={(!values.email || !!errors.email) && touched.email}
               >
@@ -118,14 +113,16 @@ export default function LoginPage() {
       </Formik>
       <Text fontSize="sm" color="gray" fontStyle="italic">
         No account?{" "}
-        <Button
-          fontSize="inherit"
-          colorScheme="gray"
-          variant="link"
-          fontStyle="inherit"
-        >
-          <Link href="/register">Sign up</Link>
-        </Button>
+        <Link href="/register">
+          <Button
+            fontSize="inherit"
+            colorScheme="gray"
+            variant="link"
+            fontStyle="inherit"
+          >
+            Sign up
+          </Button>
+        </Link>
       </Text>
     </Stack>
   )

@@ -7,6 +7,8 @@ import { StoreProvider } from "easy-peasy"
 import type { AppProps } from "next/app"
 import { store } from "../store"
 import "../styles/globals.css"
+import { AuthProvider } from "../hooks/useAuth"
+
 const config = {
   ...defaultTheme.config,
   initialColorMode: "dark",
@@ -19,7 +21,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ChakraProvider theme={theme}>
       <StoreProvider store={store}>
-        <Component {...pageProps} />
+        <AuthProvider>
+          <Component {...pageProps} />
+        </AuthProvider>
       </StoreProvider>
     </ChakraProvider>
   )

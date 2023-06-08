@@ -3,18 +3,18 @@ import assert from "assert"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { MatchRich } from "types"
-import { useUserId } from "../../pages/match/[id]"
 import { RenderSettings } from "../../services/SettingsService"
 import { scaled } from "./UIScoreView"
+import useAuth from "../../hooks/useAuth"
 
 export const UITurnChangeIndicator = (props: {
   activePlayer: MatchRich["activePlayer"]
   onChangingTurnsStart: () => void
   onChangingTurnsEnd: () => void
 }) => {
-  const userId = useUserId()
-  assert(props.activePlayer)
-  const yourTurn = props.activePlayer.userId === userId
+  const { profile } = useAuth()
+  const userId = profile?.sub ?? ""
+  const yourTurn = props.activePlayer?.userId === userId
   const [isOpen, setIsOpen] = useState(false)
   useEffect(() => {
     if (!isOpen) {
@@ -25,7 +25,7 @@ export const UITurnChangeIndicator = (props: {
         props.onChangingTurnsEnd()
       }, 2000)
     }
-  }, [props.activePlayer.playerNumber])
+  }, [props.activePlayer?.playerNumber])
 
   return (
     <Flex
@@ -44,33 +44,33 @@ export const UITurnChangeIndicator = (props: {
           width="100vw"
           align="center"
           justify="center"
-          bg="blackAlpha.700"
+          backgroundColor="blackAlpha.700"
           pointerEvents="none"
         >
           <ScaleFade initialScale={0.5} in={isOpen} delay={0.5}>
             <VStack
-              bg="gray.700"
+              backgroundColor="gray.700"
               borderWidth={scaled(1)}
               borderRadius={scaled(10)}
-              spacing={scaled(16)}
-              p={scaled(10)}
-              m={scaled(10)}
+              spacing={scaled(4)}
+              padding={scaled(4)}
+              margin={scaled(4)}
               boxShadow="dark-lg"
             >
               <Image
                 src={
                   RenderSettings.getPlayerAppearance(
-                    props.activePlayer.playerNumber
+                    props.activePlayer?.playerNumber
                   ).unit
                 }
-                width={scaled(1000)}
-                height={scaled(1000)}
+                width={scaled(175)}
+                height={scaled(175)}
                 alt=""
               />
               <Heading>
                 {yourTurn
                   ? "Your "
-                  : (props.activePlayer.user.name ?? "Anon ") + "'s "}
+                  : (props.activePlayer?.user.name ?? "Anon ") + "'s "}
                 turn!
               </Heading>
             </VStack>
