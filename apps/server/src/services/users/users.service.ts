@@ -32,6 +32,10 @@ export class UsersService {
     return user;
   }
 
+  private generateRandomFriendCode() {
+    return faker.random.alphaNumeric(8).toUpperCase();
+  }
+
   async register(params: {
     guestUserId: User['id'];
     email: string;
@@ -49,6 +53,24 @@ export class UsersService {
       throw new BadRequestException('Invalid email');
     }
 
+    let friendCode = this.generateRandomFriendCode();
+    // verify friend code is unique
+    let user = await this.prisma.user.findUnique({
+      where: { friendCode },
+    });
+    let iteration = 0;
+    while (user !== null && iteration < 10) {
+      iteration++;
+      friendCode = this.generateRandomFriendCode();
+      user = await this.prisma.user.findUnique({
+        where: { friendCode },
+      });
+      if (user === null) {
+        // found a unique friend code
+        break;
+      }
+    }
+
     try {
       const salt = await bcrypt.genSalt();
       const hash = await bcrypt.hash(password, salt);
@@ -58,6 +80,7 @@ export class UsersService {
           email,
           hash,
           name,
+          friendCode,
         },
         ...withoutHashSelect,
       });
