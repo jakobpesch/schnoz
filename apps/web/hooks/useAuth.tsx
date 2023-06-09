@@ -128,6 +128,7 @@ export function AuthProvider({
 
     if (isDataResponse(response)) {
       setCookie("jwt", response.access_token, 30)
+      await fetchProfile()
       router.push("/")
       return
     }
