@@ -1,4 +1,3 @@
 export enum MatchInstanceEvent {
-  END_TURN = 'TIMER',
-  START_TURN = 'START_TURN',
+  TURN_TIMER_RAN_OUT = "TURN_TIMER_RAN_OUT",
 }

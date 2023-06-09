@@ -96,6 +96,12 @@ export class SocketIOApi {
         this.onMadeMove(data)
       }
     )
+    this.socket.on(
+      ServerEvent.TURN_TIMER_RAN_OUT,
+      (data: Parameters<typeof this.onEndTurnTimestamp>[number]) => {
+        this.onEndTurnTimestamp(data)
+      }
+    )
 
     this.socket.on("disconnect", () => {
       console.log("disconnected")
@@ -179,6 +185,10 @@ export class SocketIOApi {
     this.callbacks.setParticipants?.(payload.updatedPlayers)
   }
 
+  private onEndTurnTimestamp = (payload: { match: Match }) => {
+    this.callbacks.setMatch?.(payload.match)
+  }
+
   public sendRequest = async (request: { event: string; data?: any }) => {
     try {
       if (!this.socket?.connected) {
@@ -234,6 +244,9 @@ export class SocketIOApi {
     }
     if (settings.stoneRatio != null) {
       gameSettings.stoneRatio = settings.stoneRatio
+    }
+    if (settings.turnTime != null) {
+      gameSettings.turnTime = settings.turnTime
     }
 
     await socketApi.sendRequest({

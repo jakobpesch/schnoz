@@ -384,9 +384,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
     }
   }
-  @OnEvent(MatchInstanceEvent.END_TURN)
-  handleTimer(id: Match['id'], remainingTime: number) {
-    console.log('handleTimer', id, remainingTime);
-    this.server.to(id).emit(ServerEvent.TIME_REMAINING, remainingTime);
+  @OnEvent(MatchInstanceEvent.TURN_TIMER_RAN_OUT)
+  handleEndTurn(match: Match) {
+    this.server.to(match.id).emit(ServerEvent.TURN_TIMER_RAN_OUT, { match });
   }
 }

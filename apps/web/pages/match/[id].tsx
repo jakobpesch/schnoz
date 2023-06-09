@@ -41,6 +41,7 @@ import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
 import { UIPreMatchView } from "../../components/ui/UIPreMatchView"
 import { UIScoreView, scaled } from "../../components/ui/UIScoreView"
 import { UITurnChangeIndicator } from "../../components/ui/UITurnChangeIndicator"
+import { UITurnTimer } from "../../components/ui/UITurnTimer"
 import { UITurnsView } from "../../components/ui/UITurnsView"
 import useAuth from "../../hooks/useAuth"
 import { useCards } from "../../hooks/useCards"
@@ -431,6 +432,11 @@ const MatchView = () => {
               top={scaled(120)}
               cursor="default"
             >
+              {match.turnEndsAt && (
+                <UITurnTimer
+                  turnEndsAt={new Date(match.turnEndsAt).toISOString()}
+                />
+              )}
               <Stack spacing={scaled(0)}>
                 <HStack
                   position="relative"

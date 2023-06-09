@@ -199,7 +199,52 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
           </ButtonGroup>
         </Stack>
         <Stack width="full">
-          <Text fontWeight="bold">Game length</Text>
+          <Text fontWeight="bold">Seconds per turn</Text>
+          <ButtonGroup isAttached>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isHost}
+              _disabled={{ opacity: 1, cursor: "default" }}
+              colorScheme={settings.turnTime === 30000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 30000 })}
+            >
+              30
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isHost}
+              _disabled={{ opacity: 1, cursor: "default" }}
+              colorScheme={settings.turnTime === 60000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 60000 })}
+            >
+              60
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isHost}
+              _disabled={{ opacity: 1, cursor: "default" }}
+              colorScheme={settings.turnTime === 90000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 90000 })}
+            >
+              90
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isHost}
+              _disabled={{ opacity: 1, cursor: "default" }}
+              colorScheme={settings.turnTime === 120000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 120000 })}
+            >
+              120
+            </Button>
+          </ButtonGroup>
+        </Stack>
+        <Stack width="full">
+          <Text fontWeight="bold">Number of turns</Text>
           <ButtonGroup isAttached>
             <Button
               variant="outline"
@@ -209,7 +254,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               colorScheme={settings.maxTurns === 6 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 6 })}
             >
-              Very Short
+              6
             </Button>
             <Button
               variant="outline"
@@ -219,7 +264,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               colorScheme={settings.maxTurns === 12 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 12 })}
             >
-              Short
+              12
             </Button>
             <Button
               variant="outline"
@@ -229,7 +274,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               colorScheme={settings.maxTurns === 24 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 24 })}
             >
-              Standard
+              24
             </Button>
             <Button
               variant="outline"
@@ -239,7 +284,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               colorScheme={settings.maxTurns === 36 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 36 })}
             >
-              Long
+              36
             </Button>
           </ButtonGroup>
         </Stack>

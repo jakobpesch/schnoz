@@ -1,3 +1,4 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   buildTileLookupId,
@@ -71,7 +72,6 @@ export class MatchInstance {
   get GameSettings() {
     return this.gameSettings;
   }
-
   get activePlayer() {
     return this.participants.find(
       (player) => player.id === this.match.activePlayerId,
@@ -79,8 +79,6 @@ export class MatchInstance {
   }
 
   public sockets = new Map<User['id'], Socket>();
-  private endTurnTime = 0;
-  private readonly turnTime = 30_000;
   private turnTimer: NodeJS.Timeout | undefined;
 
   constructor(
@@ -104,9 +102,7 @@ export class MatchInstance {
   }
 
   private async sync() {
-    this.logger.verbose('sync');
     this.match = await this.matchesService.findOne({ id: this.Id });
-    this.logger.verbose(this.match);
     this.gameSettings = await this.gameSettingsService.findOne({
       matchId: this.Id,
     });
@@ -170,21 +166,6 @@ export class MatchInstance {
       matchId: this.Id,
       message: `Player ${participantId} was kicked from the match.`,
     });
-  }
-
-  private nextTurn() {
-    if (this.turnTimer) {
-      clearTimeout(this.turnTimer);
-    }
-    this.endTurnTime = Date.now() + this.turnTime;
-    this.eventEmitter.emit(
-      MatchInstanceEvent.START_TURN,
-      this.match.activePlayerId,
-      this.endTurnTime,
-    );
-    this.turnTimer = setTimeout(() => {
-      this.nextTurn();
-    }, this.turnTime);
   }
 
   public disconnect(socket: Socket, userId: User['id']) {
@@ -329,7 +310,16 @@ export class MatchInstance {
       Object.values({ ...UnitConstellation }),
     ).slice(0, 3);
 
+    if (!this.gameSettings) {
+      return {
+        error: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
+        message: 'No game settings',
+        statusCode: 500,
+      };
+    }
+
     const turn = 1;
+    const turnEndsAt = new Date(Date.now() + this.gameSettings.turnTime);
 
     this.match = await this.matchesService.update({
       where: { id: this.match.id },
@@ -339,6 +329,7 @@ export class MatchInstance {
         startedAt,
         activePlayerId,
         turn,
+        turnEndsAt,
         logs: {
           createMany: {
             data: [
@@ -352,6 +343,8 @@ export class MatchInstance {
         },
       },
     });
+
+    this.setNewTurnTimer();
 
     return this.match;
   }
@@ -425,6 +418,10 @@ export class MatchInstance {
       };
     }
 
+    if (this.turnTimer) {
+      clearTimeout(this.turnTimer);
+    }
+
     const tileLookup = getTileLookup(this.tilesWithUnits);
     const { translatedCoordinates, error } =
       checkConditionsForUnitConstellationPlacement(
@@ -439,9 +436,6 @@ export class MatchInstance {
         participantId,
         specials,
       );
-
-    this.logger.verbose('wtf');
-    this.logger.verbose({ translatedCoordinates, error });
 
     if (error) {
       return error;
@@ -554,6 +548,7 @@ export class MatchInstance {
       where: { id: this.match.id },
       data: {
         openCards,
+        turnEndsAt: new Date(Date.now() + this.gameSettings.turnTime),
         activePlayerId: nextActivePlayerId,
         turn: { increment: 1 },
         ...(isLastTurn(this.match, this.gameSettings) || winnerId
@@ -561,11 +556,17 @@ export class MatchInstance {
           : {}),
       },
     });
+
+    if (!this.match.finishedAt) {
+      this.setNewTurnTimer();
+    }
+
     const response = {
       updatedMatch: this.match,
       updatedTilesWithUnits,
       updatedPlayers,
     };
+
     this.matchLogService.create({
       matchId: this.Id,
       message: `Player ${
@@ -578,22 +579,100 @@ export class MatchInstance {
     return response;
   }
 
-  private async changeTurn(args: any) {
-    const turnTime = 30; // @todo
-    const nextPlayerId = this.participants.find(
-      (p) => p.playerNumber !== this.activePlayer?.playerNumber,
-    )?.id;
-    if (!nextPlayerId) {
-      return;
+  private async turnTimerRanOut() {
+    await this.sync();
+
+    if (!this.activePlayer) {
+      return {
+        error: {
+          error: API_ERROR_CODES.ACTIVE_PLAYER_NOT_SET,
+          message: 'Active player is not set',
+          statusCode: 500,
+        },
+      };
     }
-    const now = new Date();
-    const nextTurnEndTimestamp = now.setSeconds(now.getSeconds() + turnTime);
-    await this.matchesService.update({
+
+    if (!this.gameSettings) {
+      return {
+        error: {
+          error: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
+          message: 'No game settings',
+          statusCode: 500,
+        },
+      };
+    }
+
+    const gameType = createCustomGame(this.gameSettings?.rules ?? null);
+
+    const winnerId =
+      determineWinner(this.match, this.gameSettings, this.participants)?.id ??
+      null;
+
+    const shouldChangeActivePlayer = gameType.shouldChangeActivePlayer(
+      this.match.turn,
+    );
+
+    const shouldChangeCards = gameType.shouldChangeCards(this.match.turn);
+
+    const openCards = shouldChangeCards
+      ? gameType.changedCards()
+      : this.match.openCards;
+
+    const nextActivePlayerId = shouldChangeActivePlayer
+      ? this.participants.find(
+          (participant) => participant.id !== this.match.activePlayerId,
+        )?.id
+      : this.match.activePlayerId;
+
+    if (!nextActivePlayerId) {
+      return { message: 'Error while changing turns', statusCode: 500 };
+    }
+
+    this.match = await this.matchesService.update({
       where: { id: this.match.id },
       data: {
-        activePlayerId: nextPlayerId,
-        // nextTurnEndTimestamp
+        openCards,
+        activePlayerId: nextActivePlayerId,
+        turnEndsAt: new Date(Date.now() + this.gameSettings.turnTime),
+        turn: { increment: 1 },
+        ...(isLastTurn(this.match, this.gameSettings) || winnerId
+          ? { winnerId, status: MatchStatus.FINISHED, finishedAt: new Date() }
+          : {}),
       },
     });
+
+    if (!this.match.finishedAt) {
+      this.setNewTurnTimer();
+    }
+
+    const response = {
+      updatedMatch: this.match,
+    };
+
+    this.eventEmitter.emit(
+      MatchInstanceEvent.TURN_TIMER_RAN_OUT,
+      response.updatedMatch,
+    );
+
+    this.matchLogService.create({
+      matchId: this.Id,
+      message: `Player ${this.activePlayer.id} did not do their move in time. Changing turns... `,
+      data: JSON.stringify(response),
+    });
+  }
+
+  private setNewTurnTimer() {
+    if (!this.match.turnEndsAt) {
+      throw new InternalServerErrorException(
+        'Error while setting end turn time',
+      );
+    }
+
+    const remainingTimeInMs =
+      new Date(this.match.turnEndsAt).getTime() - Date.now();
+
+    this.turnTimer = setTimeout(() => {
+      this.turnTimerRanOut();
+    }, remainingTimeInMs);
   }
 }
