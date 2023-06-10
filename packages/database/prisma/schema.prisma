@@ -17,6 +17,8 @@ model User {
   hash           String?
   createdMatches Match[]
   participations Participant[]
+  friends        User[]        @relation("friend")
+  friendsOf      User[]        @relation("friend")
   friendCode     String?       @unique
 }
 

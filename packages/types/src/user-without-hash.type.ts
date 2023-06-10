@@ -4,6 +4,7 @@ const userWithoutHash = Prisma.validator<Prisma.UserArgs>()({
   select: {
     id: true,
     email: true,
+    friendCode: true,
     name: true,
   },
 });

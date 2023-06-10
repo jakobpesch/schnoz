@@ -8,12 +8,13 @@ import { Prisma, User } from 'database';
 import { PrismaService } from '../prisma/prisma.service';
 import bcrypt from 'bcrypt';
 import { faker } from '@faker-js/faker';
-import { UserWithoutHash } from 'types';
+import { API_ERROR_CODES, UserWithoutHash } from 'types';
 
 const withoutHashSelect = {
   select: {
     id: true,
     email: true,
+    friendCode: true,
     name: true,
   },
 };
@@ -33,7 +34,8 @@ export class UsersService {
   }
 
   private generateRandomFriendCode() {
-    return faker.random.alphaNumeric(8).toUpperCase();
+    const codeLength = 4;
+    return faker.random.alphaNumeric(codeLength).toUpperCase();
   }
 
   async register(params: {
@@ -92,6 +94,53 @@ export class UsersService {
       }
       throw new InternalServerErrorException();
     }
+  }
+
+  async addFriend(params: {
+    requestingUserId: User['id'];
+    friendCode: User['friendCode'];
+  }) {
+    console.log('addFriend', params);
+
+    // const requestingUser = await this.findOne({ id: params.requestingUserId });
+    // const requestedUser = await this.findOne({ id: params.requestedUserId });
+    if (!params.friendCode) {
+      throw new BadRequestException();
+    }
+
+    const requestedFriend = await this.prisma.user.findUnique({
+      where: { friendCode: params.friendCode },
+    });
+
+    if (requestedFriend?.id === params.requestingUserId) {
+      throw new BadRequestException(API_ERROR_CODES.CANNOT_ADD_SELF_AS_FRIEND);
+    }
+
+    const requestingUser = await this.prisma.user.findUnique({
+      where: { id: params.requestingUserId },
+      select: {
+        friends: true,
+      },
+    });
+
+    const requestedAlready = requestingUser?.friends?.some(
+      (friend) => friend.id === requestedFriend?.id,
+    );
+
+    if (requestedAlready) {
+      throw new BadRequestException(API_ERROR_CODES.CANNOT_REQUEST_TWICE);
+    }
+
+    return await this.update({
+      where: { id: params.requestingUserId },
+      data: {
+        friends: {
+          connect: {
+            friendCode: params.friendCode,
+          },
+        },
+      },
+    });
   }
 
   async findOne(userWhereUniqueInput: Prisma.UserWhereUniqueInput) {

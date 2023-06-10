@@ -5,9 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-import { User } from 'database';
 import { UsersService } from 'src/services/users/users.service';
-import { jwtConstants } from './auth.constants';
 import { UserWithoutHash } from 'types';
 
 @Injectable()
@@ -36,6 +34,7 @@ export class AuthService {
       access_token: this.jwtService.sign({
         email: user.email,
         name: user.name,
+        friendCode: user.friendCode,
         sub: user.id,
       }),
     };

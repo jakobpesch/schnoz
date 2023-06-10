@@ -4,18 +4,27 @@ import {
   Container,
   Divider,
   FormControl,
+  HStack,
   Heading,
   Input,
+  Kbd,
+  PinInput,
+  PinInputField,
   SimpleGrid,
   Stack,
   Text,
+  useClipboard,
+  useToast,
 } from "@chakra-ui/react"
 import { Match, MatchStatus, Participant, User } from "database"
 import { NextPage } from "next"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import useSWR, { mutate } from "swr"
+import { API_ERROR_CODES, isDataResponse } from "types"
 import useAuth from "../../hooks/useAuth"
+import { fetchApi } from "../../services/FetchService"
+import { BASE_API_URL } from "../../services/GameManagerService"
 import { fetcher } from "../../services/swrUtils"
 
 function useParticipations(userId?: string) {
@@ -55,8 +64,60 @@ const UserPage: NextPage = () => {
     email: null,
     password: "",
   })
+  const toast = useToast()
+  const [friendCode, setFriendCode] = useState<User["friendCode"]>(null)
+  const [friends, setFriends] = useState<User[]>([])
+  const [incomingFriendRequests, setIncomingFriendRequests] = useState<User[]>(
+    []
+  )
+  const [outgoingFriendRequests, setOutgoingFriendRequests] = useState<User[]>(
+    []
+  )
+
+  const { onCopy: onCopyFriendCode, hasCopied: hasCopiedFriendCode } =
+    useClipboard(profile?.friendCode ?? "")
+
   useEffect(() => {
     if (profile) {
+      fetchApi<User[]>({
+        url: `${BASE_API_URL}/users/${profile.sub}/friends`,
+        method: "GET",
+      }).then((response) => {
+        if (isDataResponse(response)) {
+          setFriends(response)
+          return
+        }
+        toast({
+          title: "Could not fetch friend list",
+          status: "warning",
+        })
+      })
+      fetchApi<User[]>({
+        url: `${BASE_API_URL}/users/${profile.sub}/incoming-friend-requests`,
+        method: "GET",
+      }).then((response) => {
+        if (isDataResponse(response)) {
+          setIncomingFriendRequests(response)
+          return
+        }
+        toast({
+          title: "Could not fetch friend list",
+          status: "warning",
+        })
+      })
+      fetchApi<User[]>({
+        url: `${BASE_API_URL}/users/${profile.sub}/outgoing-friend-requests`,
+        method: "GET",
+      }).then((response) => {
+        if (isDataResponse(response)) {
+          setOutgoingFriendRequests(response)
+          return
+        }
+        toast({
+          title: "Could not fetch friend list",
+          status: "warning",
+        })
+      })
       setPayload({
         id: profile.sub,
         email: profile.email,
@@ -85,6 +146,45 @@ const UserPage: NextPage = () => {
 
   const hasAccount = profile.email && profile.name
 
+  const handleAddFriend = async (friendCode: User["friendCode"]) => {
+    const response = await fetchApi<User[]>({
+      url: `${BASE_API_URL}/users/add-friend/${friendCode}`,
+      method: "POST",
+    })
+    if (isDataResponse(response)) {
+      toast({
+        title: "Friend request sent",
+        status: "success",
+      })
+      return
+    }
+    if (response.message === API_ERROR_CODES.INVALID_FRIEND_CODE) {
+      toast({
+        title: "Invalid friend code",
+        status: "error",
+      })
+      return
+    }
+    if (response.message === API_ERROR_CODES.CANNOT_ADD_SELF_AS_FRIEND) {
+      toast({
+        title: "You are already your own friend I hope 😊",
+        status: "info",
+      })
+      return
+    }
+    if (response.message === API_ERROR_CODES.CANNOT_REQUEST_TWICE) {
+      toast({
+        title: "You already sent a friend request to this user. Be patient!",
+        status: "info",
+      })
+      return
+    }
+    toast({
+      title: "Error",
+      status: "error",
+    })
+  }
+
   return (
     <Container>
       <Stack py="16" spacing="8">
@@ -99,6 +199,23 @@ const UserPage: NextPage = () => {
               <Stack direction={"row"}>
                 <Text fontWeight="bold">Email:</Text>
                 <Text>{profile.email}</Text>
+              </Stack>
+              <Stack direction={"row"}>
+                <Text fontWeight="bold">Friend Code:</Text>
+                <Text cursor="pointer" onMouseDown={onCopyFriendCode}>
+                  {profile.friendCode?.split("").map((char, index) => (
+                    <>
+                      <Kbd
+                        fontSize="md"
+                        userSelect="none"
+                        key={`${char}_${index}`}
+                      >
+                        {char}
+                      </Kbd>{" "}
+                    </>
+                  ))}
+                </Text>
+                {hasCopiedFriendCode && <Text color="green.400">Copied!</Text>}
               </Stack>
             </>
           ) : (
@@ -162,6 +279,67 @@ const UserPage: NextPage = () => {
               </Button>
             </>
           )}
+        </Stack>
+        <Stack spacing="4">
+          {friends.length > 0 && (
+            <>
+              <Heading size="md">Friends</Heading>
+              {friends.map((friend) => (
+                <Stack key={`${friend.id}`} direction={"row"}>
+                  <Text>{friend.name}</Text>
+                </Stack>
+              ))}
+            </>
+          )}
+          {incomingFriendRequests.length > 0 && (
+            <>
+              <Heading size="md">Incoming Friend Requests</Heading>
+              {incomingFriendRequests.map((friendRequest) => (
+                <Stack key={`${friendRequest.id}_incoming`} direction={"row"}>
+                  <Text>{friendRequest.name}</Text>
+                  <Button
+                    size="xs"
+                    onClick={() => handleAddFriend(friendRequest.friendCode)}
+                  >
+                    Accept
+                  </Button>
+                </Stack>
+              ))}
+            </>
+          )}
+          {outgoingFriendRequests.length > 0 && (
+            <>
+              <Heading size="md">Outgoing Friend Requests</Heading>
+              {outgoingFriendRequests.map((friendRequest) => (
+                <Stack key={`${friendRequest.id}_outgoing`} direction={"row"}>
+                  <Text>{friendRequest.name}</Text>
+                </Stack>
+              ))}
+            </>
+          )}
+        </Stack>
+
+        <Stack direction="row">
+          <HStack>
+            <PinInput
+              onChange={(friendCode) => {
+                setFriendCode(friendCode)
+              }}
+              otp
+              type="alphanumeric"
+            >
+              <PinInputField />
+              <PinInputField />
+              <PinInputField />
+              <PinInputField />
+            </PinInput>
+          </HStack>
+          <Button
+            disabled={friendCode?.length !== 4}
+            onClick={() => handleAddFriend(friendCode)}
+          >
+            Add Friend
+          </Button>
         </Stack>
         <Stack spacing="4">
           <Heading>Match History</Heading>
