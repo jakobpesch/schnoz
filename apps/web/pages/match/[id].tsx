@@ -28,6 +28,7 @@ import {
   TileWithUnit,
   TransformedConstellation,
 } from "types"
+import popSound from "../../assets/sfx/pop.mp3"
 import { MapContainer } from "../../components/map/MapContainer"
 import { MapFog } from "../../components/map/MapFog"
 import { MapHoveredHighlights } from "../../components/map/MapHoveredHighlights"
@@ -68,7 +69,10 @@ const MatchView = () => {
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
   const [isChangingTurns, setIsChangingTurns] = useState(false)
   const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
-
+  const playSound = () => {
+    const audio = new Audio(popSound)
+    audio.play()
+  }
   const {
     match,
     gameSettings,
@@ -312,6 +316,7 @@ const MatchView = () => {
             )
           : activatedSpecials,
       })
+      playSound()
       setIsUpdatingMatch(false)
       setSelectedCard(null)
       setActivatedSpecials([])
