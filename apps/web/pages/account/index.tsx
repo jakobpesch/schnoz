@@ -19,7 +19,7 @@ import {
 import { Match, MatchStatus, Participant, User } from "database"
 import { NextPage } from "next"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import useSWR, { mutate } from "swr"
 import { API_ERROR_CODES, isDataResponse } from "types"
 import useAuth from "../../hooks/useAuth"
@@ -147,14 +147,16 @@ const UserPage: NextPage = () => {
   const hasAccount = profile.email && profile.name
 
   const handleAddFriend = async (friendCode: User["friendCode"]) => {
+    setFriendCode(null)
     const response = await fetchApi<User[]>({
       url: `${BASE_API_URL}/users/add-friend/${friendCode}`,
       method: "POST",
     })
     if (isDataResponse(response)) {
       toast({
-        title: "Friend request sent",
+        title: "Success",
         status: "success",
+        variant: "subtle",
       })
       return
     }
@@ -204,15 +206,11 @@ const UserPage: NextPage = () => {
                 <Text fontWeight="bold">Friend Code:</Text>
                 <Text cursor="pointer" onMouseDown={onCopyFriendCode}>
                   {profile.friendCode?.split("").map((char, index) => (
-                    <>
-                      <Kbd
-                        fontSize="md"
-                        userSelect="none"
-                        key={`${char}_${index}`}
-                      >
+                    <Fragment key={`${char}_${index}`}>
+                      <Kbd fontSize="md" userSelect="none">
                         {char}
                       </Kbd>{" "}
-                    </>
+                    </Fragment>
                   ))}
                 </Text>
                 {hasCopiedFriendCode && <Text color="green.400">Copied!</Text>}
@@ -285,7 +283,7 @@ const UserPage: NextPage = () => {
             <>
               <Heading size="md">Friends</Heading>
               {friends.map((friend) => (
-                <Stack key={`${friend.id}`} direction={"row"}>
+                <Stack key={friend.id} direction={"row"}>
                   <Text>{friend.name}</Text>
                 </Stack>
               ))}
