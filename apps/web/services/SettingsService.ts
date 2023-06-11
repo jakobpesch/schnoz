@@ -4,6 +4,7 @@ import bob from "../assets/sprites/bob.png"
 import background from "../assets/sprites/grass.png"
 import house from "../assets/sprites/house.png"
 import maurice from "../assets/sprites/maurice.png"
+import ulf from "../assets/sprites/ulf.png"
 import ruleDiagonal from "../assets/sprites/rule_diagonal_north_east.png"
 import ruleHole from "../assets/sprites/rule_hole.png"
 import ruleStone from "../assets/sprites/rule_stone.png"
@@ -25,7 +26,7 @@ export const RenderSettings = {
       unit = bob
       color = "pink.500"
     } else if (playerNumber === 1) {
-      unit = maurice
+      unit = ulf
       color = "teal.500"
     } else {
       unit = house
