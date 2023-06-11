@@ -170,7 +170,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.mapSize === 11 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ mapSize: 11 })}
             >
@@ -180,7 +180,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.mapSize === 21 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ mapSize: 21 })}
             >
@@ -190,7 +190,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.mapSize === 31 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ mapSize: 31 })}
             >
@@ -205,7 +205,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.turnTime === 30000 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ turnTime: 30000 })}
             >
@@ -215,7 +215,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.turnTime === 60000 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ turnTime: 60000 })}
             >
@@ -225,7 +225,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.turnTime === 90000 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ turnTime: 90000 })}
             >
@@ -235,7 +235,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.turnTime === 120000 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ turnTime: 120000 })}
             >
@@ -250,7 +250,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.maxTurns === 6 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 6 })}
             >
@@ -260,7 +260,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.maxTurns === 12 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 12 })}
             >
@@ -270,7 +270,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.maxTurns === 24 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 24 })}
             >
@@ -280,7 +280,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               variant="outline"
               size="sm"
               disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "default" }}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
               colorScheme={settings.maxTurns === 36 ? "blue" : "gray"}
               onClick={() => onSettingsChange({ maxTurns: 36 })}
             >
@@ -296,6 +296,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                 key={rule}
                 isChecked={settings.rules.includes(rule)}
                 readOnly={!isHost}
+                cursor={!isHost ? "not-allowed" : "pointer"}
                 onChange={(e) => {
                   const isChecked = e.target.checked
                   if (isChecked) {
@@ -347,6 +348,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                     min={0}
                     max={10}
                     isReadOnly={!isHost}
+                    cursor={!isHost ? "not-allowed" : "pointer"}
                     colorScheme="teal"
                     onChange={(v) => setter(v)}
                     onChangeEnd={(v) => {
