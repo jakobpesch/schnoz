@@ -2,6 +2,20 @@
 
 This is an official starter Turborepo.
 
+## Commands
+
+### Build docker images
+
+```sh
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml build
+```
+
+### Run docker images
+
+```sh
+docker-compose -f docker-compose.yml up -d
+```
+
 ## Using this example
 
 Run the following command:
