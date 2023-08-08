@@ -13,6 +13,11 @@
       "cache": false,
       "persistent": true
     },
+    "start": {
+      "dependsOn": ["^db:generate"],
+      "cache": false,
+      "persistent": true
+    },
     "db:generate": {
       "cache": false
     },

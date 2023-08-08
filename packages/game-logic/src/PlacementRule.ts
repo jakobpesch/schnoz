@@ -38,7 +38,6 @@ export const checkConditionsForUnitConstellationPlacement = (
   placingPlayer: Participant["id"] | undefined,
   specials: Special[]
 ) => {
-  console.log(JSON.stringify(Array.from(defaultGame.placementRuleMap.keys())));
   if (!match) {
     return {
       error: {

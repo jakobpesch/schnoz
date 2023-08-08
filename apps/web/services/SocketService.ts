@@ -157,8 +157,6 @@ export class SocketIOApi {
     tilesWithUnits: TileWithUnit[]
     players: ParticipantWithUser[]
   }) => {
-    console.log("onStartedMatch", payload)
-
     this.callbacks.setMatch?.(payload.match)
     this.callbacks.setParticipants?.(payload.players)
     this.callbacks.setTilesWithUnits?.(payload.tilesWithUnits)
@@ -192,8 +190,6 @@ export class SocketIOApi {
   public sendRequest = async (request: { event: string; data?: any }) => {
     try {
       if (!this.socket?.connected) {
-        console.log(request)
-
         console.error(new Error("Socket not connected"))
         return
       }

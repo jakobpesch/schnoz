@@ -28,7 +28,7 @@ import {
   TileWithUnit,
   TransformedConstellation,
 } from "types"
-import popSound from "../../assets/sfx/pop.mp3"
+// import popSound from "../../assets/sfx/pop.mp3"
 import { MapContainer } from "../../components/map/MapContainer"
 import { MapFog } from "../../components/map/MapFog"
 import { MapHoveredHighlights } from "../../components/map/MapHoveredHighlights"
@@ -52,9 +52,9 @@ import { usePlaceableCoordinates } from "../../hooks/usePlaceableCoordinates"
 import { useTiles } from "../../hooks/useTiles"
 import {
   Special,
-  createMap,
   expandBuildRadiusByOne,
 } from "../../services/GameManagerService"
+import { createMap } from "../../services/MapService"
 import {
   UpdateGameSettingsPayload,
   socketApi,
@@ -70,8 +70,8 @@ const MatchView = () => {
   const [isChangingTurns, setIsChangingTurns] = useState(false)
   const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
   const playSound = () => {
-    const audio = new Audio(popSound)
-    audio.play()
+    // const audio = new Audio(popSound)
+    // audio.play()
   }
   const {
     match,
@@ -146,15 +146,6 @@ const MatchView = () => {
     (!isPreMatch && !activePlayer) ||
     !gameSettings
   ) {
-    console.log("match data not yet complete", {
-      you,
-      userId,
-      match,
-      map,
-      players: participants,
-      tilesWithUnits,
-      activePlayer,
-    })
     return null
   }
 
@@ -226,8 +217,6 @@ const MatchView = () => {
           you.id,
           activatedSpecials
         )
-
-      console.log({ translatedCoordinates, error })
 
       if (error) {
         toast({
@@ -333,7 +322,7 @@ const MatchView = () => {
     try {
       setIsUpdatingMatch(true)
       if (!map) {
-        await createMap(match.id, userId)
+        const map = await createMap(match.id)
       }
       await socketApi.startMatch(userId)
     } catch (e) {
@@ -374,6 +363,10 @@ const MatchView = () => {
       setActivatedSpecials([])
     }
   }
+  console.log(match)
+
+  console.log(unitTiles)
+
   return (
     <Container width="100vw" height="100vh" color="white">
       {isPreMatch && (
