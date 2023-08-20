@@ -26,8 +26,6 @@ export const MapUnits = (props: {
         const hexColor =
           playerNumber != null ? playerColors[playerNumber] : "transparent"
 
-        console.log("hexColor", hexColor, "playerNumber", playerNumber)
-
         return (
           <Flex
             key={tile.row + "_" + tile.col}

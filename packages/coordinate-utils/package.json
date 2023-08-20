@@ -1,5 +1,6 @@
 {
   "name": "coordinate-utils",
+  "version": "0.1.0",
   "main": "./dist/index.js",
   "types": "./dist/index.js",
   "scripts": {
@@ -7,9 +8,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "database": "workspace:*",
-    "types": "workspace:*",
-    "tsconfig": "workspace:*"
+    "database": "*",
+    "types": "*",
+    "tsconfig": "*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",

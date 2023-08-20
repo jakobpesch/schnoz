@@ -9,8 +9,6 @@ export const setCookie = (name: any, value: any, days: any) => {
 }
 export const getCookie = (name: any) => {
   if (typeof window === "undefined") {
-    console.log("window undefined")
-
     return null
   }
   const nameWithEqualSign = name + "="
@@ -20,8 +18,9 @@ export const getCookie = (name: any) => {
     while (cookie.charAt(0) === " ") {
       cookie = cookie.substring(1, cookie.length)
     }
-    if (cookie.indexOf(nameWithEqualSign) == 0)
+    if (cookie.indexOf(nameWithEqualSign) === 0) {
       return cookie.substring(nameWithEqualSign.length, cookie.length)
+    }
   }
   return null
 }

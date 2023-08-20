@@ -14,7 +14,7 @@ const Welcome: NextPage = () => {
 
   return (
     <Container height="100vh" centerContent placeContent="center">
-      <Heading fontFamily="Geodesic" fontSize="90px" color="teal.300">
+      <Heading fontFamily="Dokdo" fontSize="90px" color="teal.300">
         schnoz
       </Heading>
       <Stack>

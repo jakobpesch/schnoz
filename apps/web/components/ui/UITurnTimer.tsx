@@ -18,7 +18,7 @@ export const UITurnTimer = (props: { turnEndsAt: string }) => {
   return remainingTime > 0 && remainingTime <= 10.5 ? (
     <Box padding={scaled(4)} position={"fixed"} bottom={1} left={1}>
       <Heading
-        fontFamily="Geodesic"
+        fontFamily="Dokdo"
         fontSize="5xl"
         color={remainingTime <= 5 ? "red.300" : "white"}
       >

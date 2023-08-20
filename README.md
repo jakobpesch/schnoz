@@ -1,81 +1,83 @@
-# Turborepo starter
+# schnoz
 
-This is an official starter Turborepo.
+schnoz is an online puzzle game where two players place units to score points.
 
-## Using this example
+## Apps and Packages
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `ui`: a stub React component library shared by both `web` and `docs` applications
+- `server`: a [Nest.js](https://nestjs.com/) app
+- `web`: a [Next.js](https://nextjs.org/) app
+- `coordinate-utils`: util function to interact with coordinates as used in the game
+- `game-logic`: contains game logic such as game modes, placement rules and more
+- `types`: all shared types, i.e. database types
 - `eslint-config-custom`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `tsconfig`: `tsconfig.json`s used throughout the monorepo
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Develop
 
-### Utilities
+### Development database
 
-This Turborepo has some additional tools already setup for you:
+To spin up a database for development spin up a docker container.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Before serving the database, make sure you have the correct environment variables set in your `.env`. Use the contents of `packages/database/.env.local` into `packages/database/.env` or use the command:
 
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+```sh
+cp packages/database/.env.local packages/database/.env
 ```
 
-### Develop
+```sh
+yarn start:db
+```
 
 To develop all apps and packages, run the following command:
 
 ```
-cd my-turborepo
-pnpm dev
+yarn dev
 ```
 
-### Remote Caching
+## Docker
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+To run a dockerized version of schnoz you can spawn `server`, `web` and `database` containers using `docker-compose`.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
+### Create `.env`
 
-```
-cd my-turborepo
-npx turbo login
-```
+First, create an `.env` file in the `database` package with the connection string for the database. Depending on your environment, different values should be used:
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+#### With local database
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Use the contents of `packages/database/.env.docker.local` into `packages/database/.env` or use the command:
 
-```
-npx turbo link
+```sh
+cp packages/database/.env.docker.local packages/database/.env
 ```
 
-## Useful Links
+#### Development-Environment
 
-Learn more about the power of Turborepo:
+TBD
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+#### Staging-Environment
+
+TBD
+
+#### Production-Environment
+
+TBD
+
+### Build docker images
+
+A docker network is required for the containers to communicate. Create one, if you did not already:
+
+```sh
+docker network create app_network
+```
+
+### Build docker images
+
+```sh
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml build
+```
+
+### Run docker images
+
+```sh
+docker-compose -f docker-compose.yml up -d
+```

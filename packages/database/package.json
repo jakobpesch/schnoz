@@ -1,18 +1,20 @@
 {
   "name": "database",
   "main": "./dist/index.js",
+  "version": "0.1.0",
   "types": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push --skip-generate"
+    "db:push": "prisma db push --skip-generate",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
-    "@prisma/client": "latest",
-    "tsconfig": "workspace:*"
+    "@prisma/client": "5.1.1",
+    "tsconfig": "*"
   },
   "devDependencies": {
-    "prisma": "^4.13.0",
+    "prisma": "5.1.1",
     "typescript": "^5.0.4"
   }
 }

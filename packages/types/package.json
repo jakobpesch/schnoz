@@ -1,12 +1,13 @@
 {
   "name": "types",
+  "version": "0.1.0",
   "main": "./dist/index.js",
   "types": "./dist/index.js",
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "database": "workspace:*",
-    "tsconfig": "workspace:*"
+    "database": "*",
+    "tsconfig": "*"
   }
 }

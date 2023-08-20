@@ -117,7 +117,9 @@ export class MatchInstance {
 
     try {
       this.map = await this.mapsService.findOne({ matchId: this.Id });
-    } catch (e) {}
+    } catch (e) {
+      this.logger.error(e);
+    }
     if (this.map) {
       this.tilesWithUnits = await this.tilesService.findMany({
         where: { mapId: this.map.id },
@@ -358,7 +360,7 @@ export class MatchInstance {
     specials: Special[],
   ) {
     await this.sync();
-
+    this.logger.log('synced');
     if (!this.map) {
       return {
         error: {
@@ -398,6 +400,7 @@ export class MatchInstance {
         },
       };
     }
+    this.logger.log('401');
 
     const currentBonusPoints =
       this.activePlayer.bonusPoints + unitConstellation.value;
@@ -449,17 +452,22 @@ export class MatchInstance {
     }
 
     const updateTilesPromises: Promise<Tile & { unit: Unit | null }>[] = [];
+    console.log(translatedCoordinates);
+
     translatedCoordinates.forEach((coordinate) => {
       const { mapId, row, col } = tileLookup[buildTileLookupId(coordinate)];
-      updateTilesPromises.push(
-        this.tilesService.update({
-          where: { mapId_row_col: { mapId, row, col } },
-          data: {
-            unit: { create: { type: UnitType.UNIT, ownerId: participantId } },
-          },
-        }),
-      );
+      const updatePayload = {
+        where: { mapId_row_col: { mapId, row, col } },
+        data: {
+          unit: { create: { type: UnitType.UNIT, ownerId: participantId } },
+        },
+      };
+      // this.logger.log('updatePayload', updatePayload);
+      updateTilesPromises.push(this.tilesService.update(updatePayload));
     });
+
+    console.log(revealedTiles);
+
     revealedTiles.forEach(({ mapId, row, col }) => {
       updateTilesPromises.push(
         this.tilesService.update({
@@ -472,29 +480,31 @@ export class MatchInstance {
         }),
       );
     });
-    const updatedTilesWithUnits = await Promise.all(updateTilesPromises);
+    const updatedTilesWithUnits: any = [];
+    for (const element of updateTilesPromises) {
+      this.logger.log('!!!element', typeof element);
+      updatedTilesWithUnits.push(await element);
+    }
+    // updatedTilesWithUnits = await Promise.all(updateTilesPromises);
     const matchWithPlacedTiles = await this.matchesService.findOneRich({
       id: this.match.id,
     });
 
-    if (
-      !matchWithPlacedTiles ||
-      !matchWithPlacedTiles.activePlayer ||
-      !matchWithPlacedTiles.map
-    ) {
+    if (!matchWithPlacedTiles?.activePlayer || !matchWithPlacedTiles?.map) {
       return { message: 'Match could not be fetched', statusCode: 500 };
     }
 
     if (!this.activePlayer) {
       return { message: 'Error while placing', statusCode: 500 };
     }
+
+    this.logger.log('496');
     const gameType = createCustomGame(this.gameSettings?.rules ?? null);
     const playersWithUpdatedScore = gameType.evaluate(matchWithPlacedTiles);
 
     const updatedPlayers: ParticipantWithUser[] = [];
-    for (let i = 0; i < playersWithUpdatedScore.length; i++) {
-      const player = playersWithUpdatedScore[i];
-
+    this.logger.log('503');
+    for (const player of playersWithUpdatedScore) {
       const bonusPointsFromCard = unitConstellation.value;
 
       const usedPointsFromSpecials = specials.reduce((totalCost, special) => {
@@ -543,7 +553,7 @@ export class MatchInstance {
     if (!nextActivePlayerId) {
       return { message: 'Error while changing turns', statusCode: 500 };
     }
-
+    this.logger.log('556');
     this.match = await this.matchesService.update({
       where: { id: this.match.id },
       data: {
@@ -556,7 +566,7 @@ export class MatchInstance {
           : {}),
       },
     });
-
+    this.logger.log('after this.match = await this.matchesService.update({');
     if (!this.match.finishedAt) {
       this.setNewTurnTimer();
     }
@@ -566,7 +576,7 @@ export class MatchInstance {
       updatedTilesWithUnits,
       updatedPlayers,
     };
-
+    this.logger.log('this.matchLogService.create({');
     this.matchLogService.create({
       matchId: this.Id,
       message: `Player ${

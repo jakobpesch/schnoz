@@ -24,7 +24,7 @@ export const Navbar: FC = () => {
     >
       <Heading
         lineHeight="40px"
-        fontFamily="Geodesic"
+        fontFamily="Dokdo"
         fontSize="40px"
         color="teal.300"
         transform="auto"

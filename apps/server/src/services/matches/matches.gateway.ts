@@ -331,6 +331,15 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
+      this.logger.verbose(
+        'making move with',
+        participantId,
+        targetRow,
+        targetCol,
+        ignoredRules,
+        unitConstellation,
+        specials,
+      );
       const updates = await matchInstance.makeMove(
         participantId,
         targetRow,
@@ -339,10 +348,14 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
         unitConstellation,
         specials,
       );
+      this.logger.verbose('made move');
       this.server
         .to(matchInstance.Match.id)
         .emit(ServerEvent.MADE_MOVE, updates);
+      this.logger.verbose('emitted move');
     } catch (e) {
+      this.logger.verbose('error');
+
       this.logger.error('update match failed');
       this.logger.error(e);
       client.disconnect();
