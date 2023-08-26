@@ -3,13 +3,14 @@ import { Socket, io } from "socket.io-client"
 import {
   ClientEvent,
   Coordinate,
-  TransformedConstellation,
   ParticipantWithUser,
   PlacementRuleName,
   ServerEvent,
   Special,
   TileWithUnit,
+  TransformedConstellation,
 } from "types"
+import { BASE_API_URL } from "./GameManagerService"
 
 // TODO: Make type proper
 export type UpdateGameSettingsPayload = Partial<Omit<GameSettings, "id">>
@@ -45,7 +46,7 @@ export class SocketIOApi {
 
   public connectToMatch = (userId: string, matchId: string) => {
     this.isConnecting = true
-    this.socket = io("http://localhost:3000", {
+    this.socket = io(BASE_API_URL, {
       query: { userId, matchId },
       autoConnect: false,
     })
