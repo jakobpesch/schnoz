@@ -10,7 +10,7 @@ import {
   TileWithUnit,
   TransformedConstellation,
 } from "types"
-import { BASE_API_URL } from "./GameManagerService"
+import { BASE_URL } from "./GameManagerService"
 
 // TODO: Make type proper
 export type UpdateGameSettingsPayload = Partial<Omit<GameSettings, "id">>
@@ -46,7 +46,7 @@ export class SocketIOApi {
 
   public connectToMatch = (userId: string, matchId: string) => {
     this.isConnecting = true
-    this.socket = io(BASE_API_URL, {
+    this.socket = io(BASE_URL, {
       query: { userId, matchId },
       autoConnect: false,
     })
