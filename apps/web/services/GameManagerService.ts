@@ -1,4 +1,4 @@
-export const BASE_URL = "http://217.160.8.112"
+export const BASE_URL = "http://212.227.51.112"
 
 export const BASE_API_URL = BASE_URL + "/api"
 
