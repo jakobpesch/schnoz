@@ -26,5 +26,5 @@ RUN yarn turbo run build --scope=server --include-dependencies --no-deps
 FROM node:20-alpine AS runner
 WORKDIR /app
 COPY --from=sourcer /app/ .
-CMD yarn turbo run db:push && yarn turbo run dev
-# CMD yarn turbo run db:push && node apps/server/dist/main.js
+# CMD yarn turbo run db:push && yarn turbo run dev
+CMD yarn turbo run db:push && node apps/server/dist/main.js
