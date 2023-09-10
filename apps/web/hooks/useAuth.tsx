@@ -16,7 +16,7 @@ import {
 } from "types"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
 import { fetchApi } from "../services/FetchService"
-import { BASE_API_URL } from "../services/GameManagerService"
+import { NEXT_PUBLIC_API_URL } from "../services/GameManagerService"
 
 interface AuthContextType {
   profile?: Profile
@@ -44,7 +44,7 @@ export function AuthProvider({
   const router = useRouter()
 
   const fetchProfile = async () => {
-    const url = `${BASE_API_URL}/auth/profile`
+    const url = `${NEXT_PUBLIC_API_URL}/auth/profile`
     const profile = await fetchApi<Profile>({ url })
 
     if (isDataResponse(profile)) {
@@ -79,7 +79,7 @@ export function AuthProvider({
 
   const login: AuthContextType["login"] = async (email, password) => {
     const response = await fetchApi<{ access_token: string }>({
-      url: `${BASE_API_URL}/auth/login`,
+      url: `${NEXT_PUBLIC_API_URL}/auth/login`,
       method: "POST",
       body: {
         email,
@@ -101,7 +101,7 @@ export function AuthProvider({
   }
 
   const playAsGuest: AuthContextType["playAsGuest"] = async () => {
-    const url = `${BASE_API_URL}/users/register/guest`
+    const url = `${NEXT_PUBLIC_API_URL}/users/register/guest`
     const response = await fetchApi<AccessTokenResponse>({
       url,
       method: "POST",
@@ -121,7 +121,7 @@ export function AuthProvider({
   const register: AuthContextType["register"] = async (props) => {
     const { guestUserId, email, name, password } = props
     const response = await fetchApi<{ access_token: string }>({
-      url: `${BASE_API_URL}/users/register`,
+      url: `${NEXT_PUBLIC_API_URL}/users/register`,
       method: "PUT",
       body: { email, name, password, guestUserId },
     })

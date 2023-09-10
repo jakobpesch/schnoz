@@ -24,7 +24,7 @@ import useSWR, { mutate } from "swr"
 import { API_ERROR_CODES, isDataResponse } from "types"
 import useAuth from "../../hooks/useAuth"
 import { fetchApi } from "../../services/FetchService"
-import { BASE_API_URL } from "../../services/GameManagerService"
+import { NEXT_PUBLIC_API_URL } from "../../services/GameManagerService"
 import { fetcher } from "../../services/swrUtils"
 
 function useParticipations(userId?: string) {
@@ -80,7 +80,7 @@ const UserPage: NextPage = () => {
   useEffect(() => {
     if (profile) {
       fetchApi<User[]>({
-        url: `${BASE_API_URL}/users/${profile.sub}/friends`,
+        url: `${NEXT_PUBLIC_API_URL}/users/${profile.sub}/friends`,
         method: "GET",
       }).then((response) => {
         if (isDataResponse(response)) {
@@ -93,7 +93,7 @@ const UserPage: NextPage = () => {
         })
       })
       fetchApi<User[]>({
-        url: `${BASE_API_URL}/users/${profile.sub}/incoming-friend-requests`,
+        url: `${NEXT_PUBLIC_API_URL}/users/${profile.sub}/incoming-friend-requests`,
         method: "GET",
       }).then((response) => {
         if (isDataResponse(response)) {
@@ -106,7 +106,7 @@ const UserPage: NextPage = () => {
         })
       })
       fetchApi<User[]>({
-        url: `${BASE_API_URL}/users/${profile.sub}/outgoing-friend-requests`,
+        url: `${NEXT_PUBLIC_API_URL}/users/${profile.sub}/outgoing-friend-requests`,
         method: "GET",
       }).then((response) => {
         if (isDataResponse(response)) {
@@ -149,7 +149,7 @@ const UserPage: NextPage = () => {
   const handleAddFriend = async (friendCode: User["friendCode"]) => {
     setFriendCode(null)
     const response = await fetchApi<User[]>({
-      url: `${BASE_API_URL}/users/add-friend/${friendCode}`,
+      url: `${NEXT_PUBLIC_API_URL}/users/add-friend/${friendCode}`,
       method: "POST",
     })
     if (isDataResponse(response)) {
