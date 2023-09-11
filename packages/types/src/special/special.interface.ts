@@ -1,6 +1,6 @@
-import { SpecialType } from './special-type.type';
+import { SpecialType } from "./special-type.type"
 
 export interface Special {
-  cost: number;
-  type: SpecialType;
+  cost: number
+  type: SpecialType
 }

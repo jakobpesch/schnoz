@@ -7,7 +7,7 @@ export const MapHighlights = (
   props: {
     coordinates: Coordinate[]
     color?: string
-  } & FlexProps
+  } & FlexProps,
 ) => {
   const { coordinates, color, ...rest } = props
   return (

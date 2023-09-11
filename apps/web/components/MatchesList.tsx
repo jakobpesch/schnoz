@@ -150,7 +150,7 @@ export const MatchesList: FC = () => {
                   matches={matches.filter(
                     (match) =>
                       match.status === MatchStatus.CREATED ||
-                      match.status === MatchStatus.STARTED
+                      match.status === MatchStatus.STARTED,
                   )}
                   onJoinClick={(matchId) => handleJoinMatch(matchId)}
                   onDeleteClick={(matchId) => handleDeleteMatch(matchId)}
@@ -160,7 +160,7 @@ export const MatchesList: FC = () => {
               <TabPanel>
                 <MatchList
                   matches={matches.filter(
-                    (match) => match.status === MatchStatus.FINISHED
+                    (match) => match.status === MatchStatus.FINISHED,
                   )}
                   onJoinClick={(matchId) => handleJoinMatch(matchId)}
                   onDeleteClick={(matchId) => handleDeleteMatch(matchId)}

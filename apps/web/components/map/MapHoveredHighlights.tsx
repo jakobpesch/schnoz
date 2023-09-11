@@ -22,7 +22,7 @@ import { scaled } from "../ui/UIScoreView"
 const mousePositionToMapCoordinates = (
   mouseX: number,
   mouseY: number,
-  tileSizeInPx: number
+  tileSizeInPx: number,
 ) => {
   const row = Math.floor(mouseX / tileSizeInPx)
   const col = Math.floor(mouseY / tileSizeInPx)
@@ -41,13 +41,13 @@ export interface MapHoveredHighlightsProps {
     row: number,
     col: number,
     rotatedClockwise: TransformedConstellation["rotatedClockwise"],
-    mirrored: TransformedConstellation["mirrored"]
+    mirrored: TransformedConstellation["mirrored"],
   ) => void
 }
 
 export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
   const [hoveredCoordinate, setHoveredCoordinate] = useState<Coordinate | null>(
-    null
+    null,
   )
   const [opponentsHoveredTiles, setOpponentsHoveredTiles] = useState<
     Coordinate[] | null
@@ -89,7 +89,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
     const coordinate = mousePositionToMapCoordinates(
       event.clientY - bounds.top,
       event.clientX - bounds.left,
-      RenderSettings.tileSize
+      RenderSettings.tileSize,
     )
     setHoveredCoordinate(coordinate)
   }
@@ -117,7 +117,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
     return null
   }
   const hasExpandBuildRaidusByOneActive = props.activeSpecials.some(
-    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1"
+    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
   )
 
   const availableBonusPoints = props.you.bonusPoints + (props.card?.value ?? 0)
@@ -256,7 +256,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
             <Image
               src={
                 RenderSettings.getPlayerAppearance(
-                  props.activePlayer?.playerNumber
+                  props.activePlayer?.playerNumber,
                 ).unit
               }
               height={RenderSettings.tileSize}
@@ -293,7 +293,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
             <Image
               src={
                 RenderSettings.getPlayerAppearance(
-                  props.activePlayer?.playerNumber
+                  props.activePlayer?.playerNumber,
                 ).unit
               }
               height={RenderSettings.tileSize}

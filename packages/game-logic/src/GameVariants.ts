@@ -1,22 +1,22 @@
-import { Match, Participant, Rule, UnitConstellation } from "database";
-import { GameType } from "./game-type.interface";
-import { placementRulesMap } from "./placementRules/placement-rule-map.const";
-import { ScoringRule } from "types";
-import { shuffleArray } from "coordinate-utils";
-import { getTileLookup } from "coordinate-utils";
+import { Match, Participant, Rule, UnitConstellation } from "database"
+import { GameType } from "./game-type.interface"
+import { placementRulesMap } from "./placementRules/placement-rule-map.const"
+import { ScoringRule } from "types"
+import { shuffleArray } from "coordinate-utils"
+import { getTileLookup } from "coordinate-utils"
 import {
   diagnoalRule,
   holeRule,
   ScoringRulesMap,
   stoneRule,
   waterRule,
-} from "./ScoringRule";
+} from "./ScoringRule"
 
 export const createCustomGame: (scoringRuleNames: Rule[] | null) => GameType = (
-  scoringRuleNames
+  scoringRuleNames,
 ) => {
   if (!scoringRuleNames) {
-    return defaultGame;
+    return defaultGame
   }
 
   return {
@@ -24,84 +24,84 @@ export const createCustomGame: (scoringRuleNames: Rule[] | null) => GameType = (
     scoringRules: [...ScoringRulesMap.entries()].reduce<ScoringRule[]>(
       (acc, [ruleName, scoringRule]) => {
         if (scoringRuleNames.includes(ruleName)) {
-          return [...acc, scoringRule];
+          return [...acc, scoringRule]
         }
-        return [...acc];
+        return [...acc]
       },
-      []
+      [],
     ),
-  };
-};
+  }
+}
 
-const defaultGamePlacementRulesMap = new Map(placementRulesMap);
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY");
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY_2");
+const defaultGamePlacementRulesMap = new Map(placementRulesMap)
+defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY")
+defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY_2")
 // defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY");
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY_2");
+defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY_2")
 
 export const defaultGame: GameType = {
   shouldChangeActivePlayer: (turn: Match["turn"]) => {
-    return turn % 2 !== 0;
+    return turn % 2 !== 0
   },
   shouldChangeCards: (turn: Match["turn"]) => {
-    return turn % 2 === 0;
+    return turn % 2 === 0
   },
   changedCards: () => {
     return shuffleArray<UnitConstellation>(
-      Object.values({ ...UnitConstellation })
-    ).slice(0, 3);
+      Object.values({ ...UnitConstellation }),
+    ).slice(0, 3)
   },
   evaluate: function (match) {
     if (!this.shouldEvaluate(match.turn)) {
-      return match.players;
+      return match.players
     }
 
     if (!match.map) {
-      console.error("Map missing");
-      return match.players;
+      console.error("Map missing")
+      return match.players
     }
-    const tileLookup = getTileLookup(match.map.tiles);
+    const tileLookup = getTileLookup(match.map.tiles)
 
     const winners = (this.scoringRules as ScoringRule[]).map((rule) => {
       const evaluations = match.players.map((player) => {
-        return rule(player.id, tileLookup);
-      });
+        return rule(player.id, tileLookup)
+      })
       if (
         evaluations.every(
-          (evaluation) => evaluation.points - evaluations[0].points === 0
+          (evaluation) => evaluation.points - evaluations[0].points === 0,
         )
       ) {
-        return null;
+        return null
       }
       const winningEvaluation = evaluations
         .sort((a, b) => {
           if (a.points > b.points) {
-            return -1;
+            return -1
           } else {
-            return 1;
+            return 1
           }
         })
-        .shift();
+        .shift()
       if (!winningEvaluation) {
-        throw new Error("Could not evaluate");
+        throw new Error("Could not evaluate")
       }
-      return winningEvaluation;
-    });
+      return winningEvaluation
+    })
 
     const playersWithUpdatedScores = match.players.map<Participant>(
       (player) => {
         const wonRulesCount = winners.filter(
-          (evaluation) => evaluation?.playerId === player.id
-        ).length;
-        return { ...player, score: player.score + wonRulesCount };
-      }
-    );
+          (evaluation) => evaluation?.playerId === player.id,
+        ).length
+        return { ...player, score: player.score + wonRulesCount }
+      },
+    )
 
-    return playersWithUpdatedScores;
+    return playersWithUpdatedScores
   },
   shouldEvaluate: (turn) => {
-    return turn % 6 === 0;
+    return turn % 6 === 0
   },
   scoringRules: [waterRule, stoneRule, holeRule, diagnoalRule],
   placementRuleMap: defaultGamePlacementRulesMap,
-};
+}

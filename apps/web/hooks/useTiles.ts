@@ -43,7 +43,7 @@ export function useTiles(tilesWithUnits: TileWithUnit[] | undefined) {
               return false
             }
             return !tile.visible
-          }
+          },
         )
         return tile.visible && hasHiddenAdjacentTile
       })

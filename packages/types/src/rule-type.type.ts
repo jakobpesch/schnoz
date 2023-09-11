@@ -1,1 +1,1 @@
-export type RuleType = 'hole' | 'water' | 'stone' | 'diagonal';
+export type RuleType = "hole" | "water" | "stone" | "diagonal"

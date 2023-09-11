@@ -4,11 +4,11 @@ import {
   Injectable,
   NestInterceptor,
   Scope,
-} from '@nestjs/common';
-import * as Sentry from '@sentry/node';
-import { Observable, catchError, finalize, throwError } from 'rxjs';
+} from "@nestjs/common"
+import * as Sentry from "@sentry/node"
+import { Observable, catchError, finalize, throwError } from "rxjs"
 
-import { NgSentryService } from './sentry.service';
+import { NgSentryService } from "./sentry.service"
 
 /**
  * We must be in Request scope as we inject SentryService
@@ -20,7 +20,7 @@ export class NgSentryInterceptor implements NestInterceptor {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // start a child span for performance tracing
-    const span = this.sentryService.startChild({ op: `route handler` });
+    const span = this.sentryService.startChild({ op: `route handler` })
 
     return next.handle().pipe(
       catchError((error) => {
@@ -28,15 +28,15 @@ export class NgSentryInterceptor implements NestInterceptor {
         Sentry.captureException(
           error,
           this.sentryService.span?.getTraceContext(),
-        );
+        )
 
         // throw again the error
-        return throwError(() => error);
+        return throwError(() => error)
       }),
       finalize(() => {
-        span?.finish();
-        this.sentryService.span?.finish();
+        span?.finish()
+        this.sentryService.span?.finish()
       }),
-    );
+    )
   }
 }

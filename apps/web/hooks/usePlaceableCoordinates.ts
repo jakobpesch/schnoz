@@ -68,8 +68,8 @@ export function usePlaceableCoordinates(props: {
             tileLookup,
             [],
             you?.id,
-            activatedSpecials
-          )
+            activatedSpecials,
+          ),
         )
         .filter((v) => typeof v.error === "undefined")
         .map((v) => v.translatedCoordinates?.[0] ?? null)

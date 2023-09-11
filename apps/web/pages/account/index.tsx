@@ -45,10 +45,10 @@ const UserPage: NextPage = () => {
   const [matches, setParticipations] = useState<Match[]>()
   const [friends, setFriends] = useState<User[]>([])
   const [incomingFriendRequests, setIncomingFriendRequests] = useState<User[]>(
-    []
+    [],
   )
   const [outgoingFriendRequests, setOutgoingFriendRequests] = useState<User[]>(
-    []
+    [],
   )
 
   const { onCopy: onCopyFriendCode, hasCopied: hasCopiedFriendCode } =

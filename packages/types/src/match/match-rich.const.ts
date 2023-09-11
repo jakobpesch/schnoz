@@ -1,4 +1,4 @@
-import { Prisma } from "database";
+import { Prisma } from "database"
 
 export const matchRich = Prisma.validator<Prisma.MatchArgs>()({
   include: {
@@ -8,4 +8,4 @@ export const matchRich = Prisma.validator<Prisma.MatchArgs>()({
     winner: true,
     gameSettings: true,
   },
-});
+})

@@ -1,6 +1,6 @@
-import { Coordinate } from './coordinate.type';
+import { Coordinate } from "./coordinate.type"
 
 export interface Card {
-  value: number;
-  coordinates: Coordinate[];
+  value: number
+  coordinates: Coordinate[]
 }

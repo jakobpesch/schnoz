@@ -59,49 +59,49 @@ export class SocketIOApi {
       ServerEvent.PLAYER_CONNECTED_TO_MATCH,
       (data: Parameters<typeof this.onPlayerConnectedToMatch>[number]) => {
         this.onPlayerConnectedToMatch(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.PLAYER_DISCONNECTED_FROM_MATCH,
       (data: Parameters<typeof this.onPlayerDisconnectedFromMatch>[number]) => {
         this.onPlayerDisconnectedFromMatch(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.STARTED_MATCH,
       (data: Parameters<typeof this.onStartedMatch>[number]) => {
         this.onStartedMatch(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.KICKED_PARTICIPANT,
       (data: Parameters<typeof this.onKickedParticipant>[number]) => {
         this.onKickedParticipant(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.UPDATED_GAME_SETTINGS,
       (data: Parameters<typeof this.onUpdatedGameSettings>[number]) => {
         this.onUpdatedGameSettings(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.HOVERED,
       (data: Parameters<typeof this.onHovered>[number]) => {
         this.onHovered(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.MADE_MOVE,
       (data: Parameters<typeof this.onMadeMove>[number]) => {
         this.onMadeMove(data)
-      }
+      },
     )
     this.socket.on(
       ServerEvent.TURN_TIMER_RAN_OUT,
       (data: Parameters<typeof this.onEndTurnTimestamp>[number]) => {
         this.onEndTurnTimestamp(data)
-      }
+      },
     )
 
     this.socket.on("disconnect", () => {
@@ -144,7 +144,7 @@ export class SocketIOApi {
   }
 
   private onPlayerDisconnectedFromMatch = (
-    participants: ParticipantWithUser[]
+    participants: ParticipantWithUser[],
   ) => {
     this.callbacks.setConnectedParticipants?.(participants)
   }
@@ -165,7 +165,7 @@ export class SocketIOApi {
   }
 
   private onKickedParticipant = (
-    remainingParticipants: ParticipantWithUser[]
+    remainingParticipants: ParticipantWithUser[],
   ) => {
     this.callbacks.setParticipants?.(remainingParticipants)
     this.callbacks.setConnectedParticipants?.(remainingParticipants)
@@ -221,7 +221,7 @@ export class SocketIOApi {
   }
 
   async updateGameSettings(
-    settings: Omit<UpdateGameSettingsPayload, "matchId">
+    settings: Omit<UpdateGameSettingsPayload, "matchId">,
   ) {
     const gameSettings: UpdateGameSettingsPayload = {}
     if (settings.mapSize) {

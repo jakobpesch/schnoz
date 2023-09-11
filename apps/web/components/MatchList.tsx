@@ -39,7 +39,7 @@ const MatchList = (props: MatchListProps) => {
   }
   const hasJoined = (match: MatchWithPlayersAndUsers) => {
     return match.players.some(
-      (participant) => participant.userId === profile?.sub
+      (participant) => participant.userId === profile?.sub,
     )
   }
   if (matches.length === 0) {
@@ -66,7 +66,7 @@ const MatchList = (props: MatchListProps) => {
           {matches?.map((match) => {
             const relativeTime = getRelativeTime(match.createdAt)
             const createdByName = match.players.find(
-              (player) => match.createdById === player.userId
+              (player) => match.createdById === player.userId,
             )?.user.name
             return (
               <Tr key={match.id}>

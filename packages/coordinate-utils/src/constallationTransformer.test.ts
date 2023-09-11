@@ -1,4 +1,4 @@
-import { UnitConstellation } from 'database';
+import { UnitConstellation } from "database"
 import {
   addCoordinates,
   decodeUnitConstellation,
@@ -11,9 +11,9 @@ import {
   separateCoordinates,
   transformCoordinates,
   translateCoordinatesTo,
-} from './constallationTransformer';
+} from "./constallationTransformer"
 
-test('normalise coordinates / translating to [0,0]', () => {
+test("normalise coordinates / translating to [0,0]", () => {
   expect(
     normaliseCoordinates([
       [1, 1],
@@ -24,7 +24,7 @@ test('normalise coordinates / translating to [0,0]', () => {
     [2, 2],
     [1, 1],
     [0, 0],
-  ]);
+  ])
 
   expect(
     normaliseCoordinates([
@@ -36,7 +36,7 @@ test('normalise coordinates / translating to [0,0]', () => {
     [0, 0],
     [1, 0],
     [2, 1],
-  ]);
+  ])
 
   expect(
     normaliseCoordinates([
@@ -46,10 +46,10 @@ test('normalise coordinates / translating to [0,0]', () => {
   ).toEqual([
     [0, 1],
     [1, 0],
-  ]);
-});
+  ])
+})
 
-test('transforms coordinates', () => {
+test("transforms coordinates", () => {
   expect(
     transformCoordinates(
       [
@@ -61,7 +61,7 @@ test('transforms coordinates', () => {
   ).toEqual([
     [4, -6],
     [2, 4],
-  ]);
+  ])
 
   expect(
     transformCoordinates(
@@ -78,14 +78,14 @@ test('transforms coordinates', () => {
     [-7, -1],
     [-8, -1],
     [-8, -0],
-  ]);
-});
+  ])
+})
 
-test('adds two coordinates', () => {
-  expect(addCoordinates([6, 4], [-4, 2])).toEqual([2, 6]);
-});
+test("adds two coordinates", () => {
+  expect(addCoordinates([6, 4], [-4, 2])).toEqual([2, 6])
+})
 
-test('translates coordinates to', () => {
+test("translates coordinates to", () => {
   expect(
     translateCoordinatesTo(
       [5, 1],
@@ -97,7 +97,7 @@ test('translates coordinates to', () => {
   ).toEqual([
     [5, 1],
     [6, 2],
-  ]);
+  ])
   expect(
     translateCoordinatesTo(
       [5, 1],
@@ -109,10 +109,10 @@ test('translates coordinates to', () => {
   ).toEqual([
     [5, 1],
     [3, 2],
-  ]);
-});
+  ])
+})
 
-test('rotate clockwise', () => {
+test("rotate clockwise", () => {
   expect(
     rotateClockwise([
       [6, 4],
@@ -121,10 +121,10 @@ test('rotate clockwise', () => {
   ).toEqual([
     [4, -6],
     [4, -5],
-  ]);
-});
+  ])
+})
 
-test('rotate counter clockwise', () => {
+test("rotate counter clockwise", () => {
   expect(
     rotateCounterClockwise([
       [6, 4],
@@ -133,10 +133,10 @@ test('rotate counter clockwise', () => {
   ).toEqual([
     [-4, 6],
     [-4, 5],
-  ]);
-});
+  ])
+})
 
-test('mirror along y-axis', () => {
+test("mirror along y-axis", () => {
   expect(
     mirrorAlongYAxis([
       [6, 4],
@@ -145,10 +145,10 @@ test('mirror along y-axis', () => {
   ).toEqual([
     [-6, 4],
     [-5, 4],
-  ]);
-});
+  ])
+})
 
-test('mirror along x-axis', () => {
+test("mirror along x-axis", () => {
   expect(
     mirrorAlongXAxis([
       [6, 4],
@@ -157,10 +157,10 @@ test('mirror along x-axis', () => {
   ).toEqual([
     [6, -4],
     [5, -4],
-  ]);
-});
+  ])
+})
 
-test('separate coordinates', () => {
+test("separate coordinates", () => {
   expect(
     separateCoordinates([
       [6, 4],
@@ -171,12 +171,12 @@ test('separate coordinates', () => {
   ).toEqual([
     [6, 5, 6, 5],
     [4, 4, -4, 3],
-  ]);
-});
+  ])
+})
 
-const unitConstellations = { ...UnitConstellation };
+const unitConstellations = { ...UnitConstellation }
 
-test('encode unit constellation', () => {
+test("encode unit constellation", () => {
   expect(
     encodeUnitConstellation(
       [
@@ -185,7 +185,7 @@ test('encode unit constellation', () => {
       ],
       4,
     ),
-  ).toEqual(unitConstellations.r0c0_r0c1_v4);
+  ).toEqual(unitConstellations.r0c0_r0c1_v4)
 
   expect(
     encodeUnitConstellation(
@@ -196,15 +196,15 @@ test('encode unit constellation', () => {
       ],
       1,
     ),
-  ).toEqual(unitConstellations.r0c0_r0c1_r1c2_v1);
-});
+  ).toEqual(unitConstellations.r0c0_r0c1_r1c2_v1)
+})
 
-test('decode unit constellation', () => {
-  expect(decodeUnitConstellation('r0c0_r0c1_v4')).toEqual({
+test("decode unit constellation", () => {
+  expect(decodeUnitConstellation("r0c0_r0c1_v4")).toEqual({
     value: 4,
     coordinates: [
       [0, 0],
       [0, 1],
     ],
-  });
-});
+  })
+})

@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Participant, Prisma } from 'database';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common"
+import { Participant, Prisma } from "database"
+import { PrismaService } from "../prisma/prisma.service"
 
 @Injectable()
 export class ParticipantsService {
@@ -12,21 +12,21 @@ export class ParticipantsService {
     const participant = await this.prisma.participant.findUnique({
       where: participantWhereUniqueInput,
       include: { user: true },
-    });
+    })
     if (!participant) {
-      throw new NotFoundException();
+      throw new NotFoundException()
     }
-    return participant;
+    return participant
   }
 
   async findMany(params: {
-    skip?: number;
-    take?: number;
-    cursor?: Prisma.ParticipantWhereUniqueInput;
-    where?: Prisma.ParticipantWhereInput;
-    orderBy?: Prisma.ParticipantOrderByWithRelationInput;
+    skip?: number
+    take?: number
+    cursor?: Prisma.ParticipantWhereUniqueInput
+    where?: Prisma.ParticipantWhereInput
+    orderBy?: Prisma.ParticipantOrderByWithRelationInput
   }) {
-    const { skip, take, cursor, where, orderBy } = params;
+    const { skip, take, cursor, where, orderBy } = params
     return this.prisma.participant.findMany({
       skip,
       take,
@@ -34,31 +34,31 @@ export class ParticipantsService {
       where,
       orderBy,
       include: { user: true },
-    });
+    })
   }
 
   async create(data: Prisma.ParticipantUncheckedCreateInput) {
     return await this.prisma.participant.create({
       data,
       include: { user: true },
-    });
+    })
   }
 
   async update(params: {
-    where: Prisma.ParticipantWhereUniqueInput;
-    data: Prisma.ParticipantUncheckedUpdateInput;
+    where: Prisma.ParticipantWhereUniqueInput
+    data: Prisma.ParticipantUncheckedUpdateInput
   }) {
-    const { where, data } = params;
+    const { where, data } = params
     return this.prisma.participant.update({
       data,
       where,
       include: { user: true },
-    });
+    })
   }
 
   async delete(where: Prisma.ParticipantWhereUniqueInput) {
     return this.prisma.participant.delete({
       where,
-    });
+    })
   }
 }

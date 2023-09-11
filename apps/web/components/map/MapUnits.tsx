@@ -19,7 +19,7 @@ export const MapUnits = (props: {
     <>
       {props.unitTiles.map((tile) => {
         const playerNumber = props.players.find(
-          (player) => player.id === tile.unit?.ownerId
+          (player) => player.id === tile.unit?.ownerId,
         )?.playerNumber
         const { unit } = RenderSettings.getPlayerAppearance(playerNumber)
 
@@ -40,7 +40,7 @@ export const MapUnits = (props: {
             // background={color}
             background={
               props.updatedUnitTiles.find((ut) =>
-                coordinatesAreEqual([ut.row, ut.col], [tile.row, tile.col])
+                coordinatesAreEqual([ut.row, ut.col], [tile.row, tile.col]),
               )
                 ? hexColor + "dd"
                 : hexColor + "80"

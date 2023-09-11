@@ -24,7 +24,7 @@ export const scaled = (value: number) => value * RenderSettings.uiScale
 const getEvaluationsMap = (
   tilesWithUnits: TileWithUnit[],
   players: Participant[],
-  rules: GameSettings["rules"]
+  rules: GameSettings["rules"],
 ) => {
   const tileLookup = getTileLookup(tilesWithUnits)
   const rulesMap = new Map<Rule, RuleEvaluation[]>()
@@ -39,8 +39,8 @@ const getEvaluationsMap = (
   players.forEach((player) =>
     evaluationsMap.set(
       player.id,
-      gameType.scoringRules.map((rule) => rule(player.id, tileLookup))
-    )
+      gameType.scoringRules.map((rule) => rule(player.id, tileLookup)),
+    ),
   )
 
   return rulesMap
@@ -634,10 +634,10 @@ export const UIScoreView = (props: {
     ? getEvaluationsMap(props.tilesWithUnits, props.participants, props.rules)
     : null
   const player1Connected = props.connectedParticipants.find(
-    (p) => player1.id === p.id
+    (p) => player1.id === p.id,
   )
   const player2Connected = props.connectedParticipants.find(
-    (p) => player2.id === p.id
+    (p) => player2.id === p.id,
   )
   return (
     <VStack position="fixed" top="0" right="0">
@@ -721,10 +721,10 @@ export const UIScoreView = (props: {
                         ? "none"
                         : ruleEvaluations[0].points > ruleEvaluations[1].points
                         ? RenderSettings.getPlayerAppearance(
-                            player1.playerNumber
+                            player1.playerNumber,
                           ).color
                         : RenderSettings.getPlayerAppearance(
-                            player2.playerNumber
+                            player2.playerNumber,
                           ).color
                     }
                   >
@@ -743,7 +743,7 @@ export const UIScoreView = (props: {
                         size="md"
                         onMouseEnter={() =>
                           props.onRuleHover(
-                            ruleEvaluations[0].fulfillments.flat()
+                            ruleEvaluations[0].fulfillments.flat(),
                           )
                         }
                         onMouseLeave={() => props.onRuleHover([])}
@@ -755,7 +755,7 @@ export const UIScoreView = (props: {
                           <Image
                             alt=""
                             src={RenderSettings.getRuleAppearance(
-                              ruleEvaluations[0].type
+                              ruleEvaluations[0].type,
                             )}
                             width={scaled(40)}
                             height={scaled(40)}
@@ -766,7 +766,7 @@ export const UIScoreView = (props: {
                             <Image
                               alt=""
                               src={RenderSettings.getRuleAppearance(
-                                ruleEvaluations[0].type
+                                ruleEvaluations[0].type,
                               )}
                               width={scaled(40)}
                               height={scaled(40)}
@@ -774,7 +774,7 @@ export const UIScoreView = (props: {
 
                             <Heading fontSize={scaled(25)}>
                               {RenderSettings.getRuleName(
-                                ruleEvaluations[0].type
+                                ruleEvaluations[0].type,
                               )}
                             </Heading>
                           </HStack>
@@ -790,7 +790,7 @@ export const UIScoreView = (props: {
                         size="md"
                         onMouseEnter={() =>
                           props.onRuleHover(
-                            ruleEvaluations[1].fulfillments.flat()
+                            ruleEvaluations[1].fulfillments.flat(),
                           )
                         }
                         onMouseLeave={() => props.onRuleHover([])}
@@ -800,7 +800,7 @@ export const UIScoreView = (props: {
                     </Flex>
                   </VStack>
                 )
-              }
+              },
             )}
           </Stack>
         )}

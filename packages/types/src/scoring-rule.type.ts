@@ -1,7 +1,7 @@
-import { RuleEvaluation } from "./rule-evaluation.interface";
-import { TileLookup } from "./tile-lookup.type";
+import { RuleEvaluation } from "./rule-evaluation.interface"
+import { TileLookup } from "./tile-lookup.type"
 
 export type ScoringRule = (
   playerId: string,
-  tileLookup: TileLookup
-) => RuleEvaluation;
+  tileLookup: TileLookup,
+) => RuleEvaluation

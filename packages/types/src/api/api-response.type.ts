@@ -1,3 +1,3 @@
-import { ErrorResponse } from "./error-response.interface";
+import { ErrorResponse } from "./error-response.interface"
 
-export type ApiResponse<Data = unknown> = Data | ErrorResponse;
+export type ApiResponse<Data = unknown> = Data | ErrorResponse
