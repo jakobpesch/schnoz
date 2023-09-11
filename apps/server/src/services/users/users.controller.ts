@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -12,17 +13,24 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { User } from 'database';
+import dotenv from 'dotenv';
 import { API_ERROR_CODES } from 'types';
 import { AuthRequest } from '../auth/auth-request.type';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthService } from '../auth/auth.service';
+import { MailService } from '../mail/mail.service';
+import { MatchesService } from '../matches/matches.service';
 import { UsersService } from './users.service';
+
+const { API_URL } = dotenv.config()?.parsed ?? {};
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
+    private readonly mailService: MailService,
+    private readonly matchesService: MatchesService,
   ) {}
 
   @Post('/register/guest')
@@ -48,6 +56,10 @@ export class UsersController {
       throw new BadRequestException('Name must be at least 3 characters');
     }
 
+    if (email.match(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/) === null) {
+      throw new BadRequestException(API_ERROR_CODES.INVALID_EMAIL);
+    }
+
     let guestUserId = id;
     if (!guestUserId) {
       const guestUser = await this.usersService.createGuestUser();
@@ -61,12 +73,28 @@ export class UsersController {
       password,
     });
 
-    return this.authService.generateToken(registeredUser);
-  }
+    const verificationToken = this.authService.generateVerificationToken(
+      registeredUser.id,
+    );
+    const registeredUserWithVerificationToken = await this.usersService.update({
+      where: { id: registeredUser.id },
+      data: { verificationToken },
+    });
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne({ id });
+    if (!registeredUser.email) {
+      throw new InternalServerErrorException(API_ERROR_CODES.EMAIL_NOT_SET);
+    }
+
+    const url = `${API_URL}/auth/verify-email?token=${registeredUserWithVerificationToken.verificationToken}`;
+    this.mailService.sendMail({
+      to: registeredUser.email,
+      subject: 'Welcome to the game!',
+      text: `Welcome to the game, ${registeredUser.name}!`,
+      html: `<p>Welcome to the game, ${registeredUser.name}!</p>\
+             <p>Click <a href="${url}">here</a> to verify your email address.</p>`,
+    });
+
+    return this.authService.generateToken(registeredUser);
   }
 
   @UseGuards(AuthGuard)
@@ -91,41 +119,65 @@ export class UsersController {
     }
   }
 
-  @Get(':id/friends')
-  async findFriends(@Param('id') id: string) {
-    const user = await this.usersService.findOne({ id });
+  @UseGuards(AuthGuard)
+  @Get('/friends')
+  async findFriends(@Req() req: AuthRequest) {
+    const user = await this.usersService.findOne({ id: req.user.sub });
     return this.usersService.findMany({
       where: {
         AND: [
           { friends: { some: { id: user.id } } },
-          { friendsOf: { some: { id } } },
+          { friendsOf: { some: { id: req.user.sub } } },
         ],
       },
     });
   }
 
-  @Get(':id/incoming-friend-requests')
-  async findIncomingFriendRequests(@Param('id') id: string) {
-    const user = await this.usersService.findOne({ id });
+  @UseGuards(AuthGuard)
+  @Get('incoming-friend-requests')
+  async findIncomingFriendRequests(@Req() req: AuthRequest) {
+    const user = await this.usersService.findOne({ id: req.user.sub });
     return this.usersService.findMany({
       where: {
         AND: [
           { friends: { some: { id: user.id } } },
-          { friendsOf: { none: { id } } },
+          { friendsOf: { none: { id: req.user.sub } } },
         ],
       },
     });
   }
-  @Get(':id/outgoing-friend-requests')
-  async findOutgoingFriendRequests(@Param('id') id: string) {
-    const user = await this.usersService.findOne({ id });
+
+  @UseGuards(AuthGuard)
+  @Get('outgoing-friend-requests')
+  async findOutgoingFriendRequests(@Req() req: AuthRequest) {
+    const user = await this.usersService.findOne({ id: req.user.sub });
     return this.usersService.findMany({
       where: {
         AND: [
           { friendsOf: { some: { id: user.id } } },
-          { friends: { none: { id } } },
+          { friends: { none: { id: req.user.sub } } },
         ],
       },
     });
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('participations')
+  async participations(@Req() req: AuthRequest) {
+    return this.matchesService.findMany({
+      where: {
+        players: {
+          some: {
+            userId: req.user.sub,
+          },
+        },
+      },
+    });
+  }
+
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne({ id });
   }
 }

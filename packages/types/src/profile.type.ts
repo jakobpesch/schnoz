@@ -5,4 +5,5 @@ export type Profile = {
   email: string;
   name: string;
   friendCode: User["friendCode"];
+  verifiedEmail: string;
 };

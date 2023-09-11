@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
+import { UsersModule } from '../users/users.module';
+import { jwtConstants } from './auth.constants';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UsersModule } from 'src/services/users/users.module';
-import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './auth.constants';
 // import { jwtConstants } from './auth.constants';
 // import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -17,14 +18,7 @@ import { jwtConstants } from './auth.constants';
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    // JwtService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
-  ],
+  providers: [AuthService, MailService],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -9,9 +9,8 @@ import {
 } from '@nestjs/common';
 import { Map } from 'database';
 import { AuthRequest } from '../auth/auth-request.type';
-import { MatchesService } from '../matches/matches.service';
-import { MapsService } from './maps.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { MapsService } from './maps.service';
 
 @Controller('maps')
 export class MapsController {

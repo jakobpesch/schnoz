@@ -8,21 +8,17 @@ import {
   useMemo,
   useState,
 } from "react"
-import {
-  AccessTokenResponse,
-  isDataResponse,
-  isErrorResponse,
-  Profile,
-} from "types"
+import { AccessTokenResponse, isDataResponse, Profile } from "types"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
 import { fetchApi } from "../services/FetchService"
-import { BASE_API_URL } from "../services/GameManagerService"
+import { NEXT_PUBLIC_API_URL } from "../services/GameManagerService"
 
 interface AuthContextType {
   profile?: Profile
   playAsGuest: () => Promise<Profile | undefined>
   logout: () => void
   login: (email: string, password: string) => Promise<void>
+  refreshToken: () => Promise<void>
   register: (props: {
     guestUserId?: string
     email: string
@@ -44,7 +40,7 @@ export function AuthProvider({
   const router = useRouter()
 
   const fetchProfile = async () => {
-    const url = `${BASE_API_URL}/auth/profile`
+    const url = `${NEXT_PUBLIC_API_URL}/auth/profile`
     const profile = await fetchApi<Profile>({ url })
 
     if (isDataResponse(profile)) {
@@ -79,7 +75,7 @@ export function AuthProvider({
 
   const login: AuthContextType["login"] = async (email, password) => {
     const response = await fetchApi<{ access_token: string }>({
-      url: `${BASE_API_URL}/auth/login`,
+      url: `${NEXT_PUBLIC_API_URL}/auth/login`,
       method: "POST",
       body: {
         email,
@@ -101,7 +97,7 @@ export function AuthProvider({
   }
 
   const playAsGuest: AuthContextType["playAsGuest"] = async () => {
-    const url = `${BASE_API_URL}/users/register/guest`
+    const url = `${NEXT_PUBLIC_API_URL}/users/register/guest`
     const response = await fetchApi<AccessTokenResponse>({
       url,
       method: "POST",
@@ -121,7 +117,7 @@ export function AuthProvider({
   const register: AuthContextType["register"] = async (props) => {
     const { guestUserId, email, name, password } = props
     const response = await fetchApi<{ access_token: string }>({
-      url: `${BASE_API_URL}/users/register`,
+      url: `${NEXT_PUBLIC_API_URL}/users/register`,
       method: "PUT",
       body: { email, name, password, guestUserId },
     })
@@ -139,6 +135,20 @@ export function AuthProvider({
     })
   }
 
+  const refreshToken: AuthContextType["refreshToken"] = async () => {
+    const response = await fetchApi<{ access_token: string }>({
+      url: `${NEXT_PUBLIC_API_URL}/auth/refresh`,
+      method: "GET",
+    })
+
+    if (isDataResponse(response)) {
+      setCookie("jwt", response.access_token, 30)
+      await fetchProfile()
+      router.push("/")
+      return
+    }
+  }
+
   const memoedValue = useMemo(
     () => ({
       profile,
@@ -146,6 +156,7 @@ export function AuthProvider({
       login,
       logout,
       register,
+      refreshToken,
     }),
     [profile]
   )

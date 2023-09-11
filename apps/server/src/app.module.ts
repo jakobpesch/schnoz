@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-
+import { RewriteFrames } from '@sentry/integrations';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './services/auth/auth.module';
+import { MailService } from './services/mail/mail.service';
 import { MatchesModule } from './services/matches/matches.module';
 import { SentryModule } from './services/sentry/sentry.module';
-import { RewriteFrames } from '@sentry/integrations';
+import { UsersModule } from './services/users/users.module';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
+    UsersModule,
+    ConfigModule.forRoot({ isGlobal: true }),
     MatchesModule,
     AuthModule,
     SentryModule.forRoot({
@@ -35,7 +38,7 @@ import { RewriteFrames } from '@sentry/integrations';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, MailService],
 })
 export class AppModule {}
 
