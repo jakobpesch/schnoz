@@ -6,6 +6,7 @@ export type AuthRequest = Request & {
     email: string | null;
     name: string;
     friendCode: User['friendCode'];
+    verifiedEmail: string;
     sub: string;
     iat: number;
     exp: number;

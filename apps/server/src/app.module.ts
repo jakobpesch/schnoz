@@ -8,10 +8,13 @@ import { AuthModule } from './services/auth/auth.module';
 import { MailService } from './services/mail/mail.service';
 import { MatchesModule } from './services/matches/matches.module';
 import { SentryModule } from './services/sentry/sentry.module';
+import { UsersModule } from './services/users/users.module';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
+    UsersModule,
+    ConfigModule.forRoot({ isGlobal: true }),
     MatchesModule,
     AuthModule,
     SentryModule.forRoot({

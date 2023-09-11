@@ -14,12 +14,13 @@ const transporter = nodemailer.createTransport({
 
 @Injectable()
 export class MailService {
-  async sendMail(
-    to: string | string[],
-    subject: string,
-    text: string,
-    html: string,
-  ) {
+  async sendMail(args: {
+    to: string | string[];
+    subject: string;
+    text: string;
+    html: string;
+  }) {
+    const { to, subject, text, html } = args;
     const info = await transporter.sendMail({
       from: '"Schnoz" <support@schnoz.lol>',
       to: Array.isArray(to) ? to.join(', ') : to,

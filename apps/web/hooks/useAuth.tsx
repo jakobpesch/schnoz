@@ -8,12 +8,7 @@ import {
   useMemo,
   useState,
 } from "react"
-import {
-  AccessTokenResponse,
-  isDataResponse,
-  isErrorResponse,
-  Profile,
-} from "types"
+import { AccessTokenResponse, isDataResponse, Profile } from "types"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
 import { fetchApi } from "../services/FetchService"
 import { NEXT_PUBLIC_API_URL } from "../services/GameManagerService"
@@ -23,6 +18,7 @@ interface AuthContextType {
   playAsGuest: () => Promise<Profile | undefined>
   logout: () => void
   login: (email: string, password: string) => Promise<void>
+  refreshToken: () => Promise<void>
   register: (props: {
     guestUserId?: string
     email: string
@@ -139,6 +135,20 @@ export function AuthProvider({
     })
   }
 
+  const refreshToken: AuthContextType["refreshToken"] = async () => {
+    const response = await fetchApi<{ access_token: string }>({
+      url: `${NEXT_PUBLIC_API_URL}/auth/refresh`,
+      method: "GET",
+    })
+
+    if (isDataResponse(response)) {
+      setCookie("jwt", response.access_token, 30)
+      await fetchProfile()
+      router.push("/")
+      return
+    }
+  }
+
   const memoedValue = useMemo(
     () => ({
       profile,
@@ -146,6 +156,7 @@ export function AuthProvider({
       login,
       logout,
       register,
+      refreshToken,
     }),
     [profile]
   )

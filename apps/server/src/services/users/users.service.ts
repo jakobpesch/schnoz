@@ -1,27 +1,29 @@
+import { faker } from '@faker-js/faker';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, User } from 'database';
-import { PrismaService } from '../prisma/prisma.service';
 import bcrypt from 'bcrypt';
-import { faker } from '@faker-js/faker';
+import { Prisma, User } from 'database';
 import { API_ERROR_CODES, UserWithoutHash } from 'types';
+import { PrismaService } from '../prisma/prisma.service';
 
 const withoutHashSelect = {
   select: {
     id: true,
     email: true,
     friendCode: true,
+    verifiedEmail: true,
+    verificationToken: true,
     name: true,
   },
 };
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async createGuestUser() {
     const name = this.generateRandomName();

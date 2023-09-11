@@ -5,7 +5,6 @@ import {
   Delete,
   ForbiddenException,
   Get,
-  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -14,11 +13,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Match, Rule } from 'database';
+import { API_ERROR_CODES } from 'types';
 import { AuthRequest } from '../auth/auth-request.type';
 import { AuthGuard } from '../auth/auth.guard';
 import { AppLoggerService } from '../logger/logger.service';
 import { MatchesService } from './matches.service';
-import { API_ERROR_CODES, ApiResponse } from 'types';
 
 @Controller('matches')
 export class MatchesController {
