@@ -1,5 +1,16 @@
 # game-logic
 
+## 0.2.2
+
+### Patch Changes
+
+- Reset db migration
+- Updated dependencies
+  - coordinate-utils@0.2.2
+  - database@0.2.2
+  - tsconfig@0.2.2
+  - types@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

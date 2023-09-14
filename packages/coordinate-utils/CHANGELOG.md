@@ -1,5 +1,15 @@
 # coordinate-utils
 
+## 0.2.2
+
+### Patch Changes
+
+- Reset db migration
+- Updated dependencies
+  - database@0.2.2
+  - tsconfig@0.2.2
+  - types@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

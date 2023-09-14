@@ -1,5 +1,11 @@
 # tsconfig
 
+## 0.2.2
+
+### Patch Changes
+
+- Reset db migration
+
 ## 0.2.1
 
 ### Patch Changes
