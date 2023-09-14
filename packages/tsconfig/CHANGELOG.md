@@ -1,5 +1,11 @@
 # tsconfig
 
+## 0.2.1
+
+### Patch Changes
+
+- Handle possibly undefined environment variable
+
 ## 0.2.0
 
 ### Minor Changes

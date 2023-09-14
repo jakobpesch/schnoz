@@ -1,5 +1,16 @@
 # game-logic
 
+## 0.2.1
+
+### Patch Changes
+
+- Handle possibly undefined environment variable
+- Updated dependencies
+  - coordinate-utils@0.2.1
+  - database@0.2.1
+  - tsconfig@0.2.1
+  - types@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
