@@ -19,6 +19,7 @@ CREATE TABLE "User" (
     "name" VARCHAR(255),
     "email" VARCHAR(255),
     "verifiedEmail" TIMESTAMP(3),
+    "verificationToken" TEXT,
     "hash" TEXT,
     "friendCode" TEXT,
 
