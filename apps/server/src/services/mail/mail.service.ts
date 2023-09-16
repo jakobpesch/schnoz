@@ -2,6 +2,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import 'dotenv/config';
 import nodemailer from 'nodemailer';
 
+console.log('process.env.MAIL_HOST', process.env.MAIL_HOST);
+
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST ?? '',
   port: process.env.MAIL_PORT ? parseInt(process.env.MAIL_PORT) : 465,
