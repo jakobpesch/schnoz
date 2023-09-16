@@ -1,5 +1,4 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import 'dotenv/config';
 import nodemailer from 'nodemailer';
 
 console.log('process.env.MAIL_HOST', process.env.MAIL_HOST);
@@ -20,7 +19,6 @@ export class MailService {
     html: string;
   }) {
     const { to, subject, text, html } = args;
-
     try {
       const info = await transporter.sendMail({
         from: '"Schnoz" <support@schnoz.lol>',
