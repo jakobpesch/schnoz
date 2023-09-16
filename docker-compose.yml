@@ -21,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
+    env_file:
+      - ./apps/server/.env
     restart: always
     ports:
       - 3000:3000
