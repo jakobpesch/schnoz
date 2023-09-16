@@ -1,5 +1,14 @@
 # types
 
+## 0.2.3
+
+### Patch Changes
+
+- Change turbo config to include only .env and not .env.local
+- Updated dependencies
+  - database@0.2.3
+  - tsconfig@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes

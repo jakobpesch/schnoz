@@ -1,5 +1,18 @@
 # web
 
+## 0.2.3
+
+### Patch Changes
+
+- Change turbo config to include only .env and not .env.local
+- Updated dependencies
+  - coordinate-utils@0.2.3
+  - database@0.2.3
+  - eslint-config-custom@0.2.3
+  - game-logic@0.2.3
+  - tsconfig@0.2.3
+  - types@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes

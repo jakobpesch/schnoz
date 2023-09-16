@@ -1,5 +1,11 @@
 # tsconfig
 
+## 0.2.3
+
+### Patch Changes
+
+- Change turbo config to include only .env and not .env.local
+
 ## 0.2.2
 
 ### Patch Changes
