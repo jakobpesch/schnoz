@@ -8,6 +8,8 @@ services:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
+    env_file:
+      - ./apps/web/.env
     restart: always
     ports:
       - 1337:1337
