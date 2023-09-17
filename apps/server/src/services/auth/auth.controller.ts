@@ -14,15 +14,12 @@ import {
 } from "@nestjs/common"
 import { JwtService } from "@nestjs/jwt"
 import { User } from "@sentry/node"
-import dotenv from "dotenv"
 import { API_ERROR_CODES } from "types"
 import { MailService } from "../mail/mail.service"
 import { UsersService } from "../users/users.service"
 import { AuthRequest } from "./auth-request.type"
 import { AuthGuard } from "./auth.guard"
 import { AuthService } from "./auth.service"
-
-const { CLIENT_URL, API_URL } = dotenv.config()?.parsed ?? {}
 
 type VerificationTokenSignature = { sub: User["id"]; iat: number; exp: number }
 @Controller("auth")
@@ -78,7 +75,7 @@ export class AuthController {
       })
     }
 
-    const url = `${API_URL}/auth/verify-email?token=${user.verificationToken}`
+    const url = `${process.env.API_URL}/auth/verify-email?token=${user.verificationToken}`
     await this.mailService.sendMail({
       to: req.user.email,
       subject: "Verify your email",
@@ -89,7 +86,7 @@ export class AuthController {
   }
 
   @Get("verify-email")
-  @Redirect(`${CLIENT_URL}/auth/verified`)
+  @Redirect(`${process.env.CLIENT_URL}/auth/verified`)
   async verifyEmail(@Query("token") token: string) {
     console.log("verifyEmail", token)
 

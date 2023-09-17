@@ -13,7 +13,6 @@ import {
   UseGuards,
 } from "@nestjs/common"
 import { User } from "database"
-import dotenv from "dotenv"
 import { API_ERROR_CODES } from "types"
 import { AuthRequest } from "../auth/auth-request.type"
 import { AuthGuard } from "../auth/auth.guard"
@@ -21,8 +20,6 @@ import { AuthService } from "../auth/auth.service"
 import { MailService } from "../mail/mail.service"
 import { MatchesService } from "../matches/matches.service"
 import { UsersService } from "./users.service"
-
-const { API_URL } = dotenv.config()?.parsed ?? {}
 
 @Controller("users")
 export class UsersController {
@@ -85,7 +82,7 @@ export class UsersController {
       throw new InternalServerErrorException(API_ERROR_CODES.EMAIL_NOT_SET)
     }
 
-    const url = `${API_URL}/auth/verify-email?token=${registeredUserWithVerificationToken.verificationToken}`
+    const url = `${process.env.API_URL}/auth/verify-email?token=${registeredUserWithVerificationToken.verificationToken}`
     this.mailService.sendMail({
       to: registeredUser.email,
       subject: "Welcome to the game!",

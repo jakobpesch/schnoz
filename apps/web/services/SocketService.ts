@@ -45,6 +45,9 @@ export class SocketIOApi {
   }
 
   public connectToMatch = (userId: string, matchId: string) => {
+    if (!NEXT_PUBLIC_WEBSOCKET_URL) {
+      throw new Error("NEXT_PUBLIC_WEBSOCKET_URL not set")
+    }
     this.isConnecting = true
     this.socket = io(NEXT_PUBLIC_WEBSOCKET_URL, {
       query: { userId, matchId },

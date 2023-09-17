@@ -1,15 +1,13 @@
-import { Injectable } from "@nestjs/common"
-import dotenv from "dotenv"
+import { Injectable, InternalServerErrorException } from "@nestjs/common"
 import nodemailer from "nodemailer"
 
-const { MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASSWORD } =
-  dotenv.config()?.parsed ?? {}
+console.log("process.env.MAIL_HOST", process.env.MAIL_HOST)
 
 const transporter = nodemailer.createTransport({
-  host: MAIL_HOST,
-  port: parseInt(MAIL_PORT),
+  host: process.env.MAIL_HOST ?? "",
+  port: process.env.MAIL_PORT ? parseInt(process.env.MAIL_PORT) : 465,
   secure: true,
-  auth: { user: MAIL_USER, pass: MAIL_PASSWORD },
+  auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASSWORD },
 })
 
 @Injectable()
@@ -21,13 +19,18 @@ export class MailService {
     html: string
   }) {
     const { to, subject, text, html } = args
-    const info = await transporter.sendMail({
-      from: '"Schnoz" <support@schnoz.lol>',
-      to: Array.isArray(to) ? to.join(", ") : to,
-      subject,
-      text,
-      html,
-    })
-    console.log("Message sent: %s", info.messageId)
+    try {
+      const info = await transporter.sendMail({
+        from: '"Schnoz" <support@schnoz.lol>',
+        to: Array.isArray(to) ? to.join(", ") : to,
+        subject,
+        text,
+        html,
+      })
+      console.log("Message sent: %s", info.messageId)
+    } catch (error) {
+      console.log("Could not send email", error)
+      new InternalServerErrorException()
+    }
   }
 }

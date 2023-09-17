@@ -436,7 +436,7 @@ const UserPage: NextPage = () => {
                         <Text color="gray.400">-</Text>
                       ) : match.winnerId === null ? (
                         <Text color="gray.400">Draw</Text>
-                      ) : match.winnerId === match.id ? (
+                      ) : match.winnerId === profile.sub ? (
                         <Text color="green.400">Win</Text>
                       ) : (
                         <Text color="red.400">Loss</Text>
