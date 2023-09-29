@@ -17,7 +17,7 @@ export function useCards(match: Match | undefined, yourTurn: boolean) {
       Mousetrap.unbind(hotkey)
       if (yourTurn) {
         Mousetrap.bind(hotkey, () =>
-          setSelectedCard(decodeUnitConstellation(unitConstellation))
+          setSelectedCard(decodeUnitConstellation(unitConstellation)),
         )
       }
     })

@@ -60,7 +60,7 @@ export const UITurnChangeIndicator = (props: {
               <Image
                 src={
                   RenderSettings.getPlayerAppearance(
-                    props.activePlayer?.playerNumber
+                    props.activePlayer?.playerNumber,
                   ).unit
                 }
                 width={scaled(175)}

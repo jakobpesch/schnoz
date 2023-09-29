@@ -24,8 +24,8 @@ export function useMatch(userId: User["id"], matchId: Match["id"]) {
       const index = tilesWithUnits?.findIndex((t) =>
         coordinatesAreEqual(
           [t.row, t.col],
-          [updatedTileWithUnit.row, updatedTileWithUnit.col]
-        )
+          [updatedTileWithUnit.row, updatedTileWithUnit.col],
+        ),
       )
       if (!index) {
         tilesWithUnitsClone.push(updatedTileWithUnit)

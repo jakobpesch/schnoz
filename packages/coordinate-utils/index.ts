@@ -1,3 +1,3 @@
-export * from "./src/arrayUtils";
-export * from "./src/coordinateUtils";
-export * from "./src/constallationTransformer";
+export * from "./src/arrayUtils"
+export * from "./src/coordinateUtils"
+export * from "./src/constallationTransformer"

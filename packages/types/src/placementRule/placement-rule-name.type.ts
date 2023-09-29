@@ -5,4 +5,4 @@ export type PlacementRuleName =
   | "ADJACENT_TO_ENEMY"
   | "ADJACENT_TO_ENEMY_2"
   | "NO_TERRAIN"
-  | "IN_BOUNDS";
+  | "IN_BOUNDS"

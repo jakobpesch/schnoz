@@ -1,4 +1,4 @@
-import { Prisma } from "database";
+import { Prisma } from "database"
 
 const userWithoutHash = Prisma.validator<Prisma.UserDefaultArgs>()({
   select: {
@@ -8,6 +8,6 @@ const userWithoutHash = Prisma.validator<Prisma.UserDefaultArgs>()({
     verifiedEmail: true,
     name: true,
   },
-});
+})
 
-export type UserWithoutHash = Prisma.UserGetPayload<typeof userWithoutHash>;
+export type UserWithoutHash = Prisma.UserGetPayload<typeof userWithoutHash>

@@ -86,7 +86,7 @@ const MatchView = () => {
   const you = participants?.find((player) => player.userId === userId)
 
   const activePlayer = participants?.find(
-    (player) => player.id === match?.activePlayerId
+    (player) => player.id === match?.activePlayerId,
   )
   const yourTurn = userId === activePlayer?.userId
 
@@ -109,7 +109,7 @@ const MatchView = () => {
   })
 
   const { isPreMatch, wasStarted, isOngoing, isFinished } = useMatchStatus(
-    match?.status
+    match?.status,
   )
 
   if (!match) {
@@ -172,7 +172,7 @@ const MatchView = () => {
     row: number,
     col: number,
     rotatedClockwise: TransformedConstellation["rotatedClockwise"],
-    mirrored: TransformedConstellation["mirrored"]
+    mirrored: TransformedConstellation["mirrored"],
   ) => {
     if (isUpdatingMatch) {
       return
@@ -215,7 +215,7 @@ const MatchView = () => {
           tileLookup,
           ignoredRules,
           you.id,
-          activatedSpecials
+          activatedSpecials,
         )
 
       if (error) {
@@ -227,12 +227,12 @@ const MatchView = () => {
         return
       }
       const tilesWithUnitsClone = JSON.parse(
-        JSON.stringify(tilesWithUnits)
+        JSON.stringify(tilesWithUnits),
       ) as TileWithUnit[]
 
       translatedCoordinates.forEach((coordinate, index) => {
         const tile = tilesWithUnitsClone.find((tile) =>
-          coordinatesAreEqual([tile.row, tile.col], coordinate)
+          coordinatesAreEqual([tile.row, tile.col], coordinate),
         )
         if (!tile) {
           return
@@ -301,7 +301,7 @@ const MatchView = () => {
         ignoredRules,
         specials: ignoredRules.includes("ADJACENT_TO_ALLY")
           ? activatedSpecials.filter(
-              (special) => special.type !== "EXPAND_BUILD_RADIUS_BY_1"
+              (special) => special.type !== "EXPAND_BUILD_RADIUS_BY_1",
             )
           : activatedSpecials,
       })
@@ -333,7 +333,7 @@ const MatchView = () => {
   }
 
   const handleSettingsChange = async (
-    settings: Omit<UpdateGameSettingsPayload, "matchId">
+    settings: Omit<UpdateGameSettingsPayload, "matchId">,
   ) => {
     try {
       await socketApi.updateGameSettings(settings)
@@ -347,7 +347,7 @@ const MatchView = () => {
   }
 
   const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
-    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1"
+    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
   )
 
   const availableBonusPoints = you.bonusPoints + (selectedCard?.value ?? 0)
@@ -516,7 +516,7 @@ const MatchView = () => {
                         ) {
                           setSpecial(
                             "EXPAND_BUILD_RADIUS_BY_1",
-                            !hasExpandBuildRaidusByOneActive
+                            !hasExpandBuildRaidusByOneActive,
                           )
                         }
                       }}

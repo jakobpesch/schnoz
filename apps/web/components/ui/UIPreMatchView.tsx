@@ -68,17 +68,17 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
   } = props
 
   const { onCopy, hasCopied } = useClipboard(
-    `${window.location.origin}/match/${matchId}/join`
+    `${window.location.origin}/match/${matchId}/join`,
   )
 
   const [sliderValueWater, setSliderValueWater] = useState(
-    settings?.waterRatio ?? 0
+    settings?.waterRatio ?? 0,
   )
   const [sliderValueStone, setSliderValueStone] = useState(
-    settings?.stoneRatio ?? 0
+    settings?.stoneRatio ?? 0,
   )
   const [sliderValueTree, setSliderValueTree] = useState(
-    settings?.treeRatio ?? 0
+    settings?.treeRatio ?? 0,
   )
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               )
             }
             const isConnected = connectedParticipants.some(
-              (p) => p.id === participant.id
+              (p) => p.id === participant.id,
             )
             return (
               <Fragment key={participant.id}>

@@ -158,7 +158,7 @@ export function AuthProvider({
       register,
       refreshToken,
     }),
-    [profile]
+    [profile],
   )
 
   return (

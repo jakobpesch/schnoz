@@ -10,7 +10,7 @@ import { scaled } from "./UIScoreView"
 const getTurns = (
   match: Match,
   players: Participant[],
-  gameSettings: GameSettings
+  gameSettings: GameSettings,
 ) => {
   const turnsUI: (
     | {
@@ -27,7 +27,7 @@ const getTurns = (
       }
   )[] = []
   const startingPlayer = players.find(
-    (player) => player.userId === match.createdById
+    (player) => player.userId === match.createdById,
   )
   assert(startingPlayer)
 

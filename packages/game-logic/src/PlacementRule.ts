@@ -2,8 +2,8 @@ import {
   buildTileLookupId,
   transformCoordinates,
   translateCoordinatesTo,
-} from "coordinate-utils";
-import { Map, Match, MatchStatus, Participant } from "database";
+} from "coordinate-utils"
+import { Map, Match, MatchStatus, Participant } from "database"
 import {
   API_ERROR_CODES,
   Coordinate,
@@ -12,10 +12,10 @@ import {
   TileLookup,
   TileWithUnit,
   TransformedConstellation,
-} from "types";
-import { defaultGame } from "./GameVariants";
-import { expandBuildRadiusByOne } from "./Specials";
-import { adjacentToUnitFactory } from "./placementRules/adjacent-to-ally";
+} from "types"
+import { defaultGame } from "./GameVariants"
+import { expandBuildRadiusByOne } from "./Specials"
+import { adjacentToUnitFactory } from "./placementRules/adjacent-to-ally"
 enum ReadableRuleNames {
   NO_UNIT = "cannot be placed on a unit",
   ADJACENT_TO_ALLY = "must be within a 1 tile radius from an ally",
@@ -36,7 +36,7 @@ export const checkConditionsForUnitConstellationPlacement = (
   tileLookup: TileLookup,
   ignoredRules: PlacementRuleName[],
   placingPlayer: Participant["id"] | undefined,
-  specials: Special[]
+  specials: Special[],
 ) => {
   if (!match) {
     return {
@@ -45,7 +45,7 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "Could not find match",
         statusCode: 400,
       },
-    };
+    }
   }
 
   if (!map) {
@@ -55,7 +55,7 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "Map is missing",
         statusCode: 500,
       },
-    };
+    }
   }
 
   if (match.status !== MatchStatus.STARTED) {
@@ -65,7 +65,7 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "Match is not started",
         statusCode: 400,
       },
-    };
+    }
   }
 
   if (match.activePlayerId !== placingPlayer) {
@@ -75,7 +75,7 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "It's not your turn",
         statusCode: 400,
       },
-    };
+    }
   }
 
   if (!tilesWithUnits) {
@@ -85,10 +85,10 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "No tiles",
         statusCode: 400,
       },
-    };
+    }
   }
 
-  const targetTile = tileLookup[buildTileLookupId(targetCoordinate)];
+  const targetTile = tileLookup[buildTileLookupId(targetCoordinate)]
 
   if (!targetTile) {
     return {
@@ -97,20 +97,20 @@ export const checkConditionsForUnitConstellationPlacement = (
         message: "Could not find target tile",
         statusCode: 400,
       },
-    };
+    }
   }
 
-  const { coordinates, rotatedClockwise, mirrored } = unitConstellation;
+  const { coordinates, rotatedClockwise, mirrored } = unitConstellation
 
   const transformedCoordinates = transformCoordinates(coordinates, {
     rotatedClockwise,
     mirrored,
-  });
+  })
 
   const translatedCoordinates = translateCoordinatesTo(
     targetCoordinate,
-    transformedCoordinates
-  );
+    transformedCoordinates,
+  )
 
   if (
     specials.some(
@@ -118,14 +118,14 @@ export const checkConditionsForUnitConstellationPlacement = (
         special.type === "EXPAND_BUILD_RADIUS_BY_1" &&
         activePlayer &&
         activePlayer.bonusPoints + unitConstellation.value >=
-          expandBuildRadiusByOne.cost
+          expandBuildRadiusByOne.cost,
     )
   ) {
-    defaultGame.placementRuleMap.delete("ADJACENT_TO_ALLY");
+    defaultGame.placementRuleMap.delete("ADJACENT_TO_ALLY")
     defaultGame.placementRuleMap.set(
       "ADJACENT_TO_ALLY_2",
-      adjacentToUnitFactory(2, "ally")
-    );
+      adjacentToUnitFactory(2, "ally"),
+    )
   }
 
   const evaluatedRules = Array.from(defaultGame.placementRuleMap).map(
@@ -134,12 +134,12 @@ export const checkConditionsForUnitConstellationPlacement = (
       isFulfilled: ignoredRules.includes(ruleName)
         ? true
         : rule(translatedCoordinates, map, tilesWithUnits, placingPlayer),
-    })
-  );
+    }),
+  )
 
   const canBePlaced = evaluatedRules.every(
-    (ruleEvaluation) => ruleEvaluation.isFulfilled
-  );
+    (ruleEvaluation) => ruleEvaluation.isFulfilled,
+  )
 
   if (!canBePlaced) {
     return {
@@ -151,8 +151,8 @@ export const checkConditionsForUnitConstellationPlacement = (
           .join(" and "),
         statusCode: 400,
       },
-    };
+    }
   }
 
-  return { translatedCoordinates };
-};
+  return { translatedCoordinates }
+}

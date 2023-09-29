@@ -1,3 +1,3 @@
-import { Match } from "database";
+import { Match } from "database"
 
-export type EvaluationCondition = (turn: Match["turn"]) => boolean;
+export type EvaluationCondition = (turn: Match["turn"]) => boolean

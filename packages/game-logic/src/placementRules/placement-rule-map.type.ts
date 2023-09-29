@@ -1,3 +1,3 @@
-import { placementRulesMap } from "./placement-rule-map.const";
+import { placementRulesMap } from "./placement-rule-map.const"
 
-export type PlacementRuleMap = typeof placementRulesMap;
+export type PlacementRuleMap = typeof placementRulesMap

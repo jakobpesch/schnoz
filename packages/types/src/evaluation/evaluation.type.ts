@@ -1,4 +1,4 @@
-import { Participant } from "database";
-import { MatchRich } from "../match/match-rich.type";
+import { Participant } from "database"
+import { MatchRich } from "../match/match-rich.type"
 
-export type Evaluation = (match: MatchRich) => Participant[];
+export type Evaluation = (match: MatchRich) => Participant[]

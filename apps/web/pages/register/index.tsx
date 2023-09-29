@@ -38,7 +38,7 @@ export default function RegisterPage() {
         onSubmit={async (values, { setSubmitting, setStatus }) => {
           const { email, password, name } = values
           register({ email, password, name }).finally(() =>
-            setSubmitting(false)
+            setSubmitting(false),
           )
         }}
       >

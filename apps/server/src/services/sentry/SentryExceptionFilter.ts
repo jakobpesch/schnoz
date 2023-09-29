@@ -1,6 +1,6 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
-import * as Sentry from '@sentry/node';
+import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common"
+import { BaseExceptionFilter } from "@nestjs/core"
+import * as Sentry from "@sentry/node"
 
 @Catch()
 export class SentryExceptionFilter
@@ -9,7 +9,7 @@ export class SentryExceptionFilter
 {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   catch(exception: any, host: ArgumentsHost) {
-    Sentry.captureException(exception);
-    super.catch(exception, host);
+    Sentry.captureException(exception)
+    super.catch(exception, host)
   }
 }

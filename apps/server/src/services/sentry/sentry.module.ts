@@ -1,17 +1,17 @@
-import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import * as Sentry from '@sentry/node';
+import { Module } from "@nestjs/common"
+import { APP_INTERCEPTOR } from "@nestjs/core"
+import * as Sentry from "@sentry/node"
 
-import { NgSentryInterceptor } from './sentry.interceptor';
-import { NgSentryService } from './sentry.service';
+import { NgSentryInterceptor } from "./sentry.interceptor"
+import { NgSentryService } from "./sentry.service"
 
-export const SENTRY_OPTIONS = 'SENTRY_OPTIONS';
+export const SENTRY_OPTIONS = "SENTRY_OPTIONS"
 
 @Module({})
 export class SentryModule {
   static forRoot(options: Sentry.NodeOptions) {
     // initialization of Sentry, this is where Sentry will create a Hub
-    Sentry.init(options);
+    Sentry.init(options)
 
     return {
       module: SentryModule,
@@ -28,6 +28,6 @@ export class SentryModule {
         },
       ],
       exports: [NgSentryService],
-    };
+    }
   }
 }
