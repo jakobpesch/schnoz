@@ -1,11 +1,20 @@
 import { ArrowForwardIcon } from "@chakra-ui/icons"
-import { Box, Circle, Flex, HStack, Kbd, Stack, Text } from "@chakra-ui/react"
+import {
+  Box,
+  Circle,
+  Flex,
+  HStack,
+  Kbd,
+  Stack,
+  Text,
+  useToken,
+} from "@chakra-ui/react"
 import {
   Card,
   transformCoordinates,
   translateCoordinatesTo,
 } from "coordinate-utils"
-import { Participant } from "database"
+import { Participant, Unit } from "database"
 import Mousetrap from "mousetrap"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
@@ -18,6 +27,8 @@ import {
 import { RenderSettings } from "../../services/SettingsService"
 import { socketApi } from "../../services/SocketService"
 import { scaled } from "../ui/UIScoreView"
+import { getPlayerNumber, useMatchStore } from "../../store"
+import { HighlightMesh, LAYERS, TileMesh, UnitMesh } from "../../pages/webgl"
 
 const mousePositionToMapCoordinates = (
   mouseX: number,
@@ -29,7 +40,19 @@ const mousePositionToMapCoordinates = (
   return [row, col] as Coordinate
 }
 
-export interface MapHoveredHighlightsProps {
+const unitFactory = (unit: Partial<Unit>) => {
+  return {
+    id: "",
+    ownerId: "",
+    type: "UNIT",
+    row: 0,
+    col: 0,
+    mapId: "",
+    ...unit,
+  } as Unit
+}
+
+export interface HoveredHighlightsProps {
   you: Participant | null
   activePlayer: Participant | null
   hide?: boolean
@@ -45,13 +68,10 @@ export interface MapHoveredHighlightsProps {
   ) => void
 }
 
-export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
-  const [hoveredCoordinate, setHoveredCoordinate] = useState<Coordinate | null>(
-    null,
-  )
-  const [opponentsHoveredTiles, setOpponentsHoveredTiles] = useState<
-    Coordinate[] | null
-  >(null)
+export const HoveredHighlights = (props: HoveredHighlightsProps) => {
+  const { opponentsHoveredCoordinates, hoveredCoordinate, selectedCard } =
+    useMatchStore()
+
   const [rotatedClockwise, setRotationCount] =
     useState<TransformedConstellation["rotatedClockwise"]>(0)
   const [mirrored, setMirrored] =
@@ -71,10 +91,6 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
   }
 
   useEffect(() => {
-    socketApi.setCallbacks({ setOpponentsHoveredTiles })
-  }, [])
-
-  useEffect(() => {
     Mousetrap.bind("r", rotate)
   })
 
@@ -82,21 +98,21 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
     Mousetrap.bind("e", mirror)
   })
 
-  document.onmousemove = (event: MouseEvent) => {
-    if (!bounds) {
-      return
-    }
-    const coordinate = mousePositionToMapCoordinates(
-      event.clientY - bounds.top,
-      event.clientX - bounds.left,
-      RenderSettings.tileSize,
-    )
-    setHoveredCoordinate(coordinate)
-  }
+  // document.onmousemove = (event: MouseEvent) => {
+  //   if (!bounds) {
+  //     return
+  //   }
+  //   const coordinate = mousePositionToMapCoordinates(
+  //     event.clientY - bounds.top,
+  //     event.clientX - bounds.left,
+  //     RenderSettings.tileSize,
+  //   )
+  //   setHoveredCoordinate(coordinate)
+  // }
 
   const hoveredCoordinates = useMemo(() => {
-    if (props.card && hoveredCoordinate) {
-      const transformed = transformCoordinates(props.card.coordinates, {
+    if (selectedCard && hoveredCoordinate) {
+      const transformed = transformCoordinates(selectedCard.coordinates, {
         rotatedClockwise,
         mirrored,
       })
@@ -104,14 +120,22 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
       socketApi.sendHoveredCoordinates(translated)
       return translated
     }
+
     return []
-  }, [props.card, hoveredCoordinate, rotatedClockwise, mirrored])
+  }, [selectedCard, hoveredCoordinate, rotatedClockwise, mirrored])
 
   useEffect(() => {
-    if (props.card === null) {
+    if (selectedCard === null) {
       socketApi.sendHoveredCoordinates(null)
     }
-  }, [props.card])
+  }, [selectedCard])
+
+  const color = useToken(
+    "colors",
+    RenderSettings.getPlayerAppearance(
+      getPlayerNumber(props.activePlayer?.id ?? null),
+    ).color,
+  )
 
   if (!props.activePlayer || props.hide || !props.you) {
     return null
@@ -120,15 +144,40 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
     (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
   )
 
-  const availableBonusPoints = props.you.bonusPoints + (props.card?.value ?? 0)
+  const availableBonusPoints =
+    props.you.bonusPoints + (selectedCard?.value ?? 0)
 
   const specialsCost = props.activeSpecials.reduce((a, s) => a + s.cost, 0)
-  const bonusFromSelectedCard = props.card?.value ?? 0
+  const bonusFromSelectedCard = selectedCard?.value ?? 0
   const resultingBonusPoints =
     props.you.bonusPoints + bonusFromSelectedCard - specialsCost
 
   return (
     <>
+      {[...(opponentsHoveredCoordinates ?? []), ...hoveredCoordinates].map(
+        ([row, col]) => {
+          return (
+            <>
+              <UnitMesh
+                key={row + "_" + col + "_unit"}
+                position={[col, -row, LAYERS.UNITS_HIGHLIGHT]}
+                unit={unitFactory({ ownerId: props.activePlayer?.id })}
+                opacity={0.6}
+                onClick={() =>
+                  props.onTileClick(row, col, rotatedClockwise, mirrored)
+                }
+              />
+              <HighlightMesh
+                key={row + "_" + col + "_highlight"}
+                opacity={0.4}
+                color={color}
+                position={[col, -row, LAYERS.TERRAIN_HIGHLIGHT]}
+              />
+            </>
+          )
+        },
+      )}
+
       {/* <Box
         bg="red"
         position="fixed"
@@ -163,7 +212,7 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
               </>
             )}
           </HStack>
-          {props.card && (
+          {selectedCard && (
             <>
               {[
                 { hotkey: "R", label: "Rotate", action: rotate },
@@ -235,80 +284,6 @@ export const MapHoveredHighlights = (props: MapHoveredHighlightsProps) => {
           )}
         </Stack>
       </Box> */}
-
-      {hoveredCoordinates.map(([row, col]) => {
-        return (
-          <Flex
-            key={row + "_" + col}
-            position="absolute"
-            align="center"
-            justify="center"
-            top={row * RenderSettings.tileSize + "px"}
-            left={col * RenderSettings.tileSize + "px"}
-            width={RenderSettings.tileSize + "px"}
-            height={RenderSettings.tileSize + "px"}
-            background={"whiteAlpha.500"}
-            opacity={0.6}
-            onClick={() =>
-              props.onTileClick(row, col, rotatedClockwise, mirrored)
-            }
-          >
-            <Image
-              src={
-                RenderSettings.getPlayerAppearance(
-                  props.activePlayer?.playerNumber,
-                ).unit
-              }
-              height={RenderSettings.tileSize}
-              width={RenderSettings.tileSize}
-              alt="tile"
-              draggable={false}
-            />
-            {/* <MapObject
-              object={
-                RenderSettings.getPlayerAppearance(props.player?.playerNumber)
-                  .unit
-              }
-            /> */}
-          </Flex>
-        )
-      })}
-      {opponentsHoveredTiles?.map(([row, col]) => {
-        return (
-          <Flex
-            key={row + "_" + col}
-            position="absolute"
-            align="center"
-            justify="center"
-            top={row * RenderSettings.tileSize + "px"}
-            left={col * RenderSettings.tileSize + "px"}
-            width={RenderSettings.tileSize + "px"}
-            height={RenderSettings.tileSize + "px"}
-            background={"whiteAlpha.500"}
-            opacity={0.6}
-            onClick={() =>
-              props.onTileClick(row, col, rotatedClockwise, mirrored)
-            }
-          >
-            <Image
-              src={
-                RenderSettings.getPlayerAppearance(
-                  props.activePlayer?.playerNumber,
-                ).unit
-              }
-              height={RenderSettings.tileSize}
-              width={RenderSettings.tileSize}
-              alt="tile"
-            />
-            {/* <MapObject
-              object={
-                RenderSettings.getPlayerAppearance(props.player?.playerNumber)
-                  .unit
-              }
-            /> */}
-          </Flex>
-        )
-      })}
     </>
   )
 }

@@ -2,9 +2,10 @@ import { Match } from "database"
 import Mousetrap from "mousetrap"
 import { useEffect, useMemo, useState } from "react"
 import { Card, decodeUnitConstellation } from "coordinate-utils"
+import { setSelectedCard, useMatchStore } from "../store"
 
-export function useCards(match: Match | undefined, yourTurn: boolean) {
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null)
+export function useCards(match: Match | null, yourTurn: boolean) {
+  const { selectedCard } = useMatchStore()
 
   const cards =
     useMemo(() => {

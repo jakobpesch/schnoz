@@ -16,6 +16,9 @@
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
     "@prisma/client": "5.1.1",
+    "@react-three/drei": "^9.86.3",
+    "@react-three/fiber": "^8.14.3",
+    "@types/three": "^0.156.0",
     "bcrypt": "^5.1.0",
     "coordinate-utils": "*",
     "database": "*",
@@ -31,8 +34,10 @@
     "react-dom": "18.2.0",
     "socket.io-client": "^4.6.0",
     "swr": "^2.0.0",
+    "three": "^0.157.0",
     "tsconfig": "*",
-    "types": "*"
+    "types": "*",
+    "zustand": "^4.4.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",

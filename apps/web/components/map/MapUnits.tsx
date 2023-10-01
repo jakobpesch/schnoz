@@ -28,7 +28,7 @@ export const MapUnits = (props: {
 
         return (
           <Flex
-            key={tile.row + "_" + tile.col}
+            key={tile.row + "_" + tile.col + "_unit"}
             position="absolute"
             align="center"
             justify="center"

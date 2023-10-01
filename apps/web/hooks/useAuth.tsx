@@ -12,9 +12,10 @@ import { AccessTokenResponse, isDataResponse, Profile } from "types"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
 import { fetchApi } from "../services/FetchService"
 import { NEXT_PUBLIC_API_URL } from "../services/GameManagerService"
+import { setProfile, useAuthStore } from "../store"
 
 interface AuthContextType {
-  profile?: Profile
+  profile: Profile | null
   playAsGuest: () => Promise<Profile | undefined>
   logout: () => void
   login: (email: string, password: string) => Promise<void>
@@ -34,7 +35,7 @@ export function AuthProvider({
 }: {
   children: ReactNode
 }): JSX.Element {
-  const [profile, setProfile] = useState<Profile>()
+  const { profile } = useAuthStore()
   const [loadingInitial, setLoadingInitial] = useState<boolean>(true)
   const toast = useToast()
   const router = useRouter()
@@ -70,7 +71,7 @@ export function AuthProvider({
   const logout: AuthContextType["logout"] = () => {
     eraseCookie("jwt")
     router.push("/welcome")
-    setProfile(undefined)
+    setProfile(null)
   }
 
   const login: AuthContextType["login"] = async (email, password) => {

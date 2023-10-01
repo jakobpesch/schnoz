@@ -23,7 +23,7 @@ export const MapTerrains = (props: { terrainTiles: TileWithUnit[] }) => {
         }
         return (
           <Flex
-            key={tile.row + "_" + tile.col}
+            key={tile.row + "_" + tile.col + "_terrain"}
             position="absolute"
             align="center"
             justify="center"

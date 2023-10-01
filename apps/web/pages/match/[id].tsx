@@ -5,7 +5,6 @@ import {
   Button,
   Center,
   Circle,
-  Container,
   HStack,
   Heading,
   Kbd,
@@ -20,7 +19,7 @@ import { Participant, UnitType } from "database"
 import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Coordinate,
   PlacementRuleName,
@@ -29,13 +28,10 @@ import {
   TransformedConstellation,
 } from "types"
 // import popSound from "../../assets/sfx/pop.mp3"
-import { MapContainer } from "../../components/map/MapContainer"
-import { MapFog } from "../../components/map/MapFog"
-import { MapHoveredHighlights } from "../../components/map/MapHoveredHighlights"
-import { MapPlaceableTiles } from "../../components/map/MapPlaceableTiles"
-import { MapRuleEvaluations } from "../../components/map/MapRuleEvaluations"
-import { MapTerrains } from "../../components/map/MapTerrains"
-import { MapUnits } from "../../components/map/MapUnits"
+import { MapControls } from "@react-three/drei"
+import { Canvas } from "@react-three/fiber"
+import { HoveredHighlights } from "../../components/map/HoveredHighlights"
+import { PlaceableTiles } from "../../components/map/PlaceableTiles"
 import { UICardsView } from "../../components/ui/UICardsView"
 import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
@@ -46,7 +42,6 @@ import { UITurnTimer } from "../../components/ui/UITurnTimer"
 import { UITurnsView } from "../../components/ui/UITurnsView"
 import useAuth from "../../hooks/useAuth"
 import { useCards } from "../../hooks/useCards"
-import { useMatch } from "../../hooks/useMatch"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
 import { usePlaceableCoordinates } from "../../hooks/usePlaceableCoordinates"
 import { useTiles } from "../../hooks/useTiles"
@@ -59,6 +54,12 @@ import {
   UpdateGameSettingsPayload,
   socketApi,
 } from "../../services/SocketService"
+import {
+  setHoveredCoordinate,
+  setTilesWithUnits,
+  useMatchStore,
+} from "../../store"
+import { LAYERS, Terrains, Tiles, Units } from "../webgl"
 
 const MatchView = () => {
   const router = useRouter()
@@ -73,6 +74,29 @@ const MatchView = () => {
     // const audio = new Audio(popSound)
     // audio.play()
   }
+
+  useEffect(() => {
+    console.log("socketApi.IsConnected", socketApi.IsConnected)
+
+    if (socketApi.IsConnected) {
+      return
+    }
+
+    console.log("socketApi.IsConnecting", socketApi.IsConnecting)
+    if (socketApi.IsConnecting) {
+      return
+    }
+
+    if (!userId || !matchId) {
+      return
+    }
+
+    socketApi.connectToMatch(userId, matchId)
+    return () => {
+      socketApi.disconnect()
+    }
+  }, [matchId, userId])
+
   const {
     match,
     gameSettings,
@@ -80,14 +104,38 @@ const MatchView = () => {
     map,
     tilesWithUnits,
     updatedTilesWithUnits,
-    connectedParticipants,
-  } = useMatch(userId, matchId)
+    hoveredCoordinate,
+    connectedPlayers: connectedParticipants,
+  } = useMatchStore()
 
-  const you = participants?.find((player) => player.userId === userId)
+  console.log("participants", participants)
 
-  const activePlayer = participants?.find(
-    (player) => player.id === match?.activePlayerId,
-  )
+  useEffect(() => {
+    if (!updatedTilesWithUnits || !tilesWithUnits) {
+      return
+    }
+    const tilesWithUnitsClone = [...tilesWithUnits]
+    updatedTilesWithUnits.forEach((updatedTileWithUnit) => {
+      const index = tilesWithUnits?.findIndex((t) =>
+        coordinatesAreEqual(
+          [t.row, t.col],
+          [updatedTileWithUnit.row, updatedTileWithUnit.col],
+        ),
+      )
+      if (!index) {
+        tilesWithUnitsClone.push(updatedTileWithUnit)
+        return
+      }
+      tilesWithUnitsClone[index] = updatedTileWithUnit
+    })
+    setTilesWithUnits(tilesWithUnitsClone)
+  }, [updatedTilesWithUnits])
+
+  const you = participants?.find((player) => player.userId === userId) ?? null
+  console.log(you)
+
+  const activePlayer =
+    participants?.find((player) => player.id === match?.activePlayerId) ?? null
   const yourTurn = userId === activePlayer?.userId
 
   const [showRuleEvaluationHighlights, setShowRuleEvaluationHighlights] =
@@ -149,6 +197,8 @@ const MatchView = () => {
     return null
   }
 
+  console.log(socketApi.IsConnected)
+
   if (!socketApi.IsConnected) {
     return (
       <Center height="100vh">
@@ -203,7 +253,6 @@ const MatchView = () => {
         coordinatesAreEqual(unitConstellation.coordinates[0], [0, 0])
           ? ["ADJACENT_TO_ALLY"]
           : []
-
       const { translatedCoordinates, error } =
         checkConditionsForUnitConstellationPlacement(
           [row, col],
@@ -363,12 +412,14 @@ const MatchView = () => {
       setActivatedSpecials([])
     }
   }
-  console.log(match)
-
-  console.log(unitTiles)
 
   return (
-    <Container width="100vw" height="100vh" color="white">
+    <Box
+      width="100vw"
+      height="100vh"
+      color="white"
+      cursor={selectedCard && hoveredCoordinate ? "none" : "default"}
+    >
       {isPreMatch && (
         <UIPreMatchView
           py="16"
@@ -386,43 +437,81 @@ const MatchView = () => {
       )}
       {wasStarted && map && tilesWithUnits && activePlayer && (
         <>
-          <MapContainer
-            id="map-container"
-            map={map}
-            bg="green"
-            cursor={selectedCard ? "none" : "default"}
+          {
+            //false && (
+            //           <MapContainer
+            //             id="map-container"
+            //             map={map}
+            //             bg="green"
+            //             cursor={selectedCard ? "none" : "default"}
+            //           >
+            //             {isOngoing && /*!isLoadingMatch && */ !isUpdatingMatch && (
+            //               <MapPlaceableTiles
+            //                 placeableCoordinates={placeableCoordinates}
+            //               />
+            //             )}
+            //
+            //             <MapUnits
+            //               unitTiles={unitTiles}
+            //               players={participants}
+            //               updatedUnitTiles={updatedTilesWithUnits ?? []}
+            //             />
+            //             {showRuleEvaluationHighlights && (
+            //               <MapRuleEvaluations
+            //                 coordinates={showRuleEvaluationHighlights}
+            //               />
+            //             )}
+            //             <MapTerrains terrainTiles={terrainTiles} />
+            //             <MapFog fogTiles={fogTiles} halfFogTiles={halfFogTiles} />
+            //             {
+            //               /*!isLoadingMatch && */ you &&
+            //                 !isUpdatingMatch &&
+            //                 !isChangingTurns && (
+            //                   <MapHoveredHighlights
+            //                     you={you}
+            //                     activePlayer={activePlayer}
+            //                     hide={isFinished}
+            //                     specials={[expandBuildRadiusByOne]}
+            //                     activeSpecials={activatedSpecials}
+            //                     setSpecial={setSpecial}
+            //                     card={selectedCard}
+            //                     onTileClick={onTileClick}
+            //                   />
+            //                 )
+            //             }
+            //           </MapContainer>
+            //        )
+          }
+          <Canvas
+            orthographic
+            camera={{
+              position: [0, 0, LAYERS.CAMERA],
+              zoom: 40,
+              up: [0, 0, 1],
+              far: 10000,
+            }}
           >
-            {isOngoing && /*!isLoadingMatch && */ !isUpdatingMatch && (
-              <MapPlaceableTiles placeableCoordinates={placeableCoordinates} />
-            )}
+            <ambientLight />
+            <pointLight position={[0, 0, 10]} />
+            <group position={[-map.colCount / 2, map.rowCount / 2, 0]}>
+              <Tiles onPointerLeave={() => setHoveredCoordinate(null)} />
+              <Units />
+              <Terrains />
+              <PlaceableTiles placeableCoordinates={placeableCoordinates} />
+              <HoveredHighlights
+                you={you}
+                activePlayer={activePlayer}
+                hide={isFinished}
+                specials={[expandBuildRadiusByOne]}
+                activeSpecials={activatedSpecials}
+                setSpecial={setSpecial}
+                card={selectedCard}
+                onTileClick={onTileClick}
+              />
 
-            <MapUnits
-              unitTiles={unitTiles}
-              players={participants}
-              updatedUnitTiles={updatedTilesWithUnits ?? []}
-            />
-            {showRuleEvaluationHighlights && (
-              <MapRuleEvaluations coordinates={showRuleEvaluationHighlights} />
-            )}
-            <MapTerrains terrainTiles={terrainTiles} />
-            <MapFog fogTiles={fogTiles} halfFogTiles={halfFogTiles} />
-            {
-              /*!isLoadingMatch && */ you &&
-                !isUpdatingMatch &&
-                !isChangingTurns && (
-                  <MapHoveredHighlights
-                    you={you}
-                    activePlayer={activePlayer}
-                    hide={isFinished}
-                    specials={[expandBuildRadiusByOne]}
-                    activeSpecials={activatedSpecials}
-                    setSpecial={setSpecial}
-                    card={selectedCard}
-                    onTileClick={onTileClick}
-                  />
-                )
-            }
-          </MapContainer>
+              <MapControls makeDefault zoomSpeed={0.5} enableRotate={true} />
+            </group>
+          </Canvas>
           {!isFinished && (
             <Box
               position="fixed"
@@ -604,7 +693,7 @@ const MatchView = () => {
       <UILoadingIndicator
         loading={/*!isLoadingMatch ||  isLoadingUpdate || */ isUpdatingMatch}
       />
-    </Container>
+    </Box>
   )
 }
 

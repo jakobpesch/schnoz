@@ -12,15 +12,15 @@ import { useTiles } from "./useTiles"
 import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 
 export function usePlaceableCoordinates(props: {
-  match: Match | undefined
-  map: Map | undefined
-  activePlayer: Participant | undefined
-  tilesWithUnits: TileWithUnit[] | undefined
-  participants: Participant[] | undefined
+  match: Match | null
+  map: Map | null
+  activePlayer: Participant | null
+  tilesWithUnits: TileWithUnit[] | null
+  participants: Participant[] | null
   yourTurn: boolean
   selectedCard: Card | null
   activatedSpecials: Special[]
-  you: Participant | undefined
+  you: Participant | null
 }) {
   const {
     match,

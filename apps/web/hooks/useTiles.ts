@@ -7,7 +7,7 @@ import {
   getTileLookup,
 } from "coordinate-utils"
 
-export function useTiles(tilesWithUnits: TileWithUnit[] | undefined) {
+export function useTiles(tilesWithUnits: TileWithUnit[] | null) {
   const tileLookup =
     useMemo(() => {
       return getTileLookup(tilesWithUnits ?? [])

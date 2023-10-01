@@ -7,6 +7,7 @@ import { Map, Match, MatchStatus, Participant } from "database"
 import {
   API_ERROR_CODES,
   Coordinate,
+  ParticipantWithUser,
   PlacementRuleName,
   Special,
   TileLookup,
@@ -29,10 +30,10 @@ enum ReadableRuleNames {
 export const checkConditionsForUnitConstellationPlacement = (
   targetCoordinate: Coordinate,
   unitConstellation: TransformedConstellation,
-  match: Match | undefined,
-  activePlayer: Participant | undefined,
-  map: Map | undefined,
-  tilesWithUnits: TileWithUnit[] | undefined,
+  match: Match | null,
+  activePlayer: ParticipantWithUser | null,
+  map: Map | null,
+  tilesWithUnits: TileWithUnit[] | null,
   tileLookup: TileLookup,
   ignoredRules: PlacementRuleName[],
   placingPlayer: Participant["id"] | undefined,

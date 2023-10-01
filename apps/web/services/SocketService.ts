@@ -11,6 +11,16 @@ import {
   TransformedConstellation,
 } from "types"
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "./GameManagerService"
+import {
+  setConnectedParticipants,
+  setGameSettings,
+  setMap,
+  setMatch,
+  setOpponentsHoveredCoordinates,
+  setParticipants,
+  setTilesWithUnits,
+  setUpdatedTilesWithUnits,
+} from "../store"
 
 // TODO: Make type proper
 export type UpdateGameSettingsPayload = Partial<Omit<GameSettings, "id">>
@@ -24,24 +34,6 @@ export class SocketIOApi {
   }
   public get IsConnected() {
     return !!this.socket?.connected
-  }
-
-  private callbacks: {
-    setIsConnecting?: (isConnecting: boolean) => void
-    setMatch?: (match: Match) => void
-    setGameSettings?: (gameSettings: GameSettings) => void
-    setMap?: (map: Map) => void
-    setTilesWithUnits?: (tilesWithUnits: TileWithUnit[]) => void
-    setUpdatedTilesWithUnits?: (updatedTilesWithUnits: TileWithUnit[]) => void
-    setUnits?: (units: Unit[]) => void
-    setParticipants?: (players: ParticipantWithUser[]) => void
-    setConnectedParticipants?: (players: ParticipantWithUser[]) => void
-    setOpponentsHoveredTiles?: (hoveringTiles: Coordinate[] | null) => void
-    setLastSynced?: (lastSynced: string) => void
-  } = {}
-
-  public setCallbacks = (callbacks: typeof this.callbacks) => {
-    this.callbacks = { ...this.callbacks, ...callbacks }
   }
 
   public connectToMatch = (userId: string, matchId: string) => {
@@ -128,32 +120,22 @@ export class SocketIOApi {
     players?: ParticipantWithUser[]
     connectedPlayers?: ParticipantWithUser[]
   }) => {
-    this.callbacks.setMatch?.(payload.match)
-    if (payload.gameSettings) {
-      this.callbacks.setGameSettings?.(payload.gameSettings)
-    }
-    if (payload.players) {
-      this.callbacks.setParticipants?.(payload.players)
-    }
-    if (payload.connectedPlayers) {
-      this.callbacks.setConnectedParticipants?.(payload.connectedPlayers)
-    }
-    if (payload.tilesWithUnits) {
-      this.callbacks.setTilesWithUnits?.(payload.tilesWithUnits)
-    }
-    if (payload.map) {
-      this.callbacks.setMap?.(payload.map)
-    }
+    setMatch(payload.match)
+    setMap(payload.map ?? null)
+    setTilesWithUnits(payload.tilesWithUnits ?? null)
+    setParticipants(payload.players ?? null)
+    setGameSettings(payload.gameSettings ?? null)
+    setConnectedParticipants(payload.connectedPlayers ?? null)
   }
 
   private onPlayerDisconnectedFromMatch = (
     participants: ParticipantWithUser[],
   ) => {
-    this.callbacks.setConnectedParticipants?.(participants)
+    setConnectedParticipants(participants)
   }
 
   private onUpdatedGameSettings = (gameSettings: GameSettings) => {
-    this.callbacks.setGameSettings?.(gameSettings)
+    setGameSettings(gameSettings)
   }
   private onStartedMatch = (payload: {
     match: Match
@@ -161,20 +143,20 @@ export class SocketIOApi {
     tilesWithUnits: TileWithUnit[]
     players: ParticipantWithUser[]
   }) => {
-    this.callbacks.setMatch?.(payload.match)
-    this.callbacks.setParticipants?.(payload.players)
-    this.callbacks.setTilesWithUnits?.(payload.tilesWithUnits)
-    this.callbacks.setMap?.(payload.map)
+    setMatch(payload.match)
+    setParticipants(payload.players)
+    setTilesWithUnits(payload.tilesWithUnits)
+    setMap(payload.map)
   }
 
   private onKickedParticipant = (
     remainingParticipants: ParticipantWithUser[],
   ) => {
-    this.callbacks.setParticipants?.(remainingParticipants)
-    this.callbacks.setConnectedParticipants?.(remainingParticipants)
+    setParticipants(remainingParticipants)
+    setConnectedParticipants(remainingParticipants)
   }
   private onHovered = (hoveredCoordinates: Coordinate[] | null) => {
-    this.callbacks.setOpponentsHoveredTiles?.(hoveredCoordinates)
+    setOpponentsHoveredCoordinates(hoveredCoordinates)
   }
 
   private onMadeMove = (payload: {
@@ -182,13 +164,13 @@ export class SocketIOApi {
     updatedTilesWithUnits: TileWithUnit[]
     updatedPlayers: ParticipantWithUser[]
   }) => {
-    this.callbacks.setMatch?.(payload.updatedMatch)
-    this.callbacks.setUpdatedTilesWithUnits?.(payload.updatedTilesWithUnits)
-    this.callbacks.setParticipants?.(payload.updatedPlayers)
+    setMatch(payload.updatedMatch)
+    setUpdatedTilesWithUnits(payload.updatedTilesWithUnits)
+    setParticipants(payload.updatedPlayers)
   }
 
   private onEndTurnTimestamp = (payload: { match: Match }) => {
-    this.callbacks.setMatch?.(payload.match)
+    setMatch(payload.match)
   }
 
   public sendRequest = async (request: { event: string; data?: any }) => {
