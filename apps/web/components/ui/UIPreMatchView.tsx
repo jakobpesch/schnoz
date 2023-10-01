@@ -206,8 +206,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               size="sm"
               disabled={!isHost}
               _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 30000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 30000 })}
+              colorScheme={settings.turnTime === 30_000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 30_000 })}
             >
               30
             </Button>
@@ -216,8 +216,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               size="sm"
               disabled={!isHost}
               _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 60000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 60000 })}
+              colorScheme={settings.turnTime === 60_000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 60_000 })}
             >
               60
             </Button>
@@ -226,8 +226,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               size="sm"
               disabled={!isHost}
               _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 90000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 90000 })}
+              colorScheme={settings.turnTime === 90_000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 90_000 })}
             >
               90
             </Button>
@@ -236,8 +236,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               size="sm"
               disabled={!isHost}
               _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 120000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 120000 })}
+              colorScheme={settings.turnTime === 120_000 ? "blue" : "gray"}
+              onClick={() => onSettingsChange({ turnTime: 120_000 })}
             >
               120
             </Button>
