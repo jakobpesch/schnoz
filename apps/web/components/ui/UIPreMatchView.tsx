@@ -241,6 +241,16 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
             >
               120
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isHost}
+              _disabled={{ opacity: 1, cursor: "not-allowed" }}
+              colorScheme={settings.turnTime === 604_800_000 ? "blue" : "gray"} // 1 week
+              onClick={() => onSettingsChange({ turnTime: 604_800_000 })}
+            >
+              ∞
+            </Button>
           </ButtonGroup>
         </Stack>
         <Stack width="full">
