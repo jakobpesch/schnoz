@@ -1,20 +1,15 @@
-import {
-  Card,
-  buildTileLookupId,
-  coordinatesAreEqual,
-  getAdjacentCoordinatesOfConstellation,
-} from "coordinate-utils"
-import { Map, Match, Participant, UnitConstellation, UnitType } from "database"
+import { Card } from "coordinate-utils"
+import { Map, Match, Participant } from "database"
+import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import { useMemo } from "react"
-import { Coordinate, TileWithUnit } from "types"
+import { Coordinate, ParticipantWithUser, TileWithUnit } from "types"
 import { Special } from "../services/GameManagerService"
 import { useTiles } from "./useTiles"
-import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 
 export function usePlaceableCoordinates(props: {
   match: Match | null
   map: Map | null
-  activePlayer: Participant | null
+  activePlayer: ParticipantWithUser | null
   tilesWithUnits: TileWithUnit[] | null
   participants: Participant[] | null
   yourTurn: boolean
@@ -65,9 +60,8 @@ export function usePlaceableCoordinates(props: {
             activePlayer,
             map,
             tilesWithUnits,
-            tileLookup,
             [],
-            you?.id,
+            you?.id ?? null,
             activatedSpecials,
           ),
         )

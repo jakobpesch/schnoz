@@ -1,44 +1,20 @@
-import { ArrowForwardIcon } from "@chakra-ui/icons"
+import { useToast, useToken } from "@chakra-ui/react"
 import {
-  Box,
-  Circle,
-  Flex,
-  HStack,
-  Kbd,
-  Stack,
-  Text,
-  useToken,
-} from "@chakra-ui/react"
-import {
-  Card,
+  coordinatesAreEqual,
   transformCoordinates,
   translateCoordinatesTo,
 } from "coordinate-utils"
-import { Participant, Unit } from "database"
+import { Unit } from "database"
+import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import Mousetrap from "mousetrap"
-import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { Coordinate, TransformedConstellation } from "types"
-import {
-  Special,
-  SpecialType,
-  expandBuildRadiusByOne,
-} from "../../services/GameManagerService"
+import { Coordinate, PlacementRuleName, TransformedConstellation } from "types"
+import { HighlightMesh, LAYERS, UnitMesh } from "../../pages/webgl"
+import { Special } from "../../services/GameManagerService"
 import { RenderSettings } from "../../services/SettingsService"
 import { socketApi } from "../../services/SocketService"
-import { scaled } from "../ui/UIScoreView"
-import { getPlayerNumber, useMatchStore } from "../../store"
-import { HighlightMesh, LAYERS, TileMesh, UnitMesh } from "../../pages/webgl"
-
-const mousePositionToMapCoordinates = (
-  mouseX: number,
-  mouseY: number,
-  tileSizeInPx: number,
-) => {
-  const row = Math.floor(mouseX / tileSizeInPx)
-  const col = Math.floor(mouseY / tileSizeInPx)
-  return [row, col] as Coordinate
-}
+import { getPlayerNumber, setSelectedCard, useStore } from "../../store"
+import { PlaceableTiles } from "./PlaceableTiles"
 
 const unitFactory = (unit: Partial<Unit>) => {
   return {
@@ -53,32 +29,65 @@ const unitFactory = (unit: Partial<Unit>) => {
 }
 
 export interface HoveredHighlightsProps {
-  you: Participant | null
-  activePlayer: Participant | null
   hide?: boolean
-  card: Card | null
-  specials: Special[]
-  activeSpecials: Special[]
-  setSpecial: (specialType: SpecialType, active: boolean) => void
-  onTileClick: (
-    row: number,
-    col: number,
-    rotatedClockwise: TransformedConstellation["rotatedClockwise"],
-    mirrored: TransformedConstellation["mirrored"],
-  ) => void
 }
 
 export const HoveredHighlights = (props: HoveredHighlightsProps) => {
-  const { opponentsHoveredCoordinates, hoveredCoordinate, selectedCard } =
-    useMatchStore()
+  const toast = useToast()
+  const userId = useStore((state) => state.userId())
+  const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
+  const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
+
+  const match = useStore((state) => state.match)
+  const you = useStore((state) => state.you())
+  const participants = useStore((state) => state.participants)
+  const yourTurn = useStore((state) => state.yourTurn())
+  const map = useStore((state) => state.map)
+  const activeParticipant = useStore((state) => state.activeParticipant())
+  const tilesWithUnits = useStore((state) => state.tilesWithUnits)
+  const hoveredCoordinate = useStore((state) => state.hoveredCoordinate)
+  const opponentsHoveredCoordinates = useStore(
+    (state) => state.opponentsHoveredCoordinates,
+  )
+  const selectedCard = useStore((state) => state.selectedCard)
+
+  const placeableCoordinates =
+    useMemo(() => {
+      if (!yourTurn || !match || !tilesWithUnits || !participants) {
+        return []
+      }
+
+      const placeableCoordiantes = tilesWithUnits
+        .map((t) =>
+          checkConditionsForUnitConstellationPlacement(
+            [t.row, t.col],
+            {
+              coordinates: [[0, 0]],
+              mirrored: false,
+              rotatedClockwise: 0,
+              value: 0,
+            },
+            match,
+            activeParticipant,
+            map,
+            tilesWithUnits,
+            [],
+            you?.id ?? null,
+            activatedSpecials,
+          ),
+        )
+        .filter((v) => typeof v.error === "undefined")
+        .map((v) => v.translatedCoordinates?.[0] ?? null)
+        .filter(Boolean) as Coordinate[]
+
+      return placeableCoordiantes
+    }, [match, tilesWithUnits, selectedCard, activatedSpecials]) ?? []
 
   const [rotatedClockwise, setRotationCount] =
     useState<TransformedConstellation["rotatedClockwise"]>(0)
   const [mirrored, setMirrored] =
     useState<TransformedConstellation["mirrored"]>(false)
 
-  const mapContainerElement = document.getElementById("map-container")
-  const bounds = mapContainerElement?.getBoundingClientRect()
   const rotate = () => {
     const correctedRotationCount = (
       rotatedClockwise === 3 ? 0 : rotatedClockwise + 1
@@ -97,18 +106,6 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   useEffect(() => {
     Mousetrap.bind("e", mirror)
   })
-
-  // document.onmousemove = (event: MouseEvent) => {
-  //   if (!bounds) {
-  //     return
-  //   }
-  //   const coordinate = mousePositionToMapCoordinates(
-  //     event.clientY - bounds.top,
-  //     event.clientX - bounds.left,
-  //     RenderSettings.tileSize,
-  //   )
-  //   setHoveredCoordinate(coordinate)
-  // }
 
   const hoveredCoordinates = useMemo(() => {
     if (selectedCard && hoveredCoordinate) {
@@ -133,27 +130,113 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   const color = useToken(
     "colors",
     RenderSettings.getPlayerAppearance(
-      getPlayerNumber(props.activePlayer?.id ?? null),
+      getPlayerNumber(activeParticipant?.id ?? null),
     ).color,
   )
 
-  if (!props.activePlayer || props.hide || !props.you) {
+  const onTileClick = async (
+    row: number,
+    col: number,
+    rotatedClockwise: TransformedConstellation["rotatedClockwise"],
+    mirrored: TransformedConstellation["mirrored"],
+  ) => {
+    if (isUpdatingMatch) {
+      return
+    }
+
+    if (!userId) {
+      return
+    }
+
+    if (!match) {
+      return
+    }
+
+    if (!selectedCard) {
+      return
+    }
+
+    const unitConstellation: TransformedConstellation = {
+      coordinates: selectedCard.coordinates,
+      value: selectedCard.value,
+      rotatedClockwise,
+      mirrored,
+    }
+
+    try {
+      if (!you) {
+        throw new Error("Could not find your id")
+      }
+
+      const ignoredRules: PlacementRuleName[] =
+        unitConstellation.coordinates.length === 1 &&
+        coordinatesAreEqual(unitConstellation.coordinates[0], [0, 0])
+          ? ["ADJACENT_TO_ALLY"]
+          : []
+
+      const { error } = checkConditionsForUnitConstellationPlacement(
+        [row, col],
+        unitConstellation,
+        match,
+        activeParticipant,
+        map,
+        tilesWithUnits,
+        ignoredRules,
+        you?.id ?? null,
+        activatedSpecials,
+      )
+
+      if (error) {
+        toast({
+          title: error.message,
+          status: "info",
+          position: "bottom-left",
+        })
+        return
+      }
+
+      setIsUpdatingMatch(true)
+
+      await socketApi.makeMove({
+        matchId: match?.id,
+        row,
+        col,
+        participantId: you.id,
+        unitConstellation,
+        ignoredRules,
+        specials: ignoredRules.includes("ADJACENT_TO_ALLY")
+          ? activatedSpecials.filter(
+              (special) => special.type !== "EXPAND_BUILD_RADIUS_BY_1",
+            )
+          : activatedSpecials,
+      })
+      // playSound()
+      setSelectedCard(null)
+      setActivatedSpecials([])
+    } catch (e: any) {
+      console.error(e.message)
+    } finally {
+      setIsUpdatingMatch(false)
+    }
+  }
+
+  if (!activeParticipant || props.hide || !you) {
     return null
   }
-  const hasExpandBuildRaidusByOneActive = props.activeSpecials.some(
+  const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
     (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
   )
 
-  const availableBonusPoints =
-    props.you.bonusPoints + (selectedCard?.value ?? 0)
+  const availableBonusPoints = you.bonusPoints + (selectedCard?.value ?? 0)
 
-  const specialsCost = props.activeSpecials.reduce((a, s) => a + s.cost, 0)
+  const specialsCost = activatedSpecials.reduce((a, s) => a + s.cost, 0)
   const bonusFromSelectedCard = selectedCard?.value ?? 0
   const resultingBonusPoints =
-    props.you.bonusPoints + bonusFromSelectedCard - specialsCost
+    you.bonusPoints + bonusFromSelectedCard - specialsCost
 
   return (
     <>
+      <PlaceableTiles placeableCoordinates={placeableCoordinates} />
       {[...(opponentsHoveredCoordinates ?? []), ...hoveredCoordinates].map(
         ([row, col]) => {
           return (
@@ -161,10 +244,10 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
               <UnitMesh
                 key={row + "_" + col + "_unit"}
                 position={[col, -row, LAYERS.UNITS_HIGHLIGHT]}
-                unit={unitFactory({ ownerId: props.activePlayer?.id })}
+                unit={unitFactory({ ownerId: activeParticipant?.id })}
                 opacity={0.6}
                 onClick={() =>
-                  props.onTileClick(row, col, rotatedClockwise, mirrored)
+                  onTileClick(row, col, rotatedClockwise, mirrored)
                 }
               />
               <HighlightMesh
@@ -177,113 +260,6 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
           )
         },
       )}
-
-      {/* <Box
-        bg="red"
-        position="fixed"
-        left={scaled(4)}
-        top={scaled(100)}
-        cursor="default"
-      >
-        <Stack spacing={scaled(0)}>
-          <HStack
-            position="relative"
-            spacing={scaled(2)}
-            padding={scaled(2)}
-            color="gray.100"
-          >
-            <Circle size={scaled(8)} background="yellow.400">
-              <Text fontSize={scaled(16)} fontWeight="bold" color="yellow.800">
-                {props.you.bonusPoints}
-              </Text>
-            </Circle>
-            {(specialsCost || bonusFromSelectedCard) && (
-              <>
-                <ArrowForwardIcon width={scaled(8)} height={scaled(8)} />
-                <Circle size={scaled(8)} background="yellow.400">
-                  <Text
-                    fontSize={scaled(16)}
-                    fontWeight="bold"
-                    color="yellow.800"
-                  >
-                    {resultingBonusPoints}
-                  </Text>
-                </Circle>
-              </>
-            )}
-          </HStack>
-          {selectedCard && (
-            <>
-              {[
-                { hotkey: "R", label: "Rotate", action: rotate },
-                { hotkey: "E", label: "Mirror", action: mirror },
-              ].map((s) => (
-                <HStack
-                  key={s.label}
-                  padding={scaled(2)}
-                  color="gray.100"
-                  cursor="pointer"
-                  onClick={() => s.action()}
-                >
-                  <Kbd
-                    borderColor="gray.100"
-                    fontSize={scaled(20)}
-                    userSelect="none"
-                  >
-                    <Text
-                    // transform={"rotate(" + 90 * rotatedClockwise + "deg)"}
-                    >
-                      {s.hotkey}
-                    </Text>
-                  </Kbd>
-                  <Text fontSize={scaled(16)} userSelect="none">
-                    {s.label}
-                  </Text>
-                </HStack>
-              ))}
-
-              <HStack
-                padding={scaled(2)}
-                borderRadius={scaled(10)}
-                borderWidth={scaled(2)}
-                color={
-                  availableBonusPoints >= expandBuildRadiusByOne.cost
-                    ? "gray.100"
-                    : "gray.400"
-                }
-                opacity={
-                  availableBonusPoints >= expandBuildRadiusByOne.cost ? 1 : 0.5
-                }
-                background={
-                  hasExpandBuildRaidusByOneActive ? "green.500" : "gray.700"
-                }
-                cursor="pointer"
-                onClick={() => {
-                  if (availableBonusPoints >= expandBuildRadiusByOne.cost) {
-                    props.setSpecial(
-                      "EXPAND_BUILD_RADIUS_BY_1",
-                      !hasExpandBuildRaidusByOneActive
-                    )
-                  }
-                }}
-              >
-                <Circle size={scaled(8)} background="yellow.400">
-                  <Text
-                    fontSize={scaled(16)}
-                    fontWeight="bold"
-                    color="yellow.800"
-                  >
-                    {expandBuildRadiusByOne.cost}
-                  </Text>
-                </Circle>
-                <Text fontSize={scaled(16)} userSelect="none">
-                  +1 Reach
-                </Text>
-              </HStack>
-            </>
-          )}
-        </Stack>
-      </Box> */}
     </>
   )
 }

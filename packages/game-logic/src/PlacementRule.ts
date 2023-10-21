@@ -1,5 +1,6 @@
 import {
   buildTileLookupId,
+  getTileLookup,
   transformCoordinates,
   translateCoordinatesTo,
 } from "coordinate-utils"
@@ -10,7 +11,6 @@ import {
   ParticipantWithUser,
   PlacementRuleName,
   Special,
-  TileLookup,
   TileWithUnit,
   TransformedConstellation,
 } from "types"
@@ -34,9 +34,8 @@ export const checkConditionsForUnitConstellationPlacement = (
   activePlayer: ParticipantWithUser | null,
   map: Map | null,
   tilesWithUnits: TileWithUnit[] | null,
-  tileLookup: TileLookup,
   ignoredRules: PlacementRuleName[],
-  placingPlayer: Participant["id"] | undefined,
+  placingPlayer: Participant["id"] | null,
   specials: Special[],
 ) => {
   if (!match) {
@@ -69,6 +68,16 @@ export const checkConditionsForUnitConstellationPlacement = (
     }
   }
 
+  if (!placingPlayer) {
+    return {
+      error: {
+        errorCode: API_ERROR_CODES.NO_PLACING_PLAYER,
+        message: "No placing player",
+        statusCode: 400,
+      },
+    }
+  }
+
   if (match.activePlayerId !== placingPlayer) {
     return {
       error: {
@@ -88,7 +97,7 @@ export const checkConditionsForUnitConstellationPlacement = (
       },
     }
   }
-
+  const tileLookup = getTileLookup(tilesWithUnits)
   const targetTile = tileLookup[buildTileLookupId(targetCoordinate)]
 
   if (!targetTile) {

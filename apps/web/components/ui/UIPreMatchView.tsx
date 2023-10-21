@@ -6,6 +6,7 @@ import {
   Checkbox,
   CheckboxGroup,
   CloseButton,
+  Flex,
   Grid,
   GridItem,
   HStack,
@@ -101,7 +102,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
     participants.length === 1 ? [...participants, null] : participants
   const allConnected = connectedParticipants.length === 2
   return (
-    <VStack align="start" spacing="8" maxWidth="md" {...stackProps}>
+    <VStack align="start" spacing="8" width="full" {...stackProps}>
       <Heading>Game Settings</Heading>
       <Stack width="full">
         <Text fontWeight="bold">Participants</Text>
@@ -163,166 +164,173 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
       </Stack>
 
       <Stack width="full" spacing="8">
-        <Stack width="full">
-          <Text fontWeight="bold">Map size</Text>
-          <ButtonGroup isAttached>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.mapSize === 11 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ mapSize: 11 })}
-            >
-              Small
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.mapSize === 21 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ mapSize: 21 })}
-            >
-              Medium
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.mapSize === 31 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ mapSize: 31 })}
-            >
-              Large
-            </Button>
-          </ButtonGroup>
-        </Stack>
-        <Stack width="full">
-          <Text fontWeight="bold">Seconds per turn</Text>
-          <ButtonGroup isAttached>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 30_000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 30_000 })}
-            >
-              30
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 60_000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 60_000 })}
-            >
-              60
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 90_000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 90_000 })}
-            >
-              90
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 120_000 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ turnTime: 120_000 })}
-            >
-              120
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.turnTime === 604_800_000 ? "blue" : "gray"} // 1 week
-              onClick={() => onSettingsChange({ turnTime: 604_800_000 })}
-            >
-              ∞
-            </Button>
-          </ButtonGroup>
-        </Stack>
-        <Stack width="full">
-          <Text fontWeight="bold">Number of turns</Text>
-          <ButtonGroup isAttached>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.maxTurns === 6 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ maxTurns: 6 })}
-            >
-              6
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.maxTurns === 12 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ maxTurns: 12 })}
-            >
-              12
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.maxTurns === 24 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ maxTurns: 24 })}
-            >
-              24
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isHost}
-              _disabled={{ opacity: 1, cursor: "not-allowed" }}
-              colorScheme={settings.maxTurns === 36 ? "blue" : "gray"}
-              onClick={() => onSettingsChange({ maxTurns: 36 })}
-            >
-              36
-            </Button>
-          </ButtonGroup>
-        </Stack>
-        <Stack width="full">
-          <Text fontWeight="bold">Rules</Text>
-          <CheckboxGroup>
-            {Object.values(Rule).map((rule) => (
-              <Checkbox
-                key={rule}
-                isChecked={settings.rules.includes(rule)}
-                readOnly={!isHost}
-                cursor={!isHost ? "not-allowed" : "pointer"}
-                onChange={(e) => {
-                  const isChecked = e.target.checked
-                  if (isChecked) {
-                    onSettingsChange({ rules: [...settings.rules, rule] })
-                  } else {
-                    onSettingsChange({
-                      rules: [...settings.rules].filter((r) => r !== rule),
-                    })
-                  }
-                }}
+        <Flex gap="4" direction={{ base: "column", sm: "row" }}>
+          {/* <Flex direction="column"> */}
+          <Stack width="full">
+            <Text fontWeight="bold">Map size</Text>
+            <ButtonGroup isAttached>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.mapSize === 11 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ mapSize: 11 })}
               >
-                {getReadableRuleNames(rule)}
-              </Checkbox>
-            ))}
-          </CheckboxGroup>
-        </Stack>
+                Small
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.mapSize === 21 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ mapSize: 21 })}
+              >
+                Medium
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.mapSize === 31 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ mapSize: 31 })}
+              >
+                Large
+              </Button>
+            </ButtonGroup>
+          </Stack>
+          <Stack width="full">
+            <Text fontWeight="bold">Seconds per turn</Text>
+            <ButtonGroup isAttached>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.turnTime === 30_000 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ turnTime: 30_000 })}
+              >
+                30
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.turnTime === 60_000 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ turnTime: 60_000 })}
+              >
+                60
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.turnTime === 90_000 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ turnTime: 90_000 })}
+              >
+                90
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.turnTime === 120_000 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ turnTime: 120_000 })}
+              >
+                120
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={
+                  settings.turnTime === 604_800_000 ? "blue" : "gray"
+                } // 1 week
+                onClick={() => onSettingsChange({ turnTime: 604_800_000 })}
+              >
+                ∞
+              </Button>
+            </ButtonGroup>
+          </Stack>
+        </Flex>
+        <Flex gap="4" direction={{ base: "column", sm: "row" }}>
+          <Stack width="full">
+            <Text fontWeight="bold">Number of turns</Text>
+            <ButtonGroup isAttached>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.maxTurns === 6 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ maxTurns: 6 })}
+              >
+                6
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.maxTurns === 12 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ maxTurns: 12 })}
+              >
+                12
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.maxTurns === 24 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ maxTurns: 24 })}
+              >
+                24
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isHost}
+                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                colorScheme={settings.maxTurns === 36 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ maxTurns: 36 })}
+              >
+                36
+              </Button>
+            </ButtonGroup>
+          </Stack>
+          <Stack width="full">
+            <Text fontWeight="bold">Rules</Text>
+            <CheckboxGroup>
+              {Object.values(Rule).map((rule) => (
+                <Checkbox
+                  key={rule}
+                  isChecked={settings.rules.includes(rule)}
+                  readOnly={!isHost}
+                  cursor={!isHost ? "not-allowed" : "pointer"}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked
+                    if (isChecked) {
+                      onSettingsChange({ rules: [...settings.rules, rule] })
+                    } else {
+                      onSettingsChange({
+                        rules: [...settings.rules].filter((r) => r !== rule),
+                      })
+                    }
+                  }}
+                >
+                  {getReadableRuleNames(rule)}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </Stack>
+        </Flex>
       </Stack>
       <Stack width="full">
         <Text fontWeight="bold">Terrain</Text>

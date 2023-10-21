@@ -434,7 +434,6 @@ export class MatchInstance {
         this.activePlayer,
         this.map,
         this.tilesWithUnits,
-        tileLookup,
         ignoredRules,
         participantId,
         specials,
@@ -482,10 +481,8 @@ export class MatchInstance {
     })
     const updatedTilesWithUnits: any = []
     for (const element of updateTilesPromises) {
-      this.logger.log("!!!element", typeof element)
       updatedTilesWithUnits.push(await element)
     }
-    // updatedTilesWithUnits = await Promise.all(updateTilesPromises);
     const matchWithPlacedTiles = await this.matchesService.findOneRich({
       id: this.match.id,
     })

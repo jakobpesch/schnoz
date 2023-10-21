@@ -12,7 +12,7 @@ import { AccessTokenResponse, isDataResponse, Profile } from "types"
 import { eraseCookie, getCookie, setCookie } from "../services/CookieService"
 import { fetchApi } from "../services/FetchService"
 import { NEXT_PUBLIC_API_URL } from "../services/GameManagerService"
-import { setProfile, useAuthStore } from "../store"
+import { setProfile, useStore } from "../store"
 
 interface AuthContextType {
   profile: Profile | null
@@ -35,7 +35,7 @@ export function AuthProvider({
 }: {
   children: ReactNode
 }): JSX.Element {
-  const { profile } = useAuthStore()
+  const { profile } = useStore()
   const [loadingInitial, setLoadingInitial] = useState<boolean>(true)
   const toast = useToast()
   const router = useRouter()

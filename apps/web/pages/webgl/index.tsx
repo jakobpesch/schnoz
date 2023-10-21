@@ -2,17 +2,18 @@ import { Box, useToken } from "@chakra-ui/react"
 import { NextPage } from "next"
 
 import { MapControls, useTexture } from "@react-three/drei"
-import { Canvas, GroupProps, ThreeElements, useFrame } from "@react-three/fiber"
-import { buildTileLookupId } from "coordinate-utils"
+import { Canvas, GroupProps, ThreeElements } from "@react-three/fiber"
+import { buildTileLookupId, coordinatesAreEqual } from "coordinate-utils"
 import { Tile, Unit } from "database"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { TileWithUnit } from "types"
 import { RenderSettings } from "../../services/SettingsService"
 import {
   getPlayerNumber,
   setHoveredCoordinate,
-  useMatchStore,
+  setTilesWithUnits,
+  useStore,
 } from "../../store"
 export const LAYERS = {
   BASE: 0,
@@ -82,9 +83,35 @@ export const UnitMesh = (
 }
 
 export const Tiles = (props: GroupProps) => {
-  const { tilesWithUnits } = useMatchStore()
+  const { tilesWithUnits } = useStore()
+  const updatedTilesWithUnits = useStore((state) => state.updatedTilesWithUnits)
+  useEffect(() => {
+    if (!updatedTilesWithUnits || !tilesWithUnits) {
+      return
+    }
+    const tilesWithUnitsClone = [...tilesWithUnits]
+    updatedTilesWithUnits.forEach((updatedTileWithUnit) => {
+      const index = tilesWithUnits?.findIndex((t) =>
+        coordinatesAreEqual(
+          [t.row, t.col],
+          [updatedTileWithUnit.row, updatedTileWithUnit.col],
+        ),
+      )
+      if (!index) {
+        tilesWithUnitsClone.push(updatedTileWithUnit)
+        return
+      }
+      tilesWithUnitsClone[index] = updatedTileWithUnit
+    })
+    setTilesWithUnits(tilesWithUnitsClone)
+  }, [updatedTilesWithUnits])
+
   return (
-    <group {...props} position={new THREE.Vector3()}>
+    <group
+      {...props}
+      position={new THREE.Vector3()}
+      onPointerLeave={() => setHoveredCoordinate(null)}
+    >
       {tilesWithUnits?.map((tile) => {
         const key = [tile.row, tile.col].join(",")
         return (
@@ -140,7 +167,7 @@ export const TerrainMesh = (
 }
 
 export const Units = () => {
-  const { tilesWithUnits } = useMatchStore()
+  const { tilesWithUnits } = useStore()
   if (!tilesWithUnits) {
     return null
   }
@@ -163,7 +190,7 @@ export const Units = () => {
 }
 
 export const Terrains = () => {
-  const { tilesWithUnits } = useMatchStore()
+  const { tilesWithUnits } = useStore()
   if (!tilesWithUnits) {
     return null
   }
@@ -186,7 +213,7 @@ export const Terrains = () => {
 
 export const HoveredUnits = (props: { units: Unit[] }) => {
   const { units } = props
-  const { tilesWithUnits } = useMatchStore()
+  const { tilesWithUnits } = useStore()
   if (!tilesWithUnits) {
     return null
   }

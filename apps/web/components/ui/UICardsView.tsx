@@ -7,8 +7,11 @@ import {
   Kbd,
   Text,
 } from "@chakra-ui/react"
+import { Card, decodeUnitConstellation } from "coordinate-utils"
+import Mousetrap from "mousetrap"
+import { useEffect } from "react"
 import { RenderSettings } from "../../services/SettingsService"
-import { Card } from "coordinate-utils"
+import { setSelectedCard, useStore } from "../../store"
 import { scaled } from "./UIScoreView"
 
 interface CardViewProps extends BoxProps {
@@ -84,45 +87,76 @@ const CardView = (props: CardViewProps) => {
   )
 }
 
-interface UICardsViewProps {
-  selectedCard: Card | null
-  cards: Card[]
-  readonly?: boolean
-  onSelect: (card: Card) => void
-}
+export const UICardsView = () => {
+  const cards = useStore(
+    (state) => state.match?.openCards.map(decodeUnitConstellation) ?? [],
+  )
+  const match = useStore((state) => state.match)
+  const yourTurn = useStore((state) => state.yourTurn())
+  const readonly = !yourTurn
+  const selectedCard = useStore((state) => state.selectedCard)
 
-export const UICardsView = (props: UICardsViewProps) => (
-  <Center
-    position="fixed"
-    zIndex={3}
-    bottom="0"
-    left="calc(50vw - 50%)"
-    width="100vw"
-  >
-    <HStack
-      spacing={scaled(10)}
-      padding={scaled(2)}
-      margin={scaled(2)}
-      background="gray.700"
-      borderRadius={scaled(5)}
-      borderWidth={scaled(2)}
-      opacity={props.readonly ? 0.5 : 1}
-    >
-      {props.cards.map((card, index) => {
-        const selected =
-          JSON.stringify(card) === JSON.stringify(props.selectedCard)
-        return (
-          <CardView
-            selected={selected}
-            key={"unitConstellationView " + card.coordinates}
-            hotkey={`${index + 1}`}
-            card={card}
-            pointerEvents={props.readonly ? "none" : "all"}
-            tileSize={21}
-            onClick={() => props.onSelect(card)}
-          />
+  useEffect(() => {
+    match?.openCards.forEach((unitConstellation, index) => {
+      const hotkey = index + 1 + ""
+      Mousetrap.unbind(hotkey)
+      if (yourTurn) {
+        Mousetrap.bind(hotkey, () =>
+          setSelectedCard(decodeUnitConstellation(unitConstellation)),
         )
-      })}
-    </HStack>
-  </Center>
-)
+      }
+    })
+    Mousetrap.unbind("esc")
+    if (yourTurn) {
+      Mousetrap.bind("esc", () => setSelectedCard(null))
+    }
+  }, [match])
+
+  return (
+    <Center
+      position="fixed"
+      zIndex={3}
+      bottom="0"
+      left="calc(50vw - 50%)"
+      width="100vw"
+    >
+      <HStack
+        spacing={scaled(10)}
+        padding={scaled(2)}
+        margin={scaled(2)}
+        background="gray.700"
+        borderRadius={scaled(5)}
+        borderWidth={scaled(2)}
+        opacity={readonly ? 0.5 : 1}
+      >
+        {cards.map((card, index) => {
+          const selected = JSON.stringify(card) === JSON.stringify(selectedCard)
+          return (
+            <CardView
+              selected={selected}
+              key={"unitConstellationView " + card.coordinates}
+              hotkey={`${index + 1}`}
+              card={card}
+              pointerEvents={readonly ? "none" : "all"}
+              tileSize={21}
+              onClick={() => {
+                // const insufficientBonusPoints =
+                //   activePlayer.bonusPoints + (card.value ?? 0) <
+                //   activatedSpecials.reduce((a, s) => a + s.cost, 0)
+
+                // const isSinglePiece =
+                //   card.coordinates.length === 1 &&
+                //   coordinatesAreEqual(card.coordinates[0], [0, 0])
+
+                // if (isSinglePiece || insufficientBonusPoints) {
+                //   setActivatedSpecials([])
+                // }
+                setSelectedCard(card)
+              }}
+            />
+          )
+        })}
+      </HStack>
+    </Center>
+  )
+}

@@ -1,37 +1,24 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ArrowForwardIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
   Center,
-  Circle,
-  HStack,
+  Container,
   Heading,
-  Kbd,
   Spinner,
-  Stack,
   Text,
   VStack,
   useToast,
 } from "@chakra-ui/react"
-import { coordinatesAreEqual, getNewlyRevealedTiles } from "coordinate-utils"
-import { Participant, UnitType } from "database"
-import { checkConditionsForUnitConstellationPlacement } from "game-logic"
+import { Participant } from "database"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
-import {
-  Coordinate,
-  PlacementRuleName,
-  SpecialType,
-  TileWithUnit,
-  TransformedConstellation,
-} from "types"
+import { Coordinate } from "types"
 // import popSound from "../../assets/sfx/pop.mp3"
 import { MapControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { HoveredHighlights } from "../../components/map/HoveredHighlights"
-import { PlaceableTiles } from "../../components/map/PlaceableTiles"
 import { UICardsView } from "../../components/ui/UICardsView"
 import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
@@ -41,27 +28,18 @@ import { UITurnChangeIndicator } from "../../components/ui/UITurnChangeIndicator
 import { UITurnTimer } from "../../components/ui/UITurnTimer"
 import { UITurnsView } from "../../components/ui/UITurnsView"
 import useAuth from "../../hooks/useAuth"
-import { useCards } from "../../hooks/useCards"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
-import { usePlaceableCoordinates } from "../../hooks/usePlaceableCoordinates"
-import { useTiles } from "../../hooks/useTiles"
-import {
-  Special,
-  expandBuildRadiusByOne,
-} from "../../services/GameManagerService"
 import { createMap } from "../../services/MapService"
 import {
   UpdateGameSettingsPayload,
   socketApi,
 } from "../../services/SocketService"
-import {
-  setHoveredCoordinate,
-  setTilesWithUnits,
-  useMatchStore,
-} from "../../store"
+import { setSelectedCard, useStore } from "../../store"
 import { LAYERS, Terrains, Tiles, Units } from "../webgl"
 
 const MatchView = () => {
+  console.count("MatchView:rendered")
+
   const router = useRouter()
   const { profile } = useAuth()
   const userId = profile?.sub ?? ""
@@ -69,20 +47,17 @@ const MatchView = () => {
   const toast = useToast()
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
   const [isChangingTurns, setIsChangingTurns] = useState(false)
-  const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
+
   const playSound = () => {
     // const audio = new Audio(popSound)
     // audio.play()
   }
 
   useEffect(() => {
-    console.log("socketApi.IsConnected", socketApi.IsConnected)
-
     if (socketApi.IsConnected) {
       return
     }
 
-    console.log("socketApi.IsConnecting", socketApi.IsConnecting)
     if (socketApi.IsConnecting) {
       return
     }
@@ -90,49 +65,22 @@ const MatchView = () => {
     if (!userId || !matchId) {
       return
     }
-
+    setSelectedCard(null)
     socketApi.connectToMatch(userId, matchId)
     return () => {
       socketApi.disconnect()
     }
   }, [matchId, userId])
 
-  const {
-    match,
-    gameSettings,
-    participants,
-    map,
-    tilesWithUnits,
-    updatedTilesWithUnits,
-    hoveredCoordinate,
-    connectedPlayers: connectedParticipants,
-  } = useMatchStore()
+  const match = useStore((state) => state.match)
+  const gameSettings = useStore((state) => state.gameSettings)
+  const participants = useStore((state) => state.participants)
+  const map = useStore((state) => state.map)
+  const tilesWithUnits = useStore((state) => state.tilesWithUnits)
 
-  console.log("participants", participants)
-
-  useEffect(() => {
-    if (!updatedTilesWithUnits || !tilesWithUnits) {
-      return
-    }
-    const tilesWithUnitsClone = [...tilesWithUnits]
-    updatedTilesWithUnits.forEach((updatedTileWithUnit) => {
-      const index = tilesWithUnits?.findIndex((t) =>
-        coordinatesAreEqual(
-          [t.row, t.col],
-          [updatedTileWithUnit.row, updatedTileWithUnit.col],
-        ),
-      )
-      if (!index) {
-        tilesWithUnitsClone.push(updatedTileWithUnit)
-        return
-      }
-      tilesWithUnitsClone[index] = updatedTileWithUnit
-    })
-    setTilesWithUnits(tilesWithUnitsClone)
-  }, [updatedTilesWithUnits])
+  const connectedParticipants = useStore((state) => state.connectedPlayers)
 
   const you = participants?.find((player) => player.userId === userId) ?? null
-  console.log(you)
 
   const activePlayer =
     participants?.find((player) => player.id === match?.activePlayerId) ?? null
@@ -140,21 +88,6 @@ const MatchView = () => {
 
   const [showRuleEvaluationHighlights, setShowRuleEvaluationHighlights] =
     useState<Coordinate[]>([])
-
-  const { cards, selectedCard, setSelectedCard } = useCards(match, yourTurn)
-  const { tileLookup, terrainTiles, unitTiles, fogTiles, halfFogTiles } =
-    useTiles(tilesWithUnits)
-  const { placeableCoordinates } = usePlaceableCoordinates({
-    match,
-    map,
-    activePlayer,
-    tilesWithUnits,
-    yourTurn,
-    participants,
-    selectedCard,
-    activatedSpecials,
-    you,
-  })
 
   const { isPreMatch, wasStarted, isOngoing, isFinished } = useMatchStatus(
     match?.status,
@@ -197,8 +130,6 @@ const MatchView = () => {
     return null
   }
 
-  console.log(socketApi.IsConnected)
-
   if (!socketApi.IsConnected) {
     return (
       <Center height="100vh">
@@ -216,151 +147,6 @@ const MatchView = () => {
         </VStack>
       </Center>
     )
-  }
-
-  const onTileClick = async (
-    row: number,
-    col: number,
-    rotatedClockwise: TransformedConstellation["rotatedClockwise"],
-    mirrored: TransformedConstellation["mirrored"],
-  ) => {
-    if (isUpdatingMatch) {
-      return
-    }
-
-    if (!userId) {
-      return
-    }
-
-    if (!selectedCard) {
-      return
-    }
-
-    const unitConstellation: TransformedConstellation = {
-      coordinates: selectedCard.coordinates,
-      value: selectedCard.value,
-      rotatedClockwise,
-      mirrored,
-    }
-
-    try {
-      if (!you.id) {
-        throw new Error("Could not find your id")
-      }
-
-      const ignoredRules: PlacementRuleName[] =
-        unitConstellation.coordinates.length === 1 &&
-        coordinatesAreEqual(unitConstellation.coordinates[0], [0, 0])
-          ? ["ADJACENT_TO_ALLY"]
-          : []
-      const { translatedCoordinates, error } =
-        checkConditionsForUnitConstellationPlacement(
-          [row, col],
-          unitConstellation,
-          match,
-          activePlayer,
-          map,
-          tilesWithUnits,
-          tileLookup,
-          ignoredRules,
-          you.id,
-          activatedSpecials,
-        )
-
-      if (error) {
-        toast({
-          title: error.message,
-          status: "info",
-          position: "bottom-left",
-        })
-        return
-      }
-      const tilesWithUnitsClone = JSON.parse(
-        JSON.stringify(tilesWithUnits),
-      ) as TileWithUnit[]
-
-      translatedCoordinates.forEach((coordinate, index) => {
-        const tile = tilesWithUnitsClone.find((tile) =>
-          coordinatesAreEqual([tile.row, tile.col], coordinate),
-        )
-        if (!tile) {
-          return
-        }
-        tile.unit = {
-          id: "pending-unit-" + index,
-          row: tile.row,
-          col: tile.col,
-          mapId: tile.mapId,
-          ownerId: you.id,
-          type: UnitType.UNIT,
-        }
-      })
-
-      const { tiles: revealedTiles, error: revealedError } =
-        getNewlyRevealedTiles(tileLookup, translatedCoordinates)
-
-      if (revealedError) {
-        return
-      }
-
-      // const optimisticData: MatchRich = {
-      //   ...match,
-      //   turn: match.turn + 1,
-      //   map: {
-      //     ...mapClone,
-      //     tiles: mapClone.tiles.map((tile, index) => {
-      //       const updatedTile: TileWithUnit = { ...tile }
-      //       if (
-      //         coordinateIncludedIn(
-      //           revealedTiles.map((tile) => [tile.row, tile.col]),
-      //           [updatedTile.row, updatedTile.col]
-      //         )
-      //       ) {
-      //         updatedTile.visible = true
-      //       }
-      //       if (
-      //         coordinateIncludedIn(translatedCoordinates, [
-      //           updatedTile.row,
-      //           updatedTile.col,
-      //         ])
-      //       ) {
-      //         updatedTile.unit = {
-      //           id: "pending-unit-" + index,
-      //           row: tile.row,
-      //           col: tile.col,
-      //           mapId: tile.mapId,
-      //           ownerId: participantId,
-      //           type: UnitType.UNIT,
-      //         }
-      //       }
-
-      //       return updatedTile
-      //     }),
-      //   },
-      //   updatedAt: new Date(),
-      // }
-      setIsUpdatingMatch(true)
-
-      await socketApi.makeMove({
-        matchId: match.id,
-        row,
-        col,
-        participantId: you.id,
-        unitConstellation,
-        ignoredRules,
-        specials: ignoredRules.includes("ADJACENT_TO_ALLY")
-          ? activatedSpecials.filter(
-              (special) => special.type !== "EXPAND_BUILD_RADIUS_BY_1",
-            )
-          : activatedSpecials,
-      })
-      playSound()
-      setIsUpdatingMatch(false)
-      setSelectedCard(null)
-      setActivatedSpecials([])
-    } catch (e: any) {
-      console.error(e.message)
-    }
   }
 
   const handleStartGameClick = async () => {
@@ -395,45 +181,24 @@ const MatchView = () => {
     } catch (e: any) {}
   }
 
-  const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
-    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
-  )
-
-  const availableBonusPoints = you.bonusPoints + (selectedCard?.value ?? 0)
-
-  const specialsCost = activatedSpecials.reduce((a, s) => a + s.cost, 0)
-  const bonusFromSelectedCard = selectedCard?.value ?? 0
-  const resultingBonusPoints =
-    you.bonusPoints + bonusFromSelectedCard - specialsCost
-  const setSpecial = (specialType: SpecialType, active: boolean) => {
-    if (active) {
-      setActivatedSpecials([expandBuildRadiusByOne])
-    } else {
-      setActivatedSpecials([])
-    }
-  }
-
   return (
-    <Box
-      width="100vw"
-      height="100vh"
-      color="white"
-      cursor={selectedCard && hoveredCoordinate ? "none" : "default"}
-    >
+    <Box width="100vw" height="100vh" color="white">
       {isPreMatch && (
-        <UIPreMatchView
-          py="16"
-          participants={participants}
-          connectedParticipants={connectedParticipants ?? []}
-          isLoading={isUpdatingMatch /*|| isValidating*/}
-          settings={gameSettings ?? null}
-          onSettingsChange={handleSettingsChange}
-          onStartGameClick={handleStartGameClick}
-          userId={userId}
-          createdById={match.createdById}
-          matchId={match.id}
-          onKick={handleKick}
-        />
+        <Container>
+          <UIPreMatchView
+            py="16"
+            participants={participants}
+            connectedParticipants={connectedParticipants ?? []}
+            isLoading={isUpdatingMatch /*|| isValidating*/}
+            settings={gameSettings ?? null}
+            onSettingsChange={handleSettingsChange}
+            onStartGameClick={handleStartGameClick}
+            userId={userId}
+            createdById={match.createdById}
+            matchId={match.id}
+            onKick={handleKick}
+          />
+        </Container>
       )}
       {wasStarted && map && tilesWithUnits && activePlayer && (
         <>
@@ -494,20 +259,11 @@ const MatchView = () => {
             <ambientLight />
             <pointLight position={[0, 0, 10]} />
             <group position={[-map.colCount / 2, map.rowCount / 2, 0]}>
-              <Tiles onPointerLeave={() => setHoveredCoordinate(null)} />
+              <Tiles />
               <Units />
               <Terrains />
-              <PlaceableTiles placeableCoordinates={placeableCoordinates} />
-              <HoveredHighlights
-                you={you}
-                activePlayer={activePlayer}
-                hide={isFinished}
-                specials={[expandBuildRadiusByOne]}
-                activeSpecials={activatedSpecials}
-                setSpecial={setSpecial}
-                card={selectedCard}
-                onTileClick={onTileClick}
-              />
+              {/* <PlaceableTiles placeableCoordinates={placeableCoordinates} /> */}
+              <HoveredHighlights hide={isFinished} />
 
               <MapControls makeDefault zoomSpeed={0.5} enableRotate={true} />
             </group>
@@ -524,7 +280,7 @@ const MatchView = () => {
                   turnEndsAt={new Date(match.turnEndsAt).toISOString()}
                 />
               )}
-              <Stack spacing={scaled(0)}>
+              {/* <Stack spacing={scaled(0)}>
                 <HStack
                   position="relative"
                   spacing={scaled(2)}
@@ -625,7 +381,7 @@ const MatchView = () => {
                     </HStack>
                   </>
                 )}
-              </Stack>
+              </Stack> */}
             </Box>
           )}
           <UIScoreView
@@ -656,25 +412,7 @@ const MatchView = () => {
           {/* {you?.bonusPoints != null && (
             <UIBonusPointsView bonusPoints={you.bonusPoints} />
           )} */}
-          <UICardsView
-            selectedCard={selectedCard}
-            cards={cards}
-            readonly={!yourTurn}
-            onSelect={(card) => {
-              const insufficientBonusPoints =
-                activePlayer.bonusPoints + (card.value ?? 0) <
-                activatedSpecials.reduce((a, s) => a + s.cost, 0)
-
-              const isSinglePiece =
-                card.coordinates.length === 1 &&
-                coordinatesAreEqual(card.coordinates[0], [0, 0])
-
-              if (isSinglePiece || insufficientBonusPoints) {
-                setActivatedSpecials([])
-              }
-              setSelectedCard(card)
-            }}
-          />
+          <UICardsView />
 
           {activePlayer && (
             <UITurnChangeIndicator

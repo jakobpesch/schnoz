@@ -1,4 +1,4 @@
-import { GameSettings, Map, Match, Participant, Unit } from "database"
+import { GameSettings, Map, Match, Participant, Unit, User } from "database"
 import {
   Card,
   Coordinate,
@@ -7,29 +7,10 @@ import {
   TileWithUnit,
 } from "types"
 import { create } from "zustand"
-import { devtools, persist } from "zustand/middleware"
 
-interface AuthState {
+interface Store {
   profile: Profile | null
-}
-
-export const useAuthStore = create<AuthState>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        profile: null,
-      }),
-      {
-        name: "auth-storage",
-      },
-    ),
-  ),
-)
-
-export const setProfile = (profile: Profile | null) => {
-  useAuthStore.setState((state) => ({ profile }))
-}
-interface MatchState {
+  userId: () => User["id"] | null
   match: Match | null
   participants: ParticipantWithUser[] | null
   map: Map | null
@@ -40,70 +21,78 @@ interface MatchState {
   hoveredCoordinate: Coordinate | null
   opponentsHoveredCoordinates: Coordinate[] | null
   selectedCard: Card | null
+  activeParticipant: () => ParticipantWithUser | null
+  yourTurn: () => boolean
+  you: () => ParticipantWithUser | null
 }
 
-export const useMatchStore = create<MatchState>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        match: null,
-        participants: null,
-        map: null,
-        tilesWithUnits: null,
-        gameSettings: null,
-        updatedTilesWithUnits: null,
-        connectedPlayers: null,
-        hoveredCoordinate: null,
-        opponentsHoveredCoordinates: null,
-        selectedCard: null,
-      }),
-      {
-        name: "match-storage",
-      },
-    ),
-  ),
-)
+export const useStore = create<Store>((set, get) => ({
+  profile: null,
+  userId: () => get().profile?.sub ?? null,
+  match: null,
+  participants: null,
+  map: null,
+  tilesWithUnits: null,
+  gameSettings: null,
+  updatedTilesWithUnits: null,
+  connectedPlayers: null,
+  hoveredCoordinate: null,
+  opponentsHoveredCoordinates: null,
+  selectedCard: null,
+  activeParticipant: () =>
+    get().participants?.find(
+      (player) => player.id === get().match?.activePlayerId,
+    ) ?? null,
+  yourTurn: () => get().userId() === get().activeParticipant()?.userId,
+  you: () =>
+    get().participants?.find((player) => player.userId === get().userId()) ??
+    null,
+}))
+
+export const setProfile = (profile: Profile | null) => {
+  useStore.setState((state) => ({ profile }))
+}
 
 export const setMatch = (match: Match | null) => {
-  useMatchStore.setState((state) => ({ match }))
+  useStore.setState((state) => ({ match }))
 }
 export const setParticipants = (participants: ParticipantWithUser[] | null) => {
-  useMatchStore.setState((state) => ({ participants }))
+  useStore.setState((state) => ({ participants }))
 }
 export const setMap = (map: Map | null) => {
-  useMatchStore.setState((state) => ({ map }))
+  useStore.setState((state) => ({ map }))
 }
 export const setTilesWithUnits = (tilesWithUnits: TileWithUnit[] | null) => {
-  useMatchStore.setState((state) => ({ tilesWithUnits }))
+  useStore.setState((state) => ({ tilesWithUnits }))
 }
 export const setUpdatedTilesWithUnits = (
   updatedTilesWithUnits: TileWithUnit[] | null,
 ) => {
-  useMatchStore.setState((state) => ({ updatedTilesWithUnits }))
+  useStore.setState((state) => ({ updatedTilesWithUnits }))
 }
 export const setGameSettings = (gameSettings: GameSettings | null) => {
-  useMatchStore.setState((state) => ({ gameSettings }))
+  useStore.setState((state) => ({ gameSettings }))
 }
 export const setConnectedParticipants = (
   connectedPlayers: ParticipantWithUser[] | null,
 ) => {
-  useMatchStore.setState((state) => ({ connectedPlayers }))
+  useStore.setState((state) => ({ connectedPlayers }))
 }
 export const setOpponentsHoveredCoordinates = (
   opponentsHoveredCoordinates: Coordinate[] | null,
 ) => {
-  useMatchStore.setState((state) => ({ opponentsHoveredCoordinates }))
+  useStore.setState((state) => ({ opponentsHoveredCoordinates }))
 }
 export const setHoveredCoordinate = (hoveredCoordinate: Coordinate | null) => {
-  useMatchStore.setState((state) => ({ hoveredCoordinate }))
+  useStore.setState((state) => ({ hoveredCoordinate }))
 }
 export const setSelectedCard = (selectedCard: Card | null) => {
-  useMatchStore.setState((state) => ({ selectedCard }))
+  useStore.setState((state) => ({ selectedCard }))
 }
 
 export const isUsersUnit = (unit: Unit) => {
-  const userId = useAuthStore.getState().profile?.sub
-  const participants = useMatchStore.getState().participants
+  const userId = useStore.getState().profile?.sub
+  const participants = useStore.getState().participants
   const usersParticipantId = participants?.find(
     (participant) => participant.userId === userId,
   )?.id
@@ -111,7 +100,6 @@ export const isUsersUnit = (unit: Unit) => {
 }
 
 export const getPlayerNumber = (participantId: Participant["id"] | null) => {
-  return useMatchStore
-    .getState()
-    .participants?.find((p) => p.id === participantId)?.playerNumber
+  return useStore.getState().participants?.find((p) => p.id === participantId)
+    ?.playerNumber
 }
