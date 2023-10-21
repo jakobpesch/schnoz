@@ -20,6 +20,7 @@ interface Store {
   connectedPlayers: ParticipantWithUser[] | null
   hoveredCoordinate: Coordinate | null
   opponentsHoveredCoordinates: Coordinate[] | null
+  showRuleEvaluationHighlights: Coordinate[] | null
   selectedCard: Card | null
   activeParticipant: () => ParticipantWithUser | null
   yourTurn: () => boolean
@@ -38,6 +39,7 @@ export const useStore = create<Store>((set, get) => ({
   connectedPlayers: null,
   hoveredCoordinate: null,
   opponentsHoveredCoordinates: null,
+  showRuleEvaluationHighlights: null,
   selectedCard: null,
   activeParticipant: () =>
     get().participants?.find(
@@ -82,6 +84,11 @@ export const setOpponentsHoveredCoordinates = (
   opponentsHoveredCoordinates: Coordinate[] | null,
 ) => {
   useStore.setState((state) => ({ opponentsHoveredCoordinates }))
+}
+export const setShowRuleEvaluationHighlights = (
+  showRuleEvaluationHighlights: Coordinate[] | null,
+) => {
+  useStore.setState((state) => ({ showRuleEvaluationHighlights }))
 }
 export const setHoveredCoordinate = (hoveredCoordinate: Coordinate | null) => {
   useStore.setState((state) => ({ hoveredCoordinate }))

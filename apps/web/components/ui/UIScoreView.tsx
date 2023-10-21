@@ -15,8 +15,9 @@ import { GameSettings, Participant, Rule, Terrain } from "database"
 import { createCustomGame } from "game-logic"
 import Image from "next/image"
 import { ReactNode } from "react"
-import { Coordinate, RuleEvaluation, TileWithUnit } from "types"
+import { RuleEvaluation, TileWithUnit } from "types"
 import { RenderSettings } from "../../services/SettingsService"
+import { setShowRuleEvaluationHighlights } from "../../store"
 import { HoveredTooltip } from "../HoveredTooltip"
 
 export const scaled = (value: number) => value * RenderSettings.uiScale
@@ -622,7 +623,6 @@ export const UIScoreView = (props: {
   connectedParticipants: Participant[]
   tilesWithUnits: TileWithUnit[]
   rules: GameSettings["rules"]
-  onRuleHover: (coordinates: Coordinate[]) => void
 }) => {
   const player1 = props.participants.find((player) => player.playerNumber === 0)
   assert(player1)
@@ -646,7 +646,7 @@ export const UIScoreView = (props: {
         borderWidth={scaled(1)}
         borderRadius={scaled(10)}
         spacing={scaled(4)}
-        padding={scaled(2)}
+        padding={scaled(1)}
         margin={scaled(4)}
       >
         <HStack spacing={scaled(4)}>
@@ -737,16 +737,20 @@ export const UIScoreView = (props: {
                     >
                       <Heading
                         minWidth={scaled(30)}
+                        rounded={scaled(8)}
+                        _hover={{
+                          bg: "whiteAlpha.300",
+                        }}
                         textAlign="center"
                         cursor="default"
                         fontSize={scaled(30)}
                         size="md"
                         onMouseEnter={() =>
-                          props.onRuleHover(
+                          setShowRuleEvaluationHighlights(
                             ruleEvaluations[0].fulfillments.flat(),
                           )
                         }
-                        onMouseLeave={() => props.onRuleHover([])}
+                        onMouseLeave={() => setShowRuleEvaluationHighlights([])}
                       >
                         {ruleEvaluations[0].points}
                       </Heading>
@@ -784,16 +788,20 @@ export const UIScoreView = (props: {
 
                       <Heading
                         minWidth={scaled(30)}
+                        rounded={scaled(8)}
+                        _hover={{
+                          bg: "whiteAlpha.300",
+                        }}
                         textAlign="center"
                         cursor="default"
                         fontSize={scaled(25)}
                         size="md"
                         onMouseEnter={() =>
-                          props.onRuleHover(
+                          setShowRuleEvaluationHighlights(
                             ruleEvaluations[1].fulfillments.flat(),
                           )
                         }
-                        onMouseLeave={() => props.onRuleHover([])}
+                        onMouseLeave={() => setShowRuleEvaluationHighlights([])}
                       >
                         {ruleEvaluations[1].points}
                       </Heading>

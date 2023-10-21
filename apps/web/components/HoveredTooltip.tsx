@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from "@chakra-ui/react"
 import { ReactNode, useEffect, useState } from "react"
+import { scaled } from "./ui/UIScoreView"
 
 export const HoveredTooltip = (props: {
   trigger: ReactNode
@@ -44,6 +45,11 @@ export const HoveredTooltip = (props: {
         <Flex
           align="center"
           justify="center"
+          padding={scaled(1)}
+          rounded={scaled(8)}
+          _hover={{
+            bg: "gray.600",
+          }}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
         >

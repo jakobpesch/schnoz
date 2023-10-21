@@ -36,6 +36,7 @@ import {
 } from "../../services/SocketService"
 import { setSelectedCard, useStore } from "../../store"
 import { LAYERS, Terrains, Tiles, Units } from "../webgl"
+import { MapRuleEvaluations } from "../../components/map/MapRuleEvaluations"
 
 const MatchView = () => {
   console.count("MatchView:rendered")
@@ -85,9 +86,6 @@ const MatchView = () => {
   const activePlayer =
     participants?.find((player) => player.id === match?.activePlayerId) ?? null
   const yourTurn = userId === activePlayer?.userId
-
-  const [showRuleEvaluationHighlights, setShowRuleEvaluationHighlights] =
-    useState<Coordinate[]>([])
 
   const { isPreMatch, wasStarted, isOngoing, isFinished } = useMatchStatus(
     match?.status,
@@ -389,9 +387,6 @@ const MatchView = () => {
             connectedParticipants={connectedParticipants ?? []}
             tilesWithUnits={tilesWithUnits}
             rules={gameSettings?.rules ?? []}
-            onRuleHover={(coordinates) => {
-              setShowRuleEvaluationHighlights(coordinates)
-            }}
           />
         </>
       )}

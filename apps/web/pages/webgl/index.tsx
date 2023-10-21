@@ -181,7 +181,7 @@ export const Units = () => {
           <UnitMesh
             key={unit.id}
             unit={unit}
-            position={[unit.col, -unit.row, LAYERS.BASE]}
+            position={[unit.col, -unit.row, LAYERS.UNITS]}
           />
         )
       })}

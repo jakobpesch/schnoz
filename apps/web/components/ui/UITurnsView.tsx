@@ -69,10 +69,10 @@ export const UITurnsView = (props: {
     <Flex position="fixed" top="0" left="0">
       <Stack
         bg="gray.700"
-        borderWidth={scaled(5)}
-        borderRadius={scaled(8)}
+        borderWidth={scaled(1)}
+        borderRadius={scaled(10)}
         spacing={scaled(16)}
-        p={scaled(4)}
+        p={scaled(1)}
         m={scaled(4)}
         maxWidth="50vw"
         overflowX="hidden"
@@ -82,10 +82,10 @@ export const UITurnsView = (props: {
             const borderStyle =
               index === 0
                 ? {
-                    borderRadius: "lg",
-                    borderWidth: "3px",
-                    borderColor: "green",
-                    bg: "green.800",
+                    borderRadius: scaled(7),
+                    borderWidth: scaled(2),
+                    borderColor: "green.300",
+                    bg: "green.400",
                   }
                 : {}
             if (turnUI.evaluate) {

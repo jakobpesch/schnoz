@@ -15,6 +15,7 @@ import { RenderSettings } from "../../services/SettingsService"
 import { socketApi } from "../../services/SocketService"
 import { getPlayerNumber, setSelectedCard, useStore } from "../../store"
 import { PlaceableTiles } from "./PlaceableTiles"
+import { MapRuleEvaluations } from "./MapRuleEvaluations"
 
 const unitFactory = (unit: Partial<Unit>) => {
   return {
@@ -46,6 +47,9 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   const activeParticipant = useStore((state) => state.activeParticipant())
   const tilesWithUnits = useStore((state) => state.tilesWithUnits)
   const hoveredCoordinate = useStore((state) => state.hoveredCoordinate)
+  const showRuleEvaluationHighlights = useStore(
+    (state) => state.showRuleEvaluationHighlights,
+  )
   const opponentsHoveredCoordinates = useStore(
     (state) => state.opponentsHoveredCoordinates,
   )
@@ -236,6 +240,9 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
 
   return (
     <>
+      {showRuleEvaluationHighlights && (
+        <MapRuleEvaluations coordinates={showRuleEvaluationHighlights} />
+      )}
       <PlaceableTiles placeableCoordinates={placeableCoordinates} />
       {[...(opponentsHoveredCoordinates ?? []), ...hoveredCoordinates].map(
         ([row, col]) => {
