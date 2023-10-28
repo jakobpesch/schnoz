@@ -1,21 +1,25 @@
 import { useToast, useToken } from "@chakra-ui/react"
+import { animated, config, useSpring } from "@react-spring/three"
 import {
   coordinatesAreEqual,
+  getTileLookup,
   transformCoordinates,
   translateCoordinatesTo,
 } from "coordinate-utils"
+
 import { Unit } from "database"
 import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import Mousetrap from "mousetrap"
-import { useEffect, useMemo, useState } from "react"
-import { Coordinate, PlacementRuleName, TransformedConstellation } from "types"
-import { HighlightMesh, LAYERS, UnitMesh } from "../../pages/webgl"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { PlacementRuleName, TransformedConstellation } from "types"
+import { HighlightSquare, LAYERS, UnitMesh } from "../../pages/webgl"
 import { Special } from "../../services/GameManagerService"
 import { RenderSettings } from "../../services/SettingsService"
 import { socketApi } from "../../services/SocketService"
-import { getPlayerNumber, setSelectedCard, useStore } from "../../store"
-import { PlaceableTiles } from "./PlaceableTiles"
+import { getPlayerNumber, setSelectedCard, useMatchStore } from "../../store"
 import { MapRuleEvaluations } from "./MapRuleEvaluations"
+import { useSound } from "../../providers/SoundProvider"
+import { useFrame, useThree } from "@react-three/fiber"
 
 const unitFactory = (unit: Partial<Unit>) => {
   return {
@@ -35,62 +39,53 @@ export interface HoveredHighlightsProps {
 
 export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   const toast = useToast()
-  const userId = useStore((state) => state.userId())
+  const state = useThree()
+  const oldCameraPosition = useRef(state.camera.position)
+  const { playSFX } = useSound()
+  const userId = useMatchStore((state) => state.userId())
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
   const [activatedSpecials, setActivatedSpecials] = useState<Special[]>([])
 
-  const match = useStore((state) => state.match)
-  const you = useStore((state) => state.you())
-  const participants = useStore((state) => state.participants)
-  const yourTurn = useStore((state) => state.yourTurn())
-  const map = useStore((state) => state.map)
-  const activeParticipant = useStore((state) => state.activeParticipant())
-  const tilesWithUnits = useStore((state) => state.tilesWithUnits)
-  const hoveredCoordinate = useStore((state) => state.hoveredCoordinate)
-  const showRuleEvaluationHighlights = useStore(
+  const match = useMatchStore((state) => state.match)
+  const gameSettings = useMatchStore((state) => state.gameSettings)
+  const you = useMatchStore((state) => state.you())
+  const participants = useMatchStore((state) => state.participants)
+  const yourTurn = useMatchStore((state) => state.yourTurn())
+  const map = useMatchStore((state) => state.map)
+  const activeParticipant = useMatchStore((state) => state.activeParticipant())
+  const tilesWithUnits = useMatchStore((state) => state.tilesWithUnits)
+  const hoveredCoordinate = useMatchStore((state) => state.hoveredCoordinate)
+  const showRuleEvaluationHighlights = useMatchStore(
     (state) => state.showRuleEvaluationHighlights,
   )
-  const opponentsHoveredCoordinates = useStore(
+
+  const opponentsHoveredCoordinates = useMatchStore(
     (state) => state.opponentsHoveredCoordinates,
   )
-  const selectedCard = useStore((state) => state.selectedCard)
-
-  const placeableCoordinates =
-    useMemo(() => {
-      if (!yourTurn || !match || !tilesWithUnits || !participants) {
-        return []
-      }
-
-      const placeableCoordiantes = tilesWithUnits
-        .map((t) =>
-          checkConditionsForUnitConstellationPlacement(
-            [t.row, t.col],
-            {
-              coordinates: [[0, 0]],
-              mirrored: false,
-              rotatedClockwise: 0,
-              value: 0,
-            },
-            match,
-            activeParticipant,
-            map,
-            tilesWithUnits,
-            [],
-            you?.id ?? null,
-            activatedSpecials,
-          ),
-        )
-        .filter((v) => typeof v.error === "undefined")
-        .map((v) => v.translatedCoordinates?.[0] ?? null)
-        .filter(Boolean) as Coordinate[]
-
-      return placeableCoordiantes
-    }, [match, tilesWithUnits, selectedCard, activatedSpecials]) ?? []
+  const selectedCard = useMatchStore((state) => state.selectedCard)
 
   const [rotatedClockwise, setRotationCount] =
     useState<TransformedConstellation["rotatedClockwise"]>(0)
   const [mirrored, setMirrored] =
     useState<TransformedConstellation["mirrored"]>(false)
+
+  const [springs, api] = useSpring(() => {
+    const [hoveredRow, hoveredCol] = hoveredCoordinate ?? [0, 0]
+    return {
+      opacity: 0,
+      scale: 0.1,
+      position: [hoveredCol, -hoveredRow, LAYERS.UNITS_HIGHLIGHT],
+      color: "#ff6d6d",
+      config: config.stiff,
+    }
+  }, [hoveredCoordinate])
+
+  useEffect(() => {
+    const canvasElement = document.getElementById("match-canvas")
+    if (canvasElement) {
+      canvasElement.style.cursor = selectedCard ? "grabbing" : "default"
+    }
+  }, [selectedCard])
 
   const rotate = () => {
     const correctedRotationCount = (
@@ -98,9 +93,11 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     ) as TransformedConstellation["rotatedClockwise"]
 
     setRotationCount(correctedRotationCount)
+    playSFX("pop")
   }
   const mirror = () => {
     setMirrored(!mirrored)
+    playSFX("pop")
   }
 
   useEffect(() => {
@@ -111,7 +108,7 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     Mousetrap.bind("e", mirror)
   })
 
-  const hoveredCoordinates = useMemo(() => {
+  const transformedCoordinates = useMemo(() => {
     if (selectedCard && hoveredCoordinate) {
       const transformed = transformCoordinates(selectedCard.coordinates, {
         rotatedClockwise,
@@ -119,7 +116,7 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
       })
       const translated = translateCoordinatesTo(hoveredCoordinate, transformed)
       socketApi.sendHoveredCoordinates(translated)
-      return translated
+      return transformed
     }
 
     return []
@@ -148,6 +145,10 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
       return
     }
 
+    if (!gameSettings) {
+      return
+    }
+
     if (!userId) {
       return
     }
@@ -172,12 +173,16 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
         throw new Error("Could not find your id")
       }
 
+      if (!tilesWithUnits) {
+        throw new Error("No tiles")
+      }
+
       const ignoredRules: PlacementRuleName[] =
         unitConstellation.coordinates.length === 1 &&
         coordinatesAreEqual(unitConstellation.coordinates[0], [0, 0])
           ? ["ADJACENT_TO_ALLY"]
           : []
-
+      const tileLookup = getTileLookup(tilesWithUnits)
       const { error } = checkConditionsForUnitConstellationPlacement(
         [row, col],
         unitConstellation,
@@ -188,6 +193,8 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
         ignoredRules,
         you?.id ?? null,
         activatedSpecials,
+        gameSettings,
+        tileLookup,
       )
 
       if (error) {
@@ -243,30 +250,56 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
       {showRuleEvaluationHighlights && (
         <MapRuleEvaluations coordinates={showRuleEvaluationHighlights} />
       )}
-      <PlaceableTiles placeableCoordinates={placeableCoordinates} />
-      {[...(opponentsHoveredCoordinates ?? []), ...hoveredCoordinates].map(
-        ([row, col]) => {
-          return (
-            <>
+      {hoveredCoordinate && (
+        <animated.group
+          key={`${hoveredCoordinate[0]}_${hoveredCoordinate[1]}group`}
+          /// @ts-ignore: Spring type is Vector3 Type (Typescript return error on position)
+          position={springs.position}
+        >
+          {transformedCoordinates.map((c) => (
+            <Fragment key={`${c[0]}_${c[1]}unitmesh`}>
               <UnitMesh
-                key={row + "_" + col + "_unit"}
-                position={[col, -row, LAYERS.UNITS_HIGHLIGHT]}
+                position={[c[1], -c[0], LAYERS.UNITS_HIGHLIGHT]}
                 unit={unitFactory({ ownerId: activeParticipant?.id })}
                 opacity={0.6}
-                onClick={() =>
-                  onTileClick(row, col, rotatedClockwise, mirrored)
-                }
+                onPointerUp={(e) => {
+                  console.log(e.button)
+
+                  if (e.button === 2) {
+                    onTileClick(
+                      hoveredCoordinate[0],
+                      hoveredCoordinate[1],
+                      rotatedClockwise,
+                      mirrored,
+                    )
+                  }
+                }}
               />
-              <HighlightMesh
-                key={row + "_" + col + "_highlight"}
-                opacity={0.4}
+              <HighlightSquare
+                opacity={0.1}
                 color={color}
-                position={[col, -row, LAYERS.TERRAIN_HIGHLIGHT]}
+                position={[c[1], -c[0], LAYERS.TERRAIN_HIGHLIGHT]}
               />
-            </>
-          )
-        },
+            </Fragment>
+          ))}
+        </animated.group>
       )}
+      {opponentsHoveredCoordinates?.map(([row, col]) => {
+        return (
+          <Fragment key={`${row}_${col}unitmesh`}>
+            <UnitMesh
+              position={[col, -row, LAYERS.UNITS_HIGHLIGHT]}
+              unit={unitFactory({ ownerId: activeParticipant?.id })}
+              opacity={0.6}
+            />
+            <HighlightSquare
+              opacity={0.1}
+              color={color}
+              position={[col, -row, LAYERS.TERRAIN_HIGHLIGHT]}
+            />
+          </Fragment>
+        )
+      })}
     </>
   )
 }

@@ -1,26 +1,31 @@
 import { Box, useToken } from "@chakra-ui/react"
-import { NextPage } from "next"
-
 import { MapControls, useTexture } from "@react-three/drei"
 import { Canvas, GroupProps, ThreeElements } from "@react-three/fiber"
 import { buildTileLookupId, coordinatesAreEqual } from "coordinate-utils"
 import { Tile, Unit } from "database"
+import { NextPage } from "next"
 import { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { TileWithUnit } from "types"
+import grassNormal from "../../assets/textures/grass.map.jpeg"
+import groundNormal from "../../assets/textures/ground.map.png"
+import waterNormal from "../../assets/textures/water.map.jpeg"
+import groundNormal2 from "../../assets/textures/ground2.map.jpeg"
 import { RenderSettings } from "../../services/SettingsService"
+import { animated, config, useSpring } from "@react-spring/three"
 import {
   getPlayerNumber,
   setHoveredCoordinate,
   setTilesWithUnits,
-  useStore,
+  useMatchStore,
 } from "../../store"
 export const LAYERS = {
   BASE: 0,
-  TERRAIN: 1,
-  TERRAIN_HIGHLIGHT: 2,
-  UNITS: 3,
-  UNITS_HIGHLIGHT: 4,
+  TERRAIN: 0.01,
+  TERRAIN_HIGHLIGHT: 0.02,
+  UNITS: 0.03,
+  UNITS_HIGHLIGHT: 0.04,
+  LIGHTING: 25,
   CAMERA: 50,
 } as const
 
@@ -31,35 +36,100 @@ export const TileMesh = (
 ) => {
   const { tile, ...rest } = props
   const ref = useRef<THREE.Mesh>(null!)
-  const green200 = useToken("colors", "green.200")
-
+  const { map } = useTexture({
+    map: groundNormal.src,
+  })
+  //create a typed array to hold texture data
+  const mask = [
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0,
+    0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1,
+  ]
+  const data = new Uint8Array(mask.length)
+  //copy mask into the typed array
+  data.set(mask.map((v) => v * 255))
   return (
-    <mesh {...rest} ref={ref} visible={tile.visible}>
+    <mesh {...rest} ref={ref} visible={tile.visible} receiveShadow>
       <planeGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
-        color={(tile.row + tile.col) % 2 === 0 ? green200 : "#80e0a2"}
+        alphaMap={
+          new THREE.DataTexture(
+            data,
+            8,
+            8,
+            THREE.LuminanceFormat,
+            THREE.UnsignedByteType,
+          )
+        }
+        normalMap={map}
+        normalScale={new THREE.Vector2(1, 1)}
+        color={new THREE.Color("hsl(120, 25%,25%)")}
+        // color={(tile.row + tile.col) % 2 === 0 ? "#268b07" : "#41980a"}
       />
     </mesh>
   )
 }
 
-export const HighlightMesh = (
+export const HighlightSquare = (
   props: ThreeElements["mesh"] & {
     opacity?: number
     color?: string
+    size?: number
   },
 ) => {
-  const { opacity = 1, color = "white", ...rest } = props
+  const { opacity = 1, color = "white", size = 1, ...rest } = props
   const ref = useRef<THREE.Mesh>(null!)
   return (
     <mesh {...rest} ref={ref}>
-      <circleGeometry args={[0.4, 8]} />
+      <planeGeometry args={[size]} />
       <meshStandardMaterial
         opacity={opacity}
         transparent={opacity < 1}
         color={color}
       />
     </mesh>
+  )
+}
+
+export const HighlightCircle = (props: ThreeElements["rectAreaLight"]) => {
+  const ref = useRef<THREE.RectAreaLight>(null!)
+  const [springs, api] = useSpring(() => ({
+    from: {
+      intensity: 10,
+      scale: 8,
+    },
+    to: {
+      intensity: 8,
+      scale: 1,
+    },
+    loop: { reverse: true },
+    config: {
+      ...config.molasses,
+      tension: 50,
+      friction: 100,
+      precision: 0.001,
+    },
+  }))
+  return (
+    <animated.rectAreaLight
+      ref={ref}
+      width={0.4}
+      height={0.4}
+      scale={springs.scale}
+      intensity={springs.intensity}
+      // @ts-ignore
+      rotation={springs.rotation}
+      {...props}
+    >
+      {/* <mesh>
+        <planeGeometry args={[1]} />
+        <meshStandardMaterial
+          opacity={opacity}
+          transparent={opacity < 1}
+          color={color}
+        />
+      </mesh> */}
+    </animated.rectAreaLight>
   )
 }
 
@@ -83,8 +153,10 @@ export const UnitMesh = (
 }
 
 export const Tiles = (props: GroupProps) => {
-  const { tilesWithUnits } = useStore()
-  const updatedTilesWithUnits = useStore((state) => state.updatedTilesWithUnits)
+  const tilesWithUnits = useMatchStore((state) => state.tilesWithUnits)
+  const updatedTilesWithUnits = useMatchStore(
+    (state) => state.updatedTilesWithUnits,
+  )
   useEffect(() => {
     if (!updatedTilesWithUnits || !tilesWithUnits) {
       return
@@ -137,28 +209,36 @@ export const TerrainMesh = (
 ) => {
   const { tile, opacity = 1, ...rest } = props
   const ref = useRef<THREE.Mesh>(null!)
+  const { map: waterMap } = useTexture({
+    map: waterNormal.src,
+  })
+  const { map: ground2Map } = useTexture({
+    map: groundNormal2.src,
+  })
+
+  const stoneSides = 5 + Math.floor((tile.col / tile.row) * 2)
+  console.log(stoneSides)
 
   return (
-    <mesh
-      {...rest}
-      ref={ref}
-      rotation={[0, 0, (-30 * Math.PI) / 180]}
-      visible={tile.visible}
-    >
-      <circleGeometry
-        args={[
-          0.5,
-          tile.terrain === "STONE" ? 5 : tile.terrain === "TREE" ? 3 : 7,
-        ]}
-      />
+    <mesh {...rest} ref={ref} visible={tile.visible} castShadow>
+      {tile.terrain === "STONE" ? (
+        <sphereGeometry args={[0.1, stoneSides, stoneSides]} />
+      ) : tile.terrain === "TREE" ? (
+        <sphereGeometry args={[0.1, 64, 64]} />
+      ) : (
+        <planeGeometry args={[0.8, 0.8]} />
+      )}
+
       <meshStandardMaterial
         opacity={opacity}
         transparent={opacity < 1}
+        normalMap={tile.terrain === "WATER" ? waterMap : null}
+        displacementMap={ground2Map}
         color={
           tile.terrain === "STONE"
             ? "gray"
             : tile.terrain === "TREE"
-            ? "green"
+            ? "darkgreen"
             : "blue"
         }
       />
@@ -167,7 +247,7 @@ export const TerrainMesh = (
 }
 
 export const Units = () => {
-  const { tilesWithUnits } = useStore()
+  const { tilesWithUnits } = useMatchStore()
   if (!tilesWithUnits) {
     return null
   }
@@ -190,7 +270,7 @@ export const Units = () => {
 }
 
 export const Terrains = () => {
-  const { tilesWithUnits } = useStore()
+  const { tilesWithUnits } = useMatchStore()
   if (!tilesWithUnits) {
     return null
   }
@@ -213,7 +293,7 @@ export const Terrains = () => {
 
 export const HoveredUnits = (props: { units: Unit[] }) => {
   const { units } = props
-  const { tilesWithUnits } = useStore()
+  const { tilesWithUnits } = useMatchStore()
   if (!tilesWithUnits) {
     return null
   }
@@ -234,7 +314,6 @@ export const HoveredUnits = (props: { units: Unit[] }) => {
 }
 
 export const Scene = (props: { onTileClick: (tile: TileWithUnit) => void }) => {
-  const { onTileClick } = props
   return (
     <Canvas
       orthographic

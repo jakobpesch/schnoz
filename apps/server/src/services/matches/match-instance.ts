@@ -4,17 +4,18 @@ import {
   buildTileLookupId,
   getNewlyRevealedTiles,
   getTileLookup,
-  shuffleArray,
+  minusFulfillments,
+  plusFulfillments,
 } from "coordinate-utils"
 import {
   GameSettings,
   Match,
   MatchStatus,
   Participant,
+  Rule,
   Map as SchnozMap,
   Tile,
   Unit,
-  UnitConstellation,
   UnitType,
   User,
 } from "database"
@@ -33,7 +34,9 @@ import {
   MatchInstanceEvent,
   ParticipantWithUser,
   PlacementRuleName,
+  RuleEvaluation,
   Special,
+  TileLookup,
   TileWithUnit,
   TransformedConstellation,
 } from "types"
@@ -46,6 +49,66 @@ import { TilesService } from "../tiles/tiles.service"
 import { UsersService } from "../users/users.service"
 import { MatchesService } from "./matches.service"
 
+const getPlaceableCoordinates = (props: {
+  tilesWithUnits: TileWithUnit[]
+  match: Match
+  gameSettings: GameSettings
+  activeParticipant: ParticipantWithUser | null
+  map: SchnozMap | null
+  tileLookup: TileLookup
+}) => {
+  return props.tilesWithUnits
+    ?.map((t) =>
+      checkConditionsForUnitConstellationPlacement(
+        [t.row, t.col],
+        {
+          coordinates: [[0, 0]],
+          mirrored: false,
+          rotatedClockwise: 0,
+          value: 0,
+        },
+        props.match,
+        props.activeParticipant ?? null,
+        props.map,
+        props.tilesWithUnits,
+        [],
+        props.activeParticipant?.id ?? null,
+        [], // todo: activated specials
+        props.gameSettings ?? null,
+        props.tileLookup,
+      ),
+    )
+    .filter((v) => typeof v.error === "undefined")
+    .map((v) => v.translatedCoordinates?.[0] ?? null)
+    .filter(Boolean) as Coordinate[]
+}
+
+const getEvaluationsMap = (
+  tileLookup: TileLookup,
+  players: Participant[],
+  gameSettings: GameSettings,
+) => {
+  const rulesMap = new Map<Rule, RuleEvaluation[]>()
+  const gameType = createCustomGame(gameSettings)
+  gameType.scoringRules.forEach((rule) => {
+    const evals = players
+      .sort((a, b) => a.playerNumber - b.playerNumber)
+      .map((player) => rule(player.id, tileLookup))
+    rulesMap.set(evals[0].type, evals)
+  })
+  // const evaluationsMap = new Map<string, RuleEvaluation[]>()
+  // players.forEach((player) =>
+  //   evaluationsMap.set(
+  //     player.id,
+  //     gameType.scoringRules.map((rule) => rule(player.id, tileLookup)),
+  //   ),
+  // )
+
+  return Object.fromEntries(rulesMap.entries()) as Record<
+    Rule,
+    RuleEvaluation[]
+  >
+}
 export class MatchInstance {
   private match!: Match
   private logger = new AppLoggerService(MatchInstance.name)
@@ -72,7 +135,7 @@ export class MatchInstance {
   get GameSettings() {
     return this.gameSettings
   }
-  get activePlayer() {
+  get ActivePlayer() {
     return this.participants.find(
       (player) => player.id === this.match.activePlayerId,
     )
@@ -293,7 +356,11 @@ export class MatchInstance {
     return participant
   }
 
-  public async startMatch(userId: User["id"]): Promise<ApiResponse<Match>> {
+  public async startMatch(
+    userId: User["id"],
+  ): Promise<
+    ApiResponse<{ match: Match; placeableCoordinates: Coordinate[] }>
+  > {
     await this.sync()
     const { error: startError } = this.checkConditionsForCreation(userId)
 
@@ -308,10 +375,6 @@ export class MatchInstance {
       (player) => player.userId === userId,
     )?.id
 
-    const openCards = shuffleArray<UnitConstellation>(
-      Object.values({ ...UnitConstellation }),
-    ).slice(0, 3)
-
     if (!this.gameSettings) {
       return {
         error: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
@@ -319,7 +382,15 @@ export class MatchInstance {
         statusCode: 500,
       }
     }
+    if (!this.tilesWithUnits) {
+      return {
+        error: API_ERROR_CODES.TILES_NOT_FOUND,
+        message: "No tiles",
+        statusCode: 500,
+      }
+    }
 
+    const openCards = createCustomGame(this.gameSettings).changedCards()
     const turn = 1
     const turnEndsAt = new Date(Date.now() + this.gameSettings.turnTime)
 
@@ -345,10 +416,20 @@ export class MatchInstance {
         },
       },
     })
+    const tileLookup = getTileLookup(this.tilesWithUnits)
+
+    const placeableCoordinates = getPlaceableCoordinates({
+      match: this.match,
+      activeParticipant: this.ActivePlayer ?? null,
+      map: this.map,
+      tilesWithUnits: this.tilesWithUnits,
+      gameSettings: this.gameSettings ?? null,
+      tileLookup,
+    })
 
     this.setNewTurnTimer()
 
-    return this.match
+    return { match: this.match, placeableCoordinates }
   }
 
   public async makeMove(
@@ -360,7 +441,6 @@ export class MatchInstance {
     specials: Special[],
   ) {
     await this.sync()
-    this.logger.log("synced")
     if (!this.map) {
       return {
         error: {
@@ -371,7 +451,7 @@ export class MatchInstance {
       }
     }
 
-    if (!this.activePlayer) {
+    if (!this.ActivePlayer) {
       return {
         error: {
           error: API_ERROR_CODES.ACTIVE_PLAYER_NOT_SET,
@@ -400,10 +480,24 @@ export class MatchInstance {
         },
       }
     }
-    this.logger.log("401")
+    const tileLookup = getTileLookup(this.tilesWithUnits)
+    const placeableCoordinatesBefore = getPlaceableCoordinates({
+      match: this.match,
+      activeParticipant: this.ActivePlayer ?? null,
+      map: this.map,
+      tilesWithUnits: this.tilesWithUnits,
+      gameSettings: this.gameSettings ?? null,
+      tileLookup,
+    })
+
+    const evalMapBefore = getEvaluationsMap(
+      tileLookup,
+      this.participants,
+      this.gameSettings,
+    )
 
     const currentBonusPoints =
-      this.activePlayer.bonusPoints + unitConstellation.value
+      this.ActivePlayer.bonusPoints + unitConstellation.value
 
     const canAffordSpecials =
       currentBonusPoints >=
@@ -425,18 +519,19 @@ export class MatchInstance {
       clearTimeout(this.turnTimer)
     }
 
-    const tileLookup = getTileLookup(this.tilesWithUnits)
     const { translatedCoordinates, error } =
       checkConditionsForUnitConstellationPlacement(
         [targetRow, targetCol],
         unitConstellation,
         this.match,
-        this.activePlayer,
+        this.ActivePlayer,
         this.map,
         this.tilesWithUnits,
         ignoredRules,
         participantId,
         specials,
+        this.gameSettings,
+        tileLookup,
       )
 
     if (error) {
@@ -451,7 +546,6 @@ export class MatchInstance {
     }
 
     const updateTilesPromises: Promise<Tile & { unit: Unit | null }>[] = []
-    console.log(translatedCoordinates)
 
     translatedCoordinates.forEach((coordinate) => {
       const { mapId, row, col } = tileLookup[buildTileLookupId(coordinate)]
@@ -464,8 +558,6 @@ export class MatchInstance {
       // this.logger.log('updatePayload', updatePayload);
       updateTilesPromises.push(this.tilesService.update(updatePayload))
     })
-
-    console.log(revealedTiles)
 
     revealedTiles.forEach(({ mapId, row, col }) => {
       updateTilesPromises.push(
@@ -491,12 +583,12 @@ export class MatchInstance {
       return { message: "Match could not be fetched", statusCode: 500 }
     }
 
-    if (!this.activePlayer) {
+    if (!this.ActivePlayer) {
       return { message: "Error while placing", statusCode: 500 }
     }
 
     this.logger.log("496")
-    const gameType = createCustomGame(this.gameSettings?.rules ?? null)
+    const gameType = createCustomGame(this.gameSettings)
     const playersWithUpdatedScore = gameType.evaluate(matchWithPlacedTiles)
 
     const updatedPlayers: ParticipantWithUser[] = []
@@ -513,10 +605,10 @@ export class MatchInstance {
           where: { id: player.id },
           data: {
             score: player.score,
-            ...(player.id === this.activePlayer.id
+            ...(player.id === this.ActivePlayer.id
               ? {
                   bonusPoints:
-                    this.activePlayer.bonusPoints +
+                    this.ActivePlayer.bonusPoints +
                     bonusPointsFromCard -
                     usedPointsFromSpecials,
                 }
@@ -550,7 +642,6 @@ export class MatchInstance {
     if (!nextActivePlayerId) {
       return { message: "Error while changing turns", statusCode: 500 }
     }
-    this.logger.log("556")
     this.match = await this.matchesService.update({
       where: { id: this.match.id },
       data: {
@@ -563,21 +654,114 @@ export class MatchInstance {
           : {}),
       },
     })
-    this.logger.log("after this.match = await this.matchesService.update({")
     if (!this.match.finishedAt) {
       this.setNewTurnTimer()
+    }
+    const tileLookupAfter = getTileLookup(matchWithPlacedTiles.map.tiles)
+    const evalMapAfter = getEvaluationsMap(
+      tileLookupAfter,
+      this.participants,
+      this.gameSettings,
+    )
+    const placeableCoordinatesAfter = getPlaceableCoordinates({
+      match: this.match,
+      activeParticipant: this.ActivePlayer ?? null,
+      map: this.map,
+      tilesWithUnits: this.tilesWithUnits,
+      gameSettings: this.gameSettings ?? null,
+      tileLookup: tileLookupAfter,
+    })
+
+    this.logger.verbose("evalMapBefore", evalMapBefore)
+    this.logger.verbose("evalMapAfter", evalMapAfter)
+
+    const updatedFullfillments: Record<
+      Participant["id"],
+      Record<
+        Rule,
+        {
+          plus: RuleEvaluation["fulfillments"]
+          minus: RuleEvaluation["fulfillments"]
+        }
+      >
+    > = {
+      [this.participants[0].id]: {
+        DIAGONAL_NORTHEAST: {
+          plus: plusFulfillments(
+            evalMapBefore.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[0].id,
+            )?.fulfillments ?? [],
+            evalMapAfter.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[0].id,
+            )?.fulfillments ?? [],
+          ),
+          minus: minusFulfillments(
+            evalMapBefore.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[0].id,
+            )?.fulfillments ?? [],
+            evalMapAfter.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[0].id,
+            )?.fulfillments ?? [],
+          ),
+        },
+        HOLE: {
+          plus: [],
+          minus: [],
+        },
+        TERRAIN_STONE_NEGATIVE: {
+          plus: [],
+          minus: [],
+        },
+        TERRAIN_WATER_POSITIVE: {
+          plus: [],
+          minus: [],
+        },
+      },
+      [this.participants[1].id]: {
+        DIAGONAL_NORTHEAST: {
+          plus: plusFulfillments(
+            evalMapBefore.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[1].id,
+            )?.fulfillments ?? [],
+            evalMapAfter.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[1].id,
+            )?.fulfillments ?? [],
+          ),
+          minus: minusFulfillments(
+            evalMapBefore.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[1].id,
+            )?.fulfillments ?? [],
+            evalMapAfter.DIAGONAL_NORTHEAST.find(
+              (v) => v.playerId === this.participants[1].id,
+            )?.fulfillments ?? [],
+          ),
+        },
+        HOLE: {
+          plus: [],
+          minus: [],
+        },
+        TERRAIN_STONE_NEGATIVE: {
+          plus: [],
+          minus: [],
+        },
+        TERRAIN_WATER_POSITIVE: {
+          plus: [],
+          minus: [],
+        },
+      },
     }
 
     const response = {
       updatedMatch: this.match,
       updatedTilesWithUnits,
       updatedPlayers,
+      updatedFullfillments,
+      placeableCoordinates: placeableCoordinatesAfter,
     }
-    this.logger.log("this.matchLogService.create({")
     this.matchLogService.create({
       matchId: this.Id,
       message: `Player ${
-        this.activePlayer.id
+        this.ActivePlayer.id
       } placed units on tiles ${translatedCoordinates.map(
         ([row, col]) => `(${row},${col})`,
       )}`,
@@ -589,7 +773,7 @@ export class MatchInstance {
   private async turnTimerRanOut() {
     await this.sync()
 
-    if (!this.activePlayer) {
+    if (!this.ActivePlayer) {
       return {
         error: {
           error: API_ERROR_CODES.ACTIVE_PLAYER_NOT_SET,
@@ -609,7 +793,7 @@ export class MatchInstance {
       }
     }
 
-    const gameType = createCustomGame(this.gameSettings?.rules ?? null)
+    const gameType = createCustomGame(this.gameSettings)
 
     const winnerId =
       determineWinner(this.match, this.gameSettings, this.participants)?.id ??
@@ -663,7 +847,7 @@ export class MatchInstance {
 
     this.matchLogService.create({
       matchId: this.Id,
-      message: `Player ${this.activePlayer.id} did not do their move in time. Changing turns... `,
+      message: `Player ${this.ActivePlayer.id} did not do their move in time. Changing turns... `,
       data: JSON.stringify(response),
     })
   }

@@ -1,58 +1,158 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+
 import {
   Box,
   Button,
   Center,
   Container,
+  HStack,
   Heading,
   Spinner,
   Text,
   VStack,
-  useToast,
 } from "@chakra-ui/react"
+import { animated } from "@react-spring/three"
+import { MapControls, useHelper } from "@react-three/drei"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { Participant } from "database"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { Coordinate } from "types"
-// import popSound from "../../assets/sfx/pop.mp3"
-import { MapControls } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
+import { useEffect, useRef, useState } from "react"
+import { Animations } from "../../components/animations/Animations"
 import { HoveredHighlights } from "../../components/map/HoveredHighlights"
+import { PlaceableTiles } from "../../components/map/PlaceableTiles"
 import { UICardsView } from "../../components/ui/UICardsView"
 import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
 import { UIPreMatchView } from "../../components/ui/UIPreMatchView"
-import { UIScoreView, scaled } from "../../components/ui/UIScoreView"
-import { UITurnChangeIndicator } from "../../components/ui/UITurnChangeIndicator"
+import { UIScoreView } from "../../components/ui/UIScoreView"
+import { UISettingsView } from "../../components/ui/UISettingsView"
+import { UISoundControls } from "../../components/ui/UISoundControls"
 import { UITurnTimer } from "../../components/ui/UITurnTimer"
 import { UITurnsView } from "../../components/ui/UITurnsView"
+import { scaled } from "../../components/ui/rule-explainations.const"
 import useAuth from "../../hooks/useAuth"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
+import { useSound } from "../../providers/SoundProvider"
 import { createMap } from "../../services/MapService"
 import {
   UpdateGameSettingsPayload,
   socketApi,
 } from "../../services/SocketService"
-import { setSelectedCard, useStore } from "../../store"
+import {
+  setConnectedParticipants,
+  setFulfillments,
+  setGameSettings,
+  setHoveredCoordinate,
+  setMap,
+  setMatch,
+  setOpponentsHoveredCoordinates,
+  setParticipants,
+  setPlaceableCoordinates,
+  setSelectedCard,
+  setShowRuleEvaluationHighlights,
+  setTilesWithUnits,
+  setUpdatedTilesWithUnits,
+  useMatchStore,
+} from "../../store"
 import { LAYERS, Terrains, Tiles, Units } from "../webgl"
-import { MapRuleEvaluations } from "../../components/map/MapRuleEvaluations"
+import { DirectionalLightHelper } from "three"
+
+const CanvasContent = () => {
+  const { playMusic, stopMusic } = useSound()
+  const map = useMatchStore((state) => state.map)
+  const directionalLighRef = useRef<THREE.DirectionalLight>(null!)
+
+  useEffect(() => {
+    playMusic("music2")
+    return () => {
+      stopMusic()
+    }
+  }, [])
+  useHelper(directionalLighRef, DirectionalLightHelper, 1, "red")
+
+  useFrame(({ clock }) => {
+    if (!directionalLighRef.current) {
+      return
+    }
+    const elapsedTime = clock.getElapsedTime()
+    const radius = 10
+    const time = 10
+    const baseIntensity = 5
+    const deltaIntensity = 0
+    // Calculate new position in a haf circle
+    const x = Math.cos(elapsedTime / time) * radius
+    const y = Math.abs(Math.sin(elapsedTime / time) * radius)
+    const z = Math.abs(
+      Math.sin(elapsedTime / time) * (radius + LAYERS.LIGHTING),
+    )
+    const intensity =
+      Math.abs(Math.sin(elapsedTime / time) * deltaIntensity) + baseIntensity
+
+    directionalLighRef.current.position.set(x, 5, LAYERS.LIGHTING - 10)
+    directionalLighRef.current.intensity = intensity
+  })
+
+  if (!map) {
+    return null
+  }
+
+  return (
+    <>
+      <animated.ambientLight intensity={0.5}></animated.ambientLight>
+      <animated.directionalLight
+        castShadow
+        ref={directionalLighRef}
+        color={"white"}
+      >
+        <mesh>
+          {/* <planeGeometry args={[1, 1]} /> */}
+          {/* <sphereGeometry args={[1, 64, 64]} /> */}
+        </mesh>
+      </animated.directionalLight>
+
+      <group position={[-map.colCount / 2 + 0.5, map.rowCount / 2 - 0.5, 0]}>
+        <group
+          position={[map.colCount / 2 - 0.5, -map.colCount / 2 + 0.5, 0.2]}
+          // rotation={[-0.8, 0, 0.8]}
+        >
+          <mesh castShadow receiveShadow rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.3, 0.4, 0.4]} />
+            <meshStandardMaterial color={"royalblue"} />
+          </mesh>
+          <mesh
+            position={[0, 0, 0.3]}
+            rotation={[Math.PI / 2, 0, 0]}
+            castShadow
+            receiveShadow
+          >
+            <coneGeometry args={[0.422, 0.2]} />
+            <meshStandardMaterial color={"royalblue"} />
+          </mesh>
+        </group>
+        <Animations />
+        <Tiles />
+        <Units />
+        <Terrains />
+        <PlaceableTiles />
+        <HoveredHighlights hide={false} />
+        <MapControls
+          makeDefault
+          zoomSpeed={0.5}
+          enableRotate={true}
+          zoomToCursor
+        />
+      </group>
+    </>
+  )
+}
 
 const MatchView = () => {
-  console.count("MatchView:rendered")
-
   const router = useRouter()
   const { profile } = useAuth()
   const userId = profile?.sub ?? ""
   const matchId = typeof router.query.id === "string" ? router.query.id : ""
-  const toast = useToast()
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
-  const [isChangingTurns, setIsChangingTurns] = useState(false)
-
-  const playSound = () => {
-    // const audio = new Audio(popSound)
-    // audio.play()
-  }
 
   useEffect(() => {
     if (socketApi.IsConnected) {
@@ -68,24 +168,40 @@ const MatchView = () => {
     }
     setSelectedCard(null)
     socketApi.connectToMatch(userId, matchId)
+
     return () => {
       socketApi.disconnect()
+      setMatch(null)
+      setMap(null)
+      setIsUpdatingMatch(false)
+      setTilesWithUnits(null)
+      setUpdatedTilesWithUnits(null)
+      setSelectedCard(null)
+      setGameSettings(null)
+      setPlaceableCoordinates(null)
+      setHoveredCoordinate(null)
+      setParticipants(null)
+      setFulfillments(null)
+      setConnectedParticipants(null)
+      setOpponentsHoveredCoordinates(null)
+      setShowRuleEvaluationHighlights(null)
     }
   }, [matchId, userId])
 
-  const match = useStore((state) => state.match)
-  const gameSettings = useStore((state) => state.gameSettings)
-  const participants = useStore((state) => state.participants)
-  const map = useStore((state) => state.map)
-  const tilesWithUnits = useStore((state) => state.tilesWithUnits)
+  const match = useMatchStore((state) => state.match)
+  const gameSettings = useMatchStore((state) => state.gameSettings)
+  const participants = useMatchStore((state) => state.participants)
+  const map = useMatchStore((state) => state.map)
+  const tilesWithUnits = useMatchStore((state) => state.tilesWithUnits)
 
-  const connectedParticipants = useStore((state) => state.connectedPlayers)
+  const connectedParticipants = useMatchStore(
+    (state) => state.connectedParticipants,
+  )
 
   const you = participants?.find((player) => player.userId === userId) ?? null
 
   const activePlayer =
     participants?.find((player) => player.id === match?.activePlayerId) ?? null
-  const yourTurn = userId === activePlayer?.userId
 
   const { isPreMatch, wasStarted, isOngoing, isFinished } = useMatchStatus(
     match?.status,
@@ -200,71 +316,22 @@ const MatchView = () => {
       )}
       {wasStarted && map && tilesWithUnits && activePlayer && (
         <>
-          {
-            //false && (
-            //           <MapContainer
-            //             id="map-container"
-            //             map={map}
-            //             bg="green"
-            //             cursor={selectedCard ? "none" : "default"}
-            //           >
-            //             {isOngoing && /*!isLoadingMatch && */ !isUpdatingMatch && (
-            //               <MapPlaceableTiles
-            //                 placeableCoordinates={placeableCoordinates}
-            //               />
-            //             )}
-            //
-            //             <MapUnits
-            //               unitTiles={unitTiles}
-            //               players={participants}
-            //               updatedUnitTiles={updatedTilesWithUnits ?? []}
-            //             />
-            //             {showRuleEvaluationHighlights && (
-            //               <MapRuleEvaluations
-            //                 coordinates={showRuleEvaluationHighlights}
-            //               />
-            //             )}
-            //             <MapTerrains terrainTiles={terrainTiles} />
-            //             <MapFog fogTiles={fogTiles} halfFogTiles={halfFogTiles} />
-            //             {
-            //               /*!isLoadingMatch && */ you &&
-            //                 !isUpdatingMatch &&
-            //                 !isChangingTurns && (
-            //                   <MapHoveredHighlights
-            //                     you={you}
-            //                     activePlayer={activePlayer}
-            //                     hide={isFinished}
-            //                     specials={[expandBuildRadiusByOne]}
-            //                     activeSpecials={activatedSpecials}
-            //                     setSpecial={setSpecial}
-            //                     card={selectedCard}
-            //                     onTileClick={onTileClick}
-            //                   />
-            //                 )
-            //             }
-            //           </MapContainer>
-            //        )
-          }
           <Canvas
+            id="match-canvas"
             orthographic
+            color="red"
+            shadows
             camera={{
               position: [0, 0, LAYERS.CAMERA],
-              zoom: 40,
+              zoom: 100,
               up: [0, 0, 1],
               far: 10000,
+              onUpdate() {
+                console.log("update")
+              },
             }}
           >
-            <ambientLight />
-            <pointLight position={[0, 0, 10]} />
-            <group position={[-map.colCount / 2, map.rowCount / 2, 0]}>
-              <Tiles />
-              <Units />
-              <Terrains />
-              {/* <PlaceableTiles placeableCoordinates={placeableCoordinates} /> */}
-              <HoveredHighlights hide={isFinished} />
-
-              <MapControls makeDefault zoomSpeed={0.5} enableRotate={true} />
-            </group>
+            <CanvasContent />
           </Canvas>
           {!isFinished && (
             <Box
@@ -382,12 +449,7 @@ const MatchView = () => {
               </Stack> */}
             </Box>
           )}
-          <UIScoreView
-            participants={participants}
-            connectedParticipants={connectedParticipants ?? []}
-            tilesWithUnits={tilesWithUnits}
-            rules={gameSettings?.rules ?? []}
-          />
+          <UIScoreView />
         </>
       )}
       {isFinished && (
@@ -399,17 +461,13 @@ const MatchView = () => {
       )}
       {isOngoing && activePlayer && (
         <>
-          <UITurnsView
-            match={match}
-            players={participants}
-            gameSettings={gameSettings}
-          />
+          <UITurnsView />
           {/* {you?.bonusPoints != null && (
             <UIBonusPointsView bonusPoints={you.bonusPoints} />
           )} */}
           <UICardsView />
 
-          {activePlayer && (
+          {/* {activePlayer && (
             <UITurnChangeIndicator
               activePlayer={activePlayer}
               onChangingTurnsStart={() => {
@@ -419,13 +477,17 @@ const MatchView = () => {
                 setIsChangingTurns(false)
               }}
             />
-          )}
+          )} */}
         </>
       )}
       {/* <UILoggingView statusLog={[]} /> */}
       <UILoadingIndicator
         loading={/*!isLoadingMatch ||  isLoadingUpdate || */ isUpdatingMatch}
       />
+      <HStack position="fixed" bottom="4" right="4">
+        <UISettingsView />
+        <UISoundControls />
+      </HStack>
     </Box>
   )
 }

@@ -5,6 +5,12 @@
     "target": "es5",
     "downlevelIteration": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "jest.setup.js"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.spec.ts",
+    "**/*.tsx",
+    "jest.setup.js"
+  ],
   "exclude": ["dist"]
 }

@@ -98,10 +98,13 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
 
   const isGameFull = participants.length === 2
   const isHost = userId === createdById
+
   const slots =
     participants.length === 1 ? [...participants, null] : participants
   const allConnected = connectedParticipants.length === 2
+
   return (
+    // @ts-ignore: Expression produces a union type that is too complex to represent.
     <VStack align="start" spacing="8" width="full" {...stackProps}>
       <Heading>Game Settings</Heading>
       <Stack width="full">
@@ -172,8 +175,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.mapSize === 11 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ mapSize: 11 })}
               >
@@ -182,8 +185,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.mapSize === 21 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ mapSize: 21 })}
               >
@@ -192,8 +195,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.mapSize === 31 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ mapSize: 31 })}
               >
@@ -207,8 +210,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.turnTime === 30_000 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ turnTime: 30_000 })}
               >
@@ -217,8 +220,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.turnTime === 60_000 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ turnTime: 60_000 })}
               >
@@ -227,8 +230,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.turnTime === 90_000 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ turnTime: 90_000 })}
               >
@@ -237,8 +240,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.turnTime === 120_000 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ turnTime: 120_000 })}
               >
@@ -247,8 +250,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={
                   settings.turnTime === 604_800_000 ? "blue" : "gray"
                 } // 1 week
@@ -266,8 +269,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.maxTurns === 6 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ maxTurns: 6 })}
               >
@@ -276,8 +279,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.maxTurns === 12 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ maxTurns: 12 })}
               >
@@ -286,8 +289,8 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.maxTurns === 24 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ maxTurns: 24 })}
               >
@@ -296,12 +299,65 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!isHost}
-                _disabled={{ opacity: 1, cursor: "not-allowed" }}
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
                 colorScheme={settings.maxTurns === 36 ? "blue" : "gray"}
                 onClick={() => onSettingsChange({ maxTurns: 36 })}
               >
                 36
+              </Button>
+            </ButtonGroup>
+            <Text fontWeight="bold">Number of cards</Text>
+            <ButtonGroup isAttached>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
+                colorScheme={settings.cardsCount === 1 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ cardsCount: 1 })}
+              >
+                1
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
+                colorScheme={settings.cardsCount === 2 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ cardsCount: 2 })}
+              >
+                2
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
+                colorScheme={settings.cardsCount === 3 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ cardsCount: 3 })}
+              >
+                3
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
+                colorScheme={settings.cardsCount === 4 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ cardsCount: 4 })}
+              >
+                4
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={!isHost}
+                _disabled={{ cursor: "default" }}
+                colorScheme={settings.cardsCount === 5 ? "blue" : "gray"}
+                onClick={() => onSettingsChange({ cardsCount: 5 })}
+              >
+                5
               </Button>
             </ButtonGroup>
           </Stack>
@@ -366,7 +422,7 @@ export const UIPreMatchView = (props: UIPreMatchViewProps) => {
                     min={0}
                     max={10}
                     isReadOnly={!isHost}
-                    cursor={!isHost ? "not-allowed" : "pointer"}
+                    cursor={!isHost ? "default" : "pointer"}
                     colorScheme="teal"
                     onChange={(v) => setter(v)}
                     onChangeEnd={(v) => {

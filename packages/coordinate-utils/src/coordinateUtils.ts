@@ -9,12 +9,15 @@ export const buildTileLookupId = (coordinate: Coordinate) => {
 }
 
 export const getTileLookup = (tiles: TileWithUnit[]) => {
-  return tiles.reduce<TileLookup>((acc, cur) => {
+  console.time("getting tile lookup")
+  const tileLookup = tiles.reduce<TileLookup>((acc, cur) => {
     return {
       ...acc,
       [buildTileLookupId([cur.row, cur.col])]: cur,
     }
   }, {})
+  console.timeEnd("getting tile lookup")
+  return tileLookup
 }
 
 export const getNewlyRevealedTiles = (

@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@chakra-ui/react"
 import { ReactNode, useEffect, useState } from "react"
-import { scaled } from "./ui/UIScoreView"
+import { scaled } from "./ui/rule-explainations.const"
 
 export const HoveredTooltip = (props: {
   trigger: ReactNode

@@ -28,6 +28,9 @@ import { TilesService } from "../tiles/tiles.service"
 import { UsersService } from "../users/users.service"
 import { MatchInstance } from "./match-instance"
 import { MatchesService } from "./matches.service"
+import { getTileLookup } from "coordinate-utils"
+import { checkConditionsForUnitConstellationPlacement } from "game-logic"
+import assert from "assert"
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -127,6 +130,34 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     this.logger.verbose(`PLAYER_CONNECTED_TO_MATCH "${matchId}"`)
     const connectedUserIds = Array.from(matchInstance.sockets.keys())
+    assert(matchInstance)
+    const tileLookup = getTileLookup(matchInstance.TilesWithUnits ?? [])
+
+    const placeableCoordinates = matchInstance?.TilesWithUnits?.map((t) => {
+      assert(matchInstance)
+      return checkConditionsForUnitConstellationPlacement(
+        [t.row, t.col],
+        {
+          coordinates: [[0, 0]],
+          mirrored: false,
+          rotatedClockwise: 0,
+          value: 0,
+        },
+        matchInstance.Match,
+        matchInstance.ActivePlayer ?? null,
+        matchInstance.Map,
+        matchInstance.TilesWithUnits,
+        [], // todo: ignored rules
+        matchInstance.ActivePlayer?.id ?? null,
+        [], // todo: activated specials
+        matchInstance.GameSettings ?? null,
+        tileLookup,
+      )
+    })
+      .filter((v) => typeof v.error === "undefined")
+      .map((v) => v.translatedCoordinates?.[0] ?? null)
+      .filter(Boolean) as Coordinate[]
+
     this.server.to(matchId).emit(ServerEvent.PLAYER_CONNECTED_TO_MATCH, {
       match: matchInstance.Match,
       map: matchInstance.Map,
@@ -136,6 +167,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       connectedPlayers: matchInstance.Participants.filter((p) => {
         return connectedUserIds.includes(p.userId)
       }),
+      placeableCoordinates,
     })
     this.logger.verbose(`Client connected to match "${matchId}"`)
     this.logger.verbose(
@@ -194,12 +226,14 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to(client.id).emit(ServerEvent.ERROR, apiResponse)
         return
       }
+
       this.server.to(matchInstance.Match.id).emit(ServerEvent.STARTED_MATCH, {
         match: matchInstance.Match,
         map: matchInstance.Map,
         tilesWithUnits: matchInstance.TilesWithUnits,
         players: matchInstance.Participants,
         users: matchInstance.Users,
+        placeableCoordinates: apiResponse.placeableCoordinates,
       })
     } catch (e) {
       this.logger.error(e)
@@ -291,8 +325,6 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       unitConstellation: TransformedConstellation
     },
   ) {
-    this.logger.verbose("MAKE MOVE")
-
     const {
       participantId,
       row: targetRow,

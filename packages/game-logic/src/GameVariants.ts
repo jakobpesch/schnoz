@@ -1,29 +1,27 @@
-import { Match, Participant, Rule, UnitConstellation } from "database"
-import { GameType } from "./game-type.interface"
-import { placementRulesMap } from "./placementRules/placement-rule-map.const"
+import { getTileLookup, shuffleArray } from "coordinate-utils"
+import { GameSettings, Participant, UnitConstellation } from "database"
 import { ScoringRule } from "types"
-import { shuffleArray } from "coordinate-utils"
-import { getTileLookup } from "coordinate-utils"
 import {
+  ScoringRulesMap,
   diagnoalRule,
   holeRule,
-  ScoringRulesMap,
   stoneRule,
   waterRule,
 } from "./ScoringRule"
+import { GameType } from "./game-type.interface"
+import { placementRulesMap } from "./placementRules/placement-rule-map.const"
 
-export const createCustomGame: (scoringRuleNames: Rule[] | null) => GameType = (
-  scoringRuleNames,
-) => {
-  if (!scoringRuleNames) {
+export const createCustomGame = (gameSettings: GameSettings) => {
+  if (!gameSettings.rules) {
     return defaultGame
   }
 
   return {
     ...defaultGame,
+    cardsCount: gameSettings.cardsCount,
     scoringRules: [...ScoringRulesMap.entries()].reduce<ScoringRule[]>(
       (acc, [ruleName, scoringRule]) => {
-        if (scoringRuleNames.includes(ruleName)) {
+        if (gameSettings.rules.includes(ruleName)) {
           return [...acc, scoringRule]
         }
         return [...acc]
@@ -33,25 +31,22 @@ export const createCustomGame: (scoringRuleNames: Rule[] | null) => GameType = (
   }
 }
 
-const defaultGamePlacementRulesMap = new Map(placementRulesMap)
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY")
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ALLY_2")
-// defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY");
-defaultGamePlacementRulesMap.delete("ADJACENT_TO_ENEMY_2")
-
 export const defaultGame: GameType = {
-  shouldChangeActivePlayer: (turn: Match["turn"]) => {
+  shouldChangeActivePlayer(turn) {
     return turn % 2 !== 0
   },
-  shouldChangeCards: (turn: Match["turn"]) => {
+  shouldChangeCards(turn) {
     return turn % 2 === 0
   },
-  changedCards: () => {
+  changedCards() {
     return shuffleArray<UnitConstellation>(
       Object.values({ ...UnitConstellation }),
-    ).slice(0, 3)
+    ).slice(0, this.cardsCount)
   },
-  evaluate: function (match) {
+  shouldEvaluate(turn) {
+    return turn % 6 === 0
+  },
+  evaluate(match) {
     if (!this.shouldEvaluate(match.turn)) {
       return match.players
     }
@@ -62,7 +57,7 @@ export const defaultGame: GameType = {
     }
     const tileLookup = getTileLookup(match.map.tiles)
 
-    const winners = (this.scoringRules as ScoringRule[]).map((rule) => {
+    const winners = this.scoringRules.map((rule) => {
       const evaluations = match.players.map((player) => {
         return rule(player.id, tileLookup)
       })
@@ -99,9 +94,16 @@ export const defaultGame: GameType = {
 
     return playersWithUpdatedScores
   },
-  shouldEvaluate: (turn) => {
-    return turn % 6 === 0
-  },
   scoringRules: [waterRule, stoneRule, holeRule, diagnoalRule],
-  placementRuleMap: defaultGamePlacementRulesMap,
+  placementRuleMap: {
+    NO_TERRAIN: placementRulesMap.NO_TERRAIN,
+    NO_UNIT: placementRulesMap.NO_UNIT,
+    ADJACENT_TO_UNIT: placementRulesMap.ADJACENT_TO_UNIT,
+    // ADJACENT_TO_ALLY: placementRulesMap.ADJACENT_TO_ALLY,
+    // ADJACENT_TO_ALLY_2: placementRulesMap.ADJACENT_TO_ALLY_2,
+    // ADJACENT_TO_ENEMY: placementRulesMap.ADJACENT_TO_ENEMY,
+    // ADJACENT_TO_ENEMY_2: placementRulesMap.ADJACENT_TO_ENEMY_2,
+    // ADJACENT_TO_UNIT_2: placementRulesMap.ADJACENT_TO_UNIT_2,
+  },
+  cardsCount: 3,
 }

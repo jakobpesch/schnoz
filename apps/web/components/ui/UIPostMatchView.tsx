@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/router"
 import KoFiLogo from "../../assets/images/kofi_logo.png"
 import { RenderSettings } from "../../services/SettingsService"
-import { scaled } from "./UIScoreView"
+import { scaled } from "./rule-explainations.const"
 interface UIPostMatchViewProps {
   winner: Participant | null
 }
@@ -35,6 +35,7 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
                 RenderSettings.getPlayerAppearance(props.winner.playerNumber)
                   .unit
               }
+              priority
               alt=""
               width={scaled(100)}
               height={scaled(100)}

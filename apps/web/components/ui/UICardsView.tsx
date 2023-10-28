@@ -11,8 +11,8 @@ import { Card, decodeUnitConstellation } from "coordinate-utils"
 import Mousetrap from "mousetrap"
 import { useEffect } from "react"
 import { RenderSettings } from "../../services/SettingsService"
-import { setSelectedCard, useStore } from "../../store"
-import { scaled } from "./UIScoreView"
+import { setSelectedCard, useMatchStore } from "../../store"
+import { scaled } from "./rule-explainations.const"
 
 interface CardViewProps extends BoxProps {
   selected: boolean
@@ -88,13 +88,13 @@ const CardView = (props: CardViewProps) => {
 }
 
 export const UICardsView = () => {
-  const cards = useStore(
+  const cards = useMatchStore(
     (state) => state.match?.openCards.map(decodeUnitConstellation) ?? [],
   )
-  const match = useStore((state) => state.match)
-  const yourTurn = useStore((state) => state.yourTurn())
+  const match = useMatchStore((state) => state.match)
+  const yourTurn = useMatchStore((state) => state.yourTurn())
   const readonly = !yourTurn
-  const selectedCard = useStore((state) => state.selectedCard)
+  const selectedCard = useMatchStore((state) => state.selectedCard)
 
   useEffect(() => {
     match?.openCards.forEach((unitConstellation, index) => {
@@ -119,12 +119,13 @@ export const UICardsView = () => {
       bottom="0"
       left="calc(50vw - 50%)"
       width="100vw"
+      pointerEvents="none"
     >
       <HStack
-        spacing={scaled(10)}
+        spacing={scaled(4)}
         padding={scaled(2)}
         margin={scaled(2)}
-        background="gray.700"
+        background="blackAlpha.300"
         borderRadius={scaled(5)}
         borderWidth={scaled(2)}
         opacity={readonly ? 0.5 : 1}

@@ -5,7 +5,8 @@ import { defaultGame } from "game-logic"
 import Image, { StaticImageData } from "next/image"
 import { useMemo } from "react"
 import { RenderSettings } from "../../services/SettingsService"
-import { scaled } from "./UIScoreView"
+import { scaled } from "./rule-explainations.const"
+import { useMatchStore } from "../../store"
 
 const getTurns = (
   match: Match,
@@ -49,33 +50,40 @@ const getTurns = (
   return turnsUI
 }
 
-export const UITurnsView = (props: {
-  match: Match
-  players: Participant[]
-  gameSettings: GameSettings
-}) => {
+export const UITurnsView = () => {
+  const match = useMatchStore((state) => state.match)
+  const participants = useMatchStore((state) => state.participants)
+  const gameSettings = useMatchStore((state) => state.gameSettings)
   const turnsUI = useMemo(() => {
-    const turns = getTurns(props.match, props.players, props.gameSettings)
-    for (let index = 1; index < props.match.turn; index++) {
+    if (!match || !participants || !gameSettings) {
+      return []
+    }
+    const turns = getTurns(match, participants, gameSettings)
+    for (let index = 1; index < match.turn; index++) {
       turns.shift()
       if (turns[0].evaluate) {
         turns.shift()
       }
     }
     return turns
-  }, [props.match])
+  }, [match])
 
   return (
     <Flex position="fixed" top="0" left="0">
       <Stack
-        bg="gray.700"
+        bg="blackAlpha.300"
         borderWidth={scaled(1)}
         borderRadius={scaled(10)}
         spacing={scaled(16)}
         p={scaled(1)}
         m={scaled(4)}
         maxWidth="50vw"
-        overflowX="hidden"
+        overflowX="scroll"
+        css={{
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        }}
       >
         <HStack position="relative" spacing={scaled(1)}>
           {turnsUI.map((turnUI, index) => {
@@ -91,9 +99,11 @@ export const UITurnsView = (props: {
             if (turnUI.evaluate) {
               return (
                 <Heading
+                  px={scaled(4)}
+                  flexShrink={0}
                   key={index + "eval"}
                   textAlign="center"
-                  fontSize={scaled(16)}
+                  fontSize={scaled(turnsUI.length === index + 1 ? 28 : 16)}
                   {...borderStyle}
                 >
                   ⭐️
@@ -102,6 +112,7 @@ export const UITurnsView = (props: {
             } else {
               return (
                 <Flex
+                  flexShrink={0}
                   align="center"
                   justify="center"
                   key={index + "player"}

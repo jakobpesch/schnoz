@@ -1,6 +1,6 @@
 import { Participant, Rule, Terrain } from "database"
 import { StaticImageData } from "next/image"
-import bob from "../assets/sprites/bob.png"
+import bob from "../assets/sprites/bob@640.png"
 import background from "../assets/sprites/grass.png"
 import house from "../assets/sprites/house.png"
 import maurice from "../assets/sprites/maurice.png"

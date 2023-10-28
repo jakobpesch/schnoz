@@ -1,26 +1,31 @@
-import { GameSettings, Map, Match, Participant, Unit, User } from "database"
+import { GameSettings, Map, Match, Participant, Rule, User } from "database"
 import { Socket, io } from "socket.io-client"
 import {
   ClientEvent,
   Coordinate,
   ParticipantWithUser,
   PlacementRuleName,
+  RuleEvaluation,
   ServerEvent,
   Special,
   TileWithUnit,
   TransformedConstellation,
 } from "types"
-import { NEXT_PUBLIC_WEBSOCKET_URL } from "./GameManagerService"
 import {
+  FulFillmentDifference,
   setConnectedParticipants,
+  setFulfillments,
   setGameSettings,
   setMap,
   setMatch,
   setOpponentsHoveredCoordinates,
   setParticipants,
+  setPlaceableCoordinates,
+  setSelectedCard,
   setTilesWithUnits,
   setUpdatedTilesWithUnits,
 } from "../store"
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "./GameManagerService"
 
 // TODO: Make type proper
 export type UpdateGameSettingsPayload = Partial<Omit<GameSettings, "id">>
@@ -119,6 +124,7 @@ export class SocketIOApi {
     tilesWithUnits?: TileWithUnit[]
     players?: ParticipantWithUser[]
     connectedPlayers?: ParticipantWithUser[]
+    placeableCoordinates?: Coordinate[]
   }) => {
     setMatch(payload.match)
     setMap(payload.map ?? null)
@@ -126,6 +132,7 @@ export class SocketIOApi {
     setParticipants(payload.players ?? null)
     setGameSettings(payload.gameSettings ?? null)
     setConnectedParticipants(payload.connectedPlayers ?? null)
+    setPlaceableCoordinates(payload.placeableCoordinates ?? null)
   }
 
   private onPlayerDisconnectedFromMatch = (
@@ -142,11 +149,13 @@ export class SocketIOApi {
     map: Map
     tilesWithUnits: TileWithUnit[]
     players: ParticipantWithUser[]
+    placeableCoordinates: Coordinate[]
   }) => {
     setMatch(payload.match)
     setParticipants(payload.players)
     setTilesWithUnits(payload.tilesWithUnits)
     setMap(payload.map)
+    setPlaceableCoordinates(payload.placeableCoordinates)
   }
 
   private onKickedParticipant = (
@@ -163,14 +172,21 @@ export class SocketIOApi {
     updatedMatch: Match
     updatedTilesWithUnits: TileWithUnit[]
     updatedPlayers: ParticipantWithUser[]
+    updatedFullfillments: FulFillmentDifference
+    placeableCoordinates: Coordinate[]
   }) => {
     setMatch(payload.updatedMatch)
     setUpdatedTilesWithUnits(payload.updatedTilesWithUnits)
     setParticipants(payload.updatedPlayers)
+    console.log("updatedFulfillments", payload.updatedFullfillments)
+
+    setFulfillments(payload.updatedFullfillments)
+    setPlaceableCoordinates(payload.placeableCoordinates)
   }
 
   private onEndTurnTimestamp = (payload: { match: Match }) => {
     setMatch(payload.match)
+    setSelectedCard(null)
   }
 
   public sendRequest = async (request: { event: string; data?: any }) => {
@@ -229,6 +245,9 @@ export class SocketIOApi {
     }
     if (settings.turnTime != null) {
       gameSettings.turnTime = settings.turnTime
+    }
+    if (settings.cardsCount != null) {
+      gameSettings.cardsCount = settings.cardsCount
     }
 
     await socketApi.sendRequest({

@@ -49,6 +49,7 @@ export const MapUnits = (props: {
           >
             <Image
               src={unit}
+              priority
               height={RenderSettings.tileSize}
               width={RenderSettings.tileSize}
               alt="unit"

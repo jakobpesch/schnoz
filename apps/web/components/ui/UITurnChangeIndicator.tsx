@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { MatchRich } from "types"
 import { RenderSettings } from "../../services/SettingsService"
-import { scaled } from "./UIScoreView"
+import { scaled } from "./rule-explainations.const"
 import useAuth from "../../hooks/useAuth"
 
 export const UITurnChangeIndicator = (props: {

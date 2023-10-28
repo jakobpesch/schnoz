@@ -1,28 +1,28 @@
 import {
   buildTileLookupId,
-  getTileLookup,
   transformCoordinates,
   translateCoordinatesTo,
 } from "coordinate-utils"
-import { Map, Match, MatchStatus, Participant } from "database"
+import { GameSettings, Map, Match, MatchStatus, Participant } from "database"
 import {
   API_ERROR_CODES,
   Coordinate,
   ParticipantWithUser,
   PlacementRuleName,
   Special,
+  TileLookup,
   TileWithUnit,
   TransformedConstellation,
 } from "types"
-import { defaultGame } from "./GameVariants"
-import { expandBuildRadiusByOne } from "./Specials"
-import { adjacentToUnitFactory } from "./placementRules/adjacent-to-ally"
+import { createCustomGame } from "./GameVariants"
 enum ReadableRuleNames {
   NO_UNIT = "cannot be placed on a unit",
   ADJACENT_TO_ALLY = "must be within a 1 tile radius from an ally",
   ADJACENT_TO_ALLY_2 = "must be within a 2 tile radius from an ally",
   ADJACENT_TO_ENEMY = "must be within a 1 tile radius from an enemy",
   ADJACENT_TO_ENEMY_2 = "must be within a 2 tile radius from an enemy",
+  ADJACENT_TO_UNIT = "must be within a 1 tile radius from a unit",
+  ADJACENT_TO_UNIT_2 = "must be within a 2 tile radius from a unit",
   NO_TERRAIN = "cannot be placed on terrain",
   IN_BOUNDS = "cannot be placed out of bounds",
 }
@@ -37,7 +37,11 @@ export const checkConditionsForUnitConstellationPlacement = (
   ignoredRules: PlacementRuleName[],
   placingPlayer: Participant["id"] | null,
   specials: Special[],
+  gameSettings: GameSettings | null,
+  tileLookup: TileLookup,
 ) => {
+  // console.log("checkConditionsForUnitConstellationPlacement", targetCoordinate)
+
   if (!match) {
     return {
       error: {
@@ -97,7 +101,16 @@ export const checkConditionsForUnitConstellationPlacement = (
       },
     }
   }
-  const tileLookup = getTileLookup(tilesWithUnits)
+  if (!gameSettings) {
+    return {
+      error: {
+        errorCode: API_ERROR_CODES.GAME_SETTINGS_NOT_FOUND,
+        message: "No gamesettings",
+        statusCode: 400,
+      },
+    }
+  }
+
   const targetTile = tileLookup[buildTileLookupId(targetCoordinate)]
 
   if (!targetTile) {
@@ -122,30 +135,31 @@ export const checkConditionsForUnitConstellationPlacement = (
     transformedCoordinates,
   )
 
-  if (
-    specials.some(
-      (special) =>
-        special.type === "EXPAND_BUILD_RADIUS_BY_1" &&
-        activePlayer &&
-        activePlayer.bonusPoints + unitConstellation.value >=
-          expandBuildRadiusByOne.cost,
-    )
-  ) {
-    defaultGame.placementRuleMap.delete("ADJACENT_TO_ALLY")
-    defaultGame.placementRuleMap.set(
-      "ADJACENT_TO_ALLY_2",
-      adjacentToUnitFactory(2, "ally"),
-    )
-  }
+  const placementRuleMap = createCustomGame(gameSettings).placementRuleMap
 
-  const evaluatedRules = Array.from(defaultGame.placementRuleMap).map(
-    ([ruleName, rule]) => ({
+  // if (
+  //   specials.some(
+  //     (special) =>
+  //       special.type === "EXPAND_BUILD_RADIUS_BY_1" &&
+  //       activePlayer &&
+  //       activePlayer.bonusPoints + unitConstellation.value >=
+  //         expandBuildRadiusByOne.cost,
+  //   )
+  // ) {
+  //   delete placementRuleMap.ADJACENT_TO_ALLY
+  //   placementRuleMap.set("ADJACENT_TO_ALLY_2", adjacentToUnitFactory(2, "ally"))
+  // }
+
+  const evaluatedRules = Object.entries(placementRuleMap).map((entries) => {
+    const ruleName = entries[0] as PlacementRuleName
+    const rule = entries[1]
+    return {
       ruleName,
-      isFulfilled: ignoredRules.includes(ruleName)
+      isFulfilled: ignoredRules.includes(ruleName as PlacementRuleName)
         ? true
         : rule(translatedCoordinates, map, tilesWithUnits, placingPlayer),
-    }),
-  )
+    }
+  })
 
   const canBePlaced = evaluatedRules.every(
     (ruleEvaluation) => ruleEvaluation.isFulfilled,

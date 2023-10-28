@@ -1,6 +1,6 @@
 import { Box, Heading } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
-import { scaled } from "./UIScoreView"
+import { scaled } from "./rule-explainations.const"
 
 export const UITurnTimer = (props: { turnEndsAt: string }) => {
   const [remainingTime, setRemainingTime] = useState(0)
