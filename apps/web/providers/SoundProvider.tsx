@@ -71,8 +71,6 @@ export function SoundProvider({ children }: SoundProviderProps) {
   })
 
   useEffect(() => {
-    console.log(currentlyPlaying.current)
-
     if (isMuted) {
       Object.values(currentlyPlaying.current.music).forEach(
         (audio) => (audio.muted = true),
@@ -122,10 +120,9 @@ export function SoundProvider({ children }: SoundProviderProps) {
   }, [volumeSFX])
 
   const playSFX = (sfx: keyof typeof SFX) => {
-    console.log(currentlyPlaying.current.sfx)
-
     const audio = new Audio(SFX[sfx])
-    audio.volume = isMuted ? 0 : volumeMaster * volumeSFX
+    audio.volume = volumeMaster * volumeSFX
+    audio.muted = isMuted
     audio.play()
     audio.onended = () => audio.remove()
   }
@@ -136,7 +133,6 @@ export function SoundProvider({ children }: SoundProviderProps) {
 
     if (!audio.paused) {
       // music is already playing
-      console.log("music is already playing!")
       return
     }
 

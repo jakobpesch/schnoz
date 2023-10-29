@@ -38,8 +38,6 @@ export const UISettingsView = () => {
     audio.volume = volume
     audio.play()
     audio.onended = () => {
-      console.log("removing audio element")
-
       audio.remove()
     }
   }

@@ -12,15 +12,15 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { animated } from "@react-spring/three"
-import { MapControls, useHelper } from "@react-three/drei"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { MapControls } from "@react-three/drei"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Participant } from "database"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
+import { Vector3 } from "three"
 import { Animations } from "../../components/animations/Animations"
 import { HoveredHighlights } from "../../components/map/HoveredHighlights"
-import { PlaceableTiles } from "../../components/map/PlaceableTiles"
 import { UICardsView } from "../../components/ui/UICardsView"
 import { UILoadingIndicator } from "../../components/ui/UILoadingIndicator"
 import { UIPostMatchView } from "../../components/ui/UIPostMatchView"
@@ -30,9 +30,16 @@ import { UISettingsView } from "../../components/ui/UISettingsView"
 import { UISoundControls } from "../../components/ui/UISoundControls"
 import { UITurnTimer } from "../../components/ui/UITurnTimer"
 import { UITurnsView } from "../../components/ui/UITurnsView"
+import { FogLayer } from "../../components/ui/layers/FogLayer"
+import { GroundLayer } from "../../components/ui/layers/GroundLayer"
+import { PlaceableTilesLayer } from "../../components/ui/layers/PlaceableTilesLayer"
+import { TerrainsLayer } from "../../components/ui/layers/TerrainsLayer"
+import { TilesLayer } from "../../components/ui/layers/TilesLayer"
+import { UnitsLayer } from "../../components/ui/layers/UnitsLayer"
 import { scaled } from "../../components/ui/rule-explainations.const"
 import useAuth from "../../hooks/useAuth"
 import { useMatchStatus } from "../../hooks/useMatchStatus"
+import { MaterialProvider } from "../../providers/MaterialProvider"
 import { useSound } from "../../providers/SoundProvider"
 import { createMap } from "../../services/MapService"
 import {
@@ -55,21 +62,26 @@ import {
   setUpdatedTilesWithUnits,
   useMatchStore,
 } from "../../store"
-import { LAYERS, Terrains, Tiles, Units } from "../webgl"
-import { DirectionalLightHelper } from "three"
+import { LAYERS } from "../webgl"
 
 const CanvasContent = () => {
   const { playMusic, stopMusic } = useSound()
+  const state = useThree()
+  // useFrame(() => {
+  //   state.camera.rotation.set(0, 0, 0, "XYZ")
+  // })
+
   const map = useMatchStore((state) => state.map)
   const directionalLighRef = useRef<THREE.DirectionalLight>(null!)
-
+  const testref = useRef<THREE.Mesh>(null!)
+  // const [fps, setFps] = useState(0)
   useEffect(() => {
     playMusic("music2")
     return () => {
       stopMusic()
     }
   }, [])
-  useHelper(directionalLighRef, DirectionalLightHelper, 1, "red")
+  // useHelper(directionalLighRef, DirectionalLightHelper, 1, "red")
 
   useFrame(({ clock }) => {
     if (!directionalLighRef.current) {
@@ -77,7 +89,7 @@ const CanvasContent = () => {
     }
     const elapsedTime = clock.getElapsedTime()
     const radius = 10
-    const time = 10
+    const time = 1
     const baseIntensity = 5
     const deltaIntensity = 0
     // Calculate new position in a haf circle
@@ -86,11 +98,16 @@ const CanvasContent = () => {
     const z = Math.abs(
       Math.sin(elapsedTime / time) * (radius + LAYERS.LIGHTING),
     )
+
     const intensity =
       Math.abs(Math.sin(elapsedTime / time) * deltaIntensity) + baseIntensity
 
     directionalLighRef.current.position.set(x, 5, LAYERS.LIGHTING - 10)
     directionalLighRef.current.intensity = intensity
+
+    testref.current?.position.set(
+      ...new Vector3(0, -1, 0).unproject(state.camera).toArray(),
+    )
   })
 
   if (!map) {
@@ -99,46 +116,33 @@ const CanvasContent = () => {
 
   return (
     <>
+      {/* <DreiText position={[0, 0, 10]}>{fps}</DreiText>
+      <PerformanceMonitor onChange={(api) => setFps(api.fps)} /> */}
       <animated.ambientLight intensity={0.5}></animated.ambientLight>
-      <animated.directionalLight
-        castShadow
-        ref={directionalLighRef}
-        color={"white"}
-      >
-        <mesh>
-          {/* <planeGeometry args={[1, 1]} /> */}
-          {/* <sphereGeometry args={[1, 64, 64]} /> */}
-        </mesh>
+      <animated.directionalLight ref={directionalLighRef} color={"white"}>
+        {/* <mesh>
+          <planeGeometry args={[1, 1]} />
+          <sphereGeometry args={[1, 64, 64]} />
+        </mesh> */}
       </animated.directionalLight>
+      {/* <mesh ref={testref}>
+        <sphereGeometry args={[1]} />
+        <meshStandardMaterial color="red" />
+      </mesh> */}
 
       <group position={[-map.colCount / 2 + 0.5, map.rowCount / 2 - 0.5, 0]}>
-        <group
-          position={[map.colCount / 2 - 0.5, -map.colCount / 2 + 0.5, 0.2]}
-          // rotation={[-0.8, 0, 0.8]}
-        >
-          <mesh castShadow receiveShadow rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.3, 0.4, 0.4]} />
-            <meshStandardMaterial color={"royalblue"} />
-          </mesh>
-          <mesh
-            position={[0, 0, 0.3]}
-            rotation={[Math.PI / 2, 0, 0]}
-            castShadow
-            receiveShadow
-          >
-            <coneGeometry args={[0.422, 0.2]} />
-            <meshStandardMaterial color={"royalblue"} />
-          </mesh>
-        </group>
         <Animations />
-        <Tiles />
-        <Units />
-        <Terrains />
-        <PlaceableTiles />
+        <FogLayer />
+        <GroundLayer />
+        <TilesLayer />
+        <UnitsLayer />
+        <TerrainsLayer />
+        <PlaceableTilesLayer />
         <HoveredHighlights hide={false} />
         <MapControls
           makeDefault
-          zoomSpeed={0.5}
+          dampingFactor={0.5}
+          zoomSpeed={1}
           enableRotate={true}
           zoomToCursor
         />
@@ -296,7 +300,7 @@ const MatchView = () => {
   }
 
   return (
-    <Box width="100vw" height="100vh" color="white">
+    <Box width="100vw" height="100vh" color="white" bg="black">
       {isPreMatch && (
         <Container>
           <UIPreMatchView
@@ -320,18 +324,18 @@ const MatchView = () => {
             id="match-canvas"
             orthographic
             color="red"
-            shadows
+            linear
+            flat
             camera={{
               position: [0, 0, LAYERS.CAMERA],
               zoom: 100,
               up: [0, 0, 1],
               far: 10000,
-              onUpdate() {
-                console.log("update")
-              },
             }}
           >
-            <CanvasContent />
+            <MaterialProvider>
+              <CanvasContent />
+            </MaterialProvider>
           </Canvas>
           {!isFinished && (
             <Box
@@ -345,108 +349,6 @@ const MatchView = () => {
                   turnEndsAt={new Date(match.turnEndsAt).toISOString()}
                 />
               )}
-              {/* <Stack spacing={scaled(0)}>
-                <HStack
-                  position="relative"
-                  spacing={scaled(2)}
-                  padding={scaled(2)}
-                  color="gray.100"
-                >
-                  <Circle size={scaled(8)} background="yellow.400">
-                    <Text
-                      fontSize={scaled(16)}
-                      fontWeight="bold"
-                      color="yellow.800"
-                    >
-                      {you.bonusPoints}
-                    </Text>
-                  </Circle>
-                  {(specialsCost || bonusFromSelectedCard) && (
-                    <>
-                      <ArrowForwardIcon width={scaled(8)} height={scaled(8)} />
-                      <Circle size={scaled(8)} background="yellow.400">
-                        <Text
-                          fontSize={scaled(16)}
-                          fontWeight="bold"
-                          color="yellow.800"
-                        >
-                          {resultingBonusPoints}
-                        </Text>
-                      </Circle>
-                    </>
-                  )}
-                </HStack>
-                {selectedCard && (
-                  <>
-                    {[
-                      { hotkey: "R", label: "Rotate" },
-                      { hotkey: "E", label: "Mirror" },
-                    ].map((s) => (
-                      <HStack
-                        key={s.label}
-                        padding={scaled(2)}
-                        color="gray.100"
-                      >
-                        <Kbd
-                          borderColor="gray.100"
-                          fontSize={scaled(20)}
-                          userSelect="none"
-                        >
-                          <Text>{s.hotkey}</Text>
-                        </Kbd>
-                        <Text fontSize={scaled(16)} userSelect="none">
-                          {s.label}
-                        </Text>
-                      </HStack>
-                    ))}
-
-                    <HStack
-                      padding={scaled(2)}
-                      borderRadius={scaled(10)}
-                      borderWidth={scaled(2)}
-                      color={
-                        availableBonusPoints >= expandBuildRadiusByOne.cost
-                          ? "gray.100"
-                          : "gray.400"
-                      }
-                      opacity={
-                        availableBonusPoints >= expandBuildRadiusByOne.cost
-                          ? 1
-                          : 0.5
-                      }
-                      background={
-                        hasExpandBuildRaidusByOneActive
-                          ? "green.500"
-                          : "gray.700"
-                      }
-                      cursor="pointer"
-                      onClick={() => {
-                        if (
-                          availableBonusPoints >= expandBuildRadiusByOne.cost
-                        ) {
-                          setSpecial(
-                            "EXPAND_BUILD_RADIUS_BY_1",
-                            !hasExpandBuildRaidusByOneActive,
-                          )
-                        }
-                      }}
-                    >
-                      <Circle size={scaled(8)} background="yellow.400">
-                        <Text
-                          fontSize={scaled(16)}
-                          fontWeight="bold"
-                          color="yellow.800"
-                        >
-                          {expandBuildRadiusByOne.cost}
-                        </Text>
-                      </Circle>
-                      <Text fontSize={scaled(16)} userSelect="none">
-                        +1 Reach
-                      </Text>
-                    </HStack>
-                  </>
-                )}
-              </Stack> */}
             </Box>
           )}
           <UIScoreView />

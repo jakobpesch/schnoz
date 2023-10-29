@@ -481,14 +481,14 @@ export class MatchInstance {
       }
     }
     const tileLookup = getTileLookup(this.tilesWithUnits)
-    const placeableCoordinatesBefore = getPlaceableCoordinates({
-      match: this.match,
-      activeParticipant: this.ActivePlayer ?? null,
-      map: this.map,
-      tilesWithUnits: this.tilesWithUnits,
-      gameSettings: this.gameSettings ?? null,
-      tileLookup,
-    })
+    // const placeableCoordinatesBefore = getPlaceableCoordinates({
+    //   match: this.match,
+    //   activeParticipant: this.ActivePlayer ?? null,
+    //   map: this.map,
+    //   tilesWithUnits: this.tilesWithUnits,
+    //   gameSettings: this.gameSettings ?? null,
+    //   tileLookup,
+    // })
 
     const evalMapBefore = getEvaluationsMap(
       tileLookup,
@@ -667,13 +667,10 @@ export class MatchInstance {
       match: this.match,
       activeParticipant: this.ActivePlayer ?? null,
       map: this.map,
-      tilesWithUnits: this.tilesWithUnits,
+      tilesWithUnits: matchWithPlacedTiles.map.tiles,
       gameSettings: this.gameSettings ?? null,
       tileLookup: tileLookupAfter,
     })
-
-    this.logger.verbose("evalMapBefore", evalMapBefore)
-    this.logger.verbose("evalMapAfter", evalMapAfter)
 
     const updatedFullfillments: Record<
       Participant["id"],

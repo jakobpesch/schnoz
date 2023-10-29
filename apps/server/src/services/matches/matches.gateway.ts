@@ -161,7 +161,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(matchId).emit(ServerEvent.PLAYER_CONNECTED_TO_MATCH, {
       match: matchInstance.Match,
       map: matchInstance.Map,
-      tilesWithUnits: matchInstance.TilesWithUnits,
+      tilesWithUnits: matchInstance.TilesWithUnits?.filter((t) => t.visible),
       gameSettings: matchInstance.GameSettings,
       players: matchInstance.Participants,
       connectedPlayers: matchInstance.Participants.filter((p) => {
@@ -230,7 +230,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(matchInstance.Match.id).emit(ServerEvent.STARTED_MATCH, {
         match: matchInstance.Match,
         map: matchInstance.Map,
-        tilesWithUnits: matchInstance.TilesWithUnits,
+        tilesWithUnits: matchInstance.TilesWithUnits?.filter((t) => t.visible),
         players: matchInstance.Participants,
         users: matchInstance.Users,
         placeableCoordinates: apiResponse.placeableCoordinates,

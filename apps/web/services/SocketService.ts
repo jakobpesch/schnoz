@@ -178,8 +178,6 @@ export class SocketIOApi {
     setMatch(payload.updatedMatch)
     setUpdatedTilesWithUnits(payload.updatedTilesWithUnits)
     setParticipants(payload.updatedPlayers)
-    console.log("updatedFulfillments", payload.updatedFullfillments)
-
     setFulfillments(payload.updatedFullfillments)
     setPlaceableCoordinates(payload.placeableCoordinates)
   }

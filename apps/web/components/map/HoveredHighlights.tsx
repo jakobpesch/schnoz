@@ -7,31 +7,19 @@ import {
   translateCoordinatesTo,
 } from "coordinate-utils"
 
-import { Unit } from "database"
 import { checkConditionsForUnitConstellationPlacement } from "game-logic"
 import Mousetrap from "mousetrap"
-import { Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 import { PlacementRuleName, TransformedConstellation } from "types"
-import { HighlightSquare, LAYERS, UnitMesh } from "../../pages/webgl"
+import { HighlightSquare, LAYERS } from "../../pages/webgl"
+import { useMaterial } from "../../providers/MaterialProvider"
+import { useSound } from "../../providers/SoundProvider"
 import { Special } from "../../services/GameManagerService"
 import { RenderSettings } from "../../services/SettingsService"
 import { socketApi } from "../../services/SocketService"
 import { getPlayerNumber, setSelectedCard, useMatchStore } from "../../store"
+import { UnitMesh } from "../ui/meshes/UnitMesh"
 import { MapRuleEvaluations } from "./MapRuleEvaluations"
-import { useSound } from "../../providers/SoundProvider"
-import { useFrame, useThree } from "@react-three/fiber"
-
-const unitFactory = (unit: Partial<Unit>) => {
-  return {
-    id: "",
-    ownerId: "",
-    type: "UNIT",
-    row: 0,
-    col: 0,
-    mapId: "",
-    ...unit,
-  } as Unit
-}
 
 export interface HoveredHighlightsProps {
   hide?: boolean
@@ -39,8 +27,8 @@ export interface HoveredHighlightsProps {
 
 export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   const toast = useToast()
-  const state = useThree()
-  const oldCameraPosition = useRef(state.camera.position)
+  const { bobTransparentSpriteMaterial, ulfTransparentSpriteMaterial } =
+    useMaterial()
   const { playSFX } = useSound()
   const userId = useMatchStore((state) => state.userId())
   const [isUpdatingMatch, setIsUpdatingMatch] = useState(false)
@@ -50,7 +38,6 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   const gameSettings = useMatchStore((state) => state.gameSettings)
   const you = useMatchStore((state) => state.you())
   const participants = useMatchStore((state) => state.participants)
-  const yourTurn = useMatchStore((state) => state.yourTurn())
   const map = useMatchStore((state) => state.map)
   const activeParticipant = useMatchStore((state) => state.activeParticipant())
   const tilesWithUnits = useMatchStore((state) => state.tilesWithUnits)
@@ -64,20 +51,24 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
   )
   const selectedCard = useMatchStore((state) => state.selectedCard)
 
-  const [rotatedClockwise, setRotationCount] =
+  const [rotationCount, setRotationCount] =
     useState<TransformedConstellation["rotatedClockwise"]>(0)
   const [mirrored, setMirrored] =
     useState<TransformedConstellation["mirrored"]>(false)
 
   const [springs, api] = useSpring(() => {
-    const [hoveredRow, hoveredCol] = hoveredCoordinate ?? [0, 0]
     return {
-      opacity: 0,
-      scale: 0.1,
-      position: [hoveredCol, -hoveredRow, LAYERS.UNITS_HIGHLIGHT],
-      color: "#ff6d6d",
+      position: [0, 0, LAYERS.UNITS_HIGHLIGHT],
       config: config.stiff,
     }
+  })
+
+  useEffect(() => {
+    if (!hoveredCoordinate) {
+      return
+    }
+    const [hoveredRow, hoveredCol] = hoveredCoordinate
+    api.start({ position: [hoveredCol, -hoveredRow, LAYERS.UNITS_HIGHLIGHT] })
   }, [hoveredCoordinate])
 
   useEffect(() => {
@@ -87,31 +78,30 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     }
   }, [selectedCard])
 
-  const rotate = () => {
-    const correctedRotationCount = (
-      rotatedClockwise === 3 ? 0 : rotatedClockwise + 1
-    ) as TransformedConstellation["rotatedClockwise"]
-
-    setRotationCount(correctedRotationCount)
-    playSFX("pop")
-  }
-  const mirror = () => {
-    setMirrored(!mirrored)
-    playSFX("pop")
-  }
-
   useEffect(() => {
+    const rotate = () => {
+      const correctedRotationCount = (
+        rotationCount === 3 ? 0 : rotationCount + 1
+      ) as TransformedConstellation["rotatedClockwise"]
+
+      setRotationCount(correctedRotationCount)
+      playSFX("pop")
+    }
     Mousetrap.bind("r", rotate)
-  })
+  }, [rotationCount])
 
   useEffect(() => {
+    const mirror = () => {
+      setMirrored(!mirrored)
+      playSFX("pop")
+    }
     Mousetrap.bind("e", mirror)
-  })
+  }, [mirrored])
 
   const transformedCoordinates = useMemo(() => {
     if (selectedCard && hoveredCoordinate) {
       const transformed = transformCoordinates(selectedCard.coordinates, {
-        rotatedClockwise,
+        rotatedClockwise: rotationCount,
         mirrored,
       })
       const translated = translateCoordinatesTo(hoveredCoordinate, transformed)
@@ -120,7 +110,7 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     }
 
     return []
-  }, [selectedCard, hoveredCoordinate, rotatedClockwise, mirrored])
+  }, [selectedCard, hoveredCoordinate, rotationCount, mirrored])
 
   useEffect(() => {
     if (selectedCard === null) {
@@ -135,29 +125,25 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     ).color,
   )
 
+  if (!activeParticipant || props.hide || !you) {
+    return null
+  }
+
   const onTileClick = async (
     row: number,
     col: number,
     rotatedClockwise: TransformedConstellation["rotatedClockwise"],
     mirrored: TransformedConstellation["mirrored"],
   ) => {
-    if (isUpdatingMatch) {
-      return
-    }
-
-    if (!gameSettings) {
-      return
-    }
-
-    if (!userId) {
-      return
-    }
-
-    if (!match) {
-      return
-    }
-
-    if (!selectedCard) {
+    if (
+      isUpdatingMatch ||
+      !gameSettings ||
+      !userId ||
+      !match ||
+      !selectedCard ||
+      !you ||
+      !tilesWithUnits
+    ) {
       return
     }
 
@@ -169,14 +155,6 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     }
 
     try {
-      if (!you) {
-        throw new Error("Could not find your id")
-      }
-
-      if (!tilesWithUnits) {
-        throw new Error("No tiles")
-      }
-
       const ignoredRules: PlacementRuleName[] =
         unitConstellation.coordinates.length === 1 &&
         coordinatesAreEqual(unitConstellation.coordinates[0], [0, 0])
@@ -191,7 +169,7 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
         map,
         tilesWithUnits,
         ignoredRules,
-        you?.id ?? null,
+        you.id,
         activatedSpecials,
         gameSettings,
         tileLookup,
@@ -231,20 +209,6 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
     }
   }
 
-  if (!activeParticipant || props.hide || !you) {
-    return null
-  }
-  const hasExpandBuildRaidusByOneActive = activatedSpecials.some(
-    (special) => special.type === "EXPAND_BUILD_RADIUS_BY_1",
-  )
-
-  const availableBonusPoints = you.bonusPoints + (selectedCard?.value ?? 0)
-
-  const specialsCost = activatedSpecials.reduce((a, s) => a + s.cost, 0)
-  const bonusFromSelectedCard = selectedCard?.value ?? 0
-  const resultingBonusPoints =
-    you.bonusPoints + bonusFromSelectedCard - specialsCost
-
   return (
     <>
       {showRuleEvaluationHighlights && (
@@ -253,33 +217,34 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
       {hoveredCoordinate && (
         <animated.group
           key={`${hoveredCoordinate[0]}_${hoveredCoordinate[1]}group`}
-          /// @ts-ignore: Spring type is Vector3 Type (Typescript return error on position)
+          // @ts-ignore: Spring type is Vector3 Type (Typescript return error on position)
           position={springs.position}
         >
           {transformedCoordinates.map((c) => (
             <Fragment key={`${c[0]}_${c[1]}unitmesh`}>
               <UnitMesh
                 position={[c[1], -c[0], LAYERS.UNITS_HIGHLIGHT]}
-                unit={unitFactory({ ownerId: activeParticipant?.id })}
-                opacity={0.6}
+                material={
+                  activeParticipant?.id === participants?.[0].id
+                    ? bobTransparentSpriteMaterial
+                    : ulfTransparentSpriteMaterial
+                }
                 onPointerUp={(e) => {
-                  console.log(e.button)
-
                   if (e.button === 2) {
                     onTileClick(
                       hoveredCoordinate[0],
                       hoveredCoordinate[1],
-                      rotatedClockwise,
+                      rotationCount,
                       mirrored,
                     )
                   }
                 }}
               />
-              <HighlightSquare
+              {/* <HighlightSquare
                 opacity={0.1}
                 color={color}
                 position={[c[1], -c[0], LAYERS.TERRAIN_HIGHLIGHT]}
-              />
+              /> */}
             </Fragment>
           ))}
         </animated.group>
@@ -289,8 +254,11 @@ export const HoveredHighlights = (props: HoveredHighlightsProps) => {
           <Fragment key={`${row}_${col}unitmesh`}>
             <UnitMesh
               position={[col, -row, LAYERS.UNITS_HIGHLIGHT]}
-              unit={unitFactory({ ownerId: activeParticipant?.id })}
-              opacity={0.6}
+              material={
+                activeParticipant?.id === participants?.[0].id
+                  ? bobTransparentSpriteMaterial
+                  : ulfTransparentSpriteMaterial
+              }
             />
             <HighlightSquare
               opacity={0.1}

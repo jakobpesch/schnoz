@@ -36,7 +36,6 @@ export const SoundService: SoundService = {
     sfx: {},
   },
   playMusic(music: keyof typeof this.MUSIC) {
-    console.log("before", this.currentlyPlaying)
     const audio =
       this.currentlyPlaying.music[music] ?? new Audio(this.MUSIC[music])
 

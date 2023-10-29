@@ -14,6 +14,8 @@ export const Animations = () => {
   //     animationObject={{ id: "1", position: [5, 5] }}
   //   />
   // )
+  console.log(animationObjects)
+
   return Object.values(animationObjects).map((obj) => (
     <PlusOneAnimation
       key={obj.id}

@@ -58,7 +58,7 @@ const CardView = (props: CardViewProps) => {
           />
         )
       })}
-      {card.value > 0 && (
+      {/* {card.value > 0 && (
         <Circle
           position="absolute"
           top={scaled(-2)}
@@ -70,7 +70,7 @@ const CardView = (props: CardViewProps) => {
             {card.value}
           </Text>
         </Circle>
-      )}
+      )} */}
 
       <Kbd
         position="absolute"
@@ -123,11 +123,11 @@ export const UICardsView = () => {
     >
       <HStack
         spacing={scaled(4)}
-        padding={scaled(2)}
-        margin={scaled(2)}
-        background="blackAlpha.300"
-        borderRadius={scaled(5)}
-        borderWidth={scaled(2)}
+        // padding={scaled(2)}
+        margin={scaled(4)}
+        // background="blackAlpha.300"
+        // borderRadius={scaled(5)}
+        // borderWidth={scaled(2)}
         opacity={readonly ? 0.5 : 1}
       >
         {cards.map((card, index) => {

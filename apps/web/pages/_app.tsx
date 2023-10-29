@@ -8,6 +8,7 @@ import type { AppProps } from "next/app"
 import { AuthProvider } from "../hooks/useAuth"
 import "../styles/globals.css"
 import { SoundProvider } from "../providers/SoundProvider"
+import { MaterialProvider } from "../providers/MaterialProvider"
 
 Globals.assign({
   frameLoop: "always",

@@ -40,8 +40,6 @@ export const checkConditionsForUnitConstellationPlacement = (
   gameSettings: GameSettings | null,
   tileLookup: TileLookup,
 ) => {
-  // console.log("checkConditionsForUnitConstellationPlacement", targetCoordinate)
-
   if (!match) {
     return {
       error: {
