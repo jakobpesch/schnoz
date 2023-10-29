@@ -61,15 +61,6 @@ export const PlusOneAnimation = (props: {
   return (
     // @ts-ignore: Spring type is Vector3 Type (Typescript return error on position)
     <animated.group scale={springs.scale} position={springs.position}>
-      {
-        <animated.pointLight
-          intensity={0.3}
-          // @ts-ignore: Spring type is Vector3 Type (Typescript return error on position)
-          // position={springs.position}
-          position={new Vector3(0.2, 0.2, 0.2)}
-          color={"yellow"}
-        ></animated.pointLight>
-      }
       <mesh>
         <circleGeometry args={[0.8, 64, 64]} />
         {

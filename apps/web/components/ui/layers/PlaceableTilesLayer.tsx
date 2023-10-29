@@ -10,7 +10,7 @@ export const PlaceableTilesLayer = () => {
   return placeableCoordinates?.map(([row, col]) => (
     <PlaceableHighlightMesh
       key={buildTileLookupId([row, col]) + "_placable"}
-      position={[col, -row, LAYERS.TERRAIN_HIGHLIGHT + 0.1]}
+      position={[col, -row, LAYERS.TERRAIN_HIGHLIGHT]}
     />
   ))
 }
