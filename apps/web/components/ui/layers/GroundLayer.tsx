@@ -15,7 +15,7 @@ export const GroundLayer = () => {
       ]}
     >
       <planeGeometry args={[map?.colCount, map?.rowCount]} />
-      <meshStandardMaterial color={"green"} />
+      <meshStandardMaterial color={"#748E63"} />
     </mesh>
   )
 }

@@ -1,12 +1,13 @@
 import { Mask, useMask } from "@react-three/drei"
+import { buildTileLookupId } from "coordinate-utils"
 import { LAYERS } from "../../../pages/webgl"
 import { useMatchStore } from "../../../store"
-import { buildTileLookupId } from "coordinate-utils"
 
 export const FogLayer = () => {
   const map = useMatchStore((state) => state.map)
   const tilesWithUnits = useMatchStore((state) => state.tilesWithUnits)
   const stencil = useMask(1, true)
+
   if (!map || !tilesWithUnits) {
     return
   }

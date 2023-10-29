@@ -48,7 +48,7 @@ export const HoveredTooltip = (props: {
           padding={scaled(1)}
           rounded={scaled(8)}
           _hover={{
-            bg: "gray.600",
+            bg: "whiteAlpha.100",
           }}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}

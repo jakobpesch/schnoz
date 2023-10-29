@@ -6,6 +6,7 @@ import {
   Heading,
   HStack,
   Stack,
+  useToken,
   VStack,
 } from "@chakra-ui/react"
 import assert from "assert"
@@ -38,10 +39,21 @@ export const UIScoreView = () => {
     state.isParticipantConnected(1),
   )
 
+  const player1Color = useToken(
+    "colors",
+    RenderSettings.getPlayerAppearance(player1.playerNumber).color,
+  )
+  const player2Color = useToken(
+    "colors",
+    RenderSettings.getPlayerAppearance(player2.playerNumber).color,
+  )
+
   return (
     <VStack position="fixed" top="0" right="0">
       <VStack
         background="blackAlpha.300"
+        backdropFilter="auto"
+        backdropBlur={"10px"}
         borderWidth={scaled(1)}
         borderRadius={scaled(10)}
         spacing={scaled(4)}
@@ -53,7 +65,7 @@ export const UIScoreView = () => {
             key={player1.id}
             align="center"
             justify="center"
-            gap={scaled(4)}
+            gap={scaled(2)}
           >
             <Box position="relative">
               <Image
@@ -82,7 +94,7 @@ export const UIScoreView = () => {
             key={player2.id}
             align="center"
             justify="center"
-            gap={scaled(4)}
+            gap={scaled(2)}
           >
             <Heading fontSize={scaled(30)}>{player2.score}</Heading>
             <Box position="relative">
@@ -109,28 +121,24 @@ export const UIScoreView = () => {
         </HStack>
         <Divider />
         {rulesMap && (
-          <Stack spacing={scaled(2)} width="full">
+          <Stack spacing={scaled(1)} width="full">
             {Array.from(rulesMap.values()).map(
               (ruleEvaluations, ruleEvalsIndex) => {
                 return (
                   <VStack
                     key={"ruleEvals_" + ruleEvalsIndex}
-                    padding={scaled(1)}
+                    padding={scaled(0)}
                     borderRadius={scaled(10)}
                     background={
                       ruleEvaluations[0].points === ruleEvaluations[1].points
                         ? "none"
                         : ruleEvaluations[0].points > ruleEvaluations[1].points
-                        ? RenderSettings.getPlayerAppearance(
-                            player1.playerNumber,
-                          ).color
-                        : RenderSettings.getPlayerAppearance(
-                            player2.playerNumber,
-                          ).color
+                        ? player1Color + "55"
+                        : player2Color + "55"
                     }
                   >
                     <Flex
-                      gap={scaled(2)}
+                      gap={scaled(0)}
                       align="center"
                       justify="space-around"
                       width="full"

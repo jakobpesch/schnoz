@@ -1,21 +1,8 @@
 import { Box } from "@chakra-ui/react"
-import { animated } from "@react-spring/three"
-import { MapControls, useTexture } from "@react-three/drei"
-import { Canvas, GroupProps, ThreeElements } from "@react-three/fiber"
-import { buildTileLookupId, coordinatesAreEqual } from "coordinate-utils"
-import { Tile, Unit } from "database"
+import { ThreeElements } from "@react-three/fiber"
 import { NextPage } from "next"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 import * as THREE from "three"
-import { TileWithUnit } from "types"
-import { RenderSettings } from "../../services/SettingsService"
-import {
-  getPlayerNumber,
-  setHoveredCoordinate,
-  setTilesWithUnits,
-  useMatchStore,
-} from "../../store"
-import { TerrainMesh } from "../../components/ui/meshes/TerrainMesh"
 export const LAYERS = {
   BASE: 0,
   TILE: 0.01,

@@ -1,15 +1,7 @@
-import {
-  Box,
-  BoxProps,
-  Center,
-  Circle,
-  HStack,
-  Kbd,
-  Text,
-} from "@chakra-ui/react"
+import { Box, BoxProps, Center, HStack, Kbd } from "@chakra-ui/react"
 import { Card, decodeUnitConstellation } from "coordinate-utils"
 import Mousetrap from "mousetrap"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { RenderSettings } from "../../services/SettingsService"
 import { setSelectedCard, useMatchStore } from "../../store"
 import { scaled } from "./rule-explainations.const"
@@ -29,15 +21,32 @@ const CardView = (props: CardViewProps) => {
     tileSize = RenderSettings.tileSize,
     ...boxProps
   } = props
-
+  const [isKeyPressed, setIsKeyPressed] = useState(false)
   const padding = 8
   const maxTiles = 3
   const containerSize = tileSize * maxTiles + 2 * padding + "px"
-
+  useEffect(() => {
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (hotkey === ev.key) {
+        setIsKeyPressed(true)
+      }
+    }
+    const onKeyUp = (ev: KeyboardEvent) => {
+      if (hotkey === ev.key) {
+        setIsKeyPressed(false)
+      }
+    }
+    document.addEventListener("keydown", onKeyDown)
+    document.addEventListener("keyup", onKeyUp)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      document.removeEventListener("keyup", onKeyUp)
+    }
+  }, [])
   return (
     <Box
-      background={selected ? "blue.300" : "gray.600"}
-      borderRadius={scaled(5)}
+      background={selected ? "blue.300" : "whiteAlpha.200"}
+      borderRadius={scaled(10)}
       _hover={{ borderColor: selected ? "transparent" : "blue.300" }}
       position="relative"
       width={containerSize}
@@ -77,9 +86,10 @@ const CardView = (props: CardViewProps) => {
         bottom={scaled(-2)}
         right={scaled(-2)}
         fontSize={scaled(16)}
-        background="gray.700"
-        color="gray.300"
+        background={selected ? "gray.700" : "gray.700"}
+        color={selected ? "blue.50" : "gray.300"}
         borderColor="gray.300"
+        borderBottomWidth={isKeyPressed ? 1 : undefined}
       >
         {hotkey}
       </Kbd>
@@ -122,12 +132,14 @@ export const UICardsView = () => {
       pointerEvents="none"
     >
       <HStack
+        backdropFilter="auto"
+        backdropBlur={"10px"}
         spacing={scaled(4)}
-        // padding={scaled(2)}
+        padding={scaled(2)}
         margin={scaled(4)}
-        // background="blackAlpha.300"
-        // borderRadius={scaled(5)}
-        // borderWidth={scaled(2)}
+        background="blackAlpha.300"
+        borderRadius={scaled(16)}
+        borderWidth={scaled(1)}
         opacity={readonly ? 0.5 : 1}
       >
         {cards.map((card, index) => {

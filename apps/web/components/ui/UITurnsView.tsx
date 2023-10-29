@@ -5,8 +5,8 @@ import { defaultGame } from "game-logic"
 import Image, { StaticImageData } from "next/image"
 import { useMemo } from "react"
 import { RenderSettings } from "../../services/SettingsService"
-import { scaled } from "./rule-explainations.const"
 import { useMatchStore } from "../../store"
+import { scaled } from "./rule-explainations.const"
 
 const getTurns = (
   match: Match,
@@ -72,6 +72,8 @@ export const UITurnsView = () => {
     <Flex position="fixed" top="0" left="0">
       <Stack
         bg="blackAlpha.300"
+        backdropFilter="auto"
+        backdropBlur="10px"
         borderWidth={scaled(1)}
         borderRadius={scaled(10)}
         spacing={scaled(16)}

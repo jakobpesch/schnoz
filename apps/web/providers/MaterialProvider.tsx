@@ -4,13 +4,12 @@ import {
   CircleGeometry,
   MeshStandardMaterial,
   PlaneGeometry,
-  RectAreaLight,
   RingGeometry,
   SpriteMaterial,
 } from "three"
 import bob from "../assets/sprites/bob@320.png"
-import ulf from "../assets/sprites/ulf.png"
 import house from "../assets/sprites/house.png"
+import ulf from "../assets/sprites/ulf.png"
 
 interface MaterialContextType {
   bobSpriteMaterial: SpriteMaterial
@@ -28,7 +27,7 @@ interface MaterialContextType {
   waterMaterial: MeshStandardMaterial
   waterGeometry: RingGeometry
   placeableHighlightMaterial: MeshStandardMaterial
-  placeableHighlightGeometry: PlaneGeometry
+  placeableHighlightGeometry: RingGeometry
 }
 
 //<rectAreaLight width={0.6} height={0.6} intensity={1} {...props}>
@@ -82,7 +81,7 @@ export function MaterialProvider({ children }: MaterialProviderProps) {
     transparent: true,
   })
   const tileMeshMaterial = new MeshStandardMaterial({
-    opacity: 0.05,
+    opacity: 0.02,
     transparent: true,
     color: "black",
   })
@@ -92,11 +91,11 @@ export function MaterialProvider({ children }: MaterialProviderProps) {
   const treeGeometry = new CircleGeometry(0.45, 3, 3)
   const waterMaterial = new MeshStandardMaterial({ color: "blue" })
   const waterGeometry = new RingGeometry(0.1, 0.4, 12)
-  const placeableHighlightGeometry = new PlaneGeometry(0.8, 0.8)
+  const placeableHighlightGeometry = new RingGeometry(0.1, 0.4, 4)
   const placeableHighlightMaterial = new MeshStandardMaterial({
-    opacity: 0.2,
+    opacity: 0.05,
     transparent: true,
-    color: "black",
+    color: "yellow",
   })
   const value: MaterialContextType = {
     bobSpriteMaterial,

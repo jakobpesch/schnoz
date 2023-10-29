@@ -6,7 +6,12 @@ export const UISoundControls = () => {
   const { isMuted, setIsMuted } = useSound()
 
   return (
-    <IconButton aria-label="volume-icon" onClick={() => setIsMuted(!isMuted)}>
+    <IconButton
+      backdropBlur="10px"
+      backdropFilter="auto"
+      aria-label="volume-icon"
+      onClick={() => setIsMuted(!isMuted)}
+    >
       {isMuted ? <VolumeIcon /> : <Volume2Icon />}
     </IconButton>
   )
