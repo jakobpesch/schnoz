@@ -2,6 +2,7 @@ import { ReactNode, createContext, useContext, useEffect, useRef } from "react"
 import music from "../assets/sfx/music.mp3"
 import music2 from "../assets/sfx/music2.mp3"
 import pop from "../assets/sfx/pop.mp3"
+import coin from "../assets/sfx/coin.mp3"
 import {
   setIsMuted,
   setVolumeMaster,
@@ -10,7 +11,7 @@ import {
   useSettingsStore,
 } from "../store"
 
-export const SFX = { pop } as const
+export const SFX = { pop, coin } as const
 export const MUSIC = { music, music2 } as const
 
 // Define the shape of the SoundContext

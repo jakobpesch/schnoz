@@ -58,6 +58,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance(0).unit}
@@ -91,6 +92,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                 >
                   {terrain && (
                     <Image
+                      draggable={false}
                       alt=""
                       src={terrain}
                       width={scaled(size)}
@@ -187,6 +189,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance(0).unit}
@@ -214,6 +217,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                 >
                   {terrain && (
                     <Image
+                      draggable={false}
                       alt=""
                       src={terrain}
                       width={scaled(size)}
@@ -309,6 +313,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance(0).unit}
@@ -334,6 +339,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance(1).unit}
@@ -355,6 +361,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance().unit}
@@ -378,6 +385,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                 >
                   {terrain && (
                     <Image
+                      draggable={false}
                       alt=""
                       src={terrain}
                       width={scaled(size)}
@@ -482,6 +490,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                   pointerEvents="none"
                 >
                   <Image
+                    draggable={false}
                     priority
                     alt=""
                     src={RenderSettings.getPlayerAppearance(0).unit}
@@ -511,6 +520,7 @@ export const ruleExplainations = new Map<Rule, ReactNode>([
                 >
                   {terrain && (
                     <Image
+                      draggable={false}
                       alt=""
                       src={terrain}
                       width={scaled(size)}

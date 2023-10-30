@@ -89,6 +89,7 @@ const CardView = (props: CardViewProps) => {
         background={selected ? "gray.700" : "gray.700"}
         color={selected ? "blue.50" : "gray.300"}
         borderColor="gray.300"
+        userSelect="none"
         borderBottomWidth={isKeyPressed ? 1 : undefined}
       >
         {hotkey}

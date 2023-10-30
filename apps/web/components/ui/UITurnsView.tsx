@@ -105,6 +105,7 @@ export const UITurnsView = () => {
                   flexShrink={0}
                   key={index + "eval"}
                   textAlign="center"
+                  userSelect="none"
                   fontSize={scaled(turnsUI.length === index + 1 ? 28 : 16)}
                   {...borderStyle}
                 >
@@ -118,11 +119,13 @@ export const UITurnsView = () => {
                   align="center"
                   justify="center"
                   key={index + "player"}
+                  userSelect="none"
                   {...borderStyle}
                 >
                   <Image
                     src={turnUI.icon}
                     alt=""
+                    draggable={false}
                     width={scaled(40)}
                     height={scaled(40)}
                   />

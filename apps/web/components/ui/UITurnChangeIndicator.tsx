@@ -37,6 +37,7 @@ export const UITurnChangeIndicator = (props: {
       height="100vh"
       width="100vw"
       pointerEvents="none"
+      userSelect="none"
     >
       <Fade in={isOpen}>
         <Flex
@@ -58,6 +59,7 @@ export const UITurnChangeIndicator = (props: {
               boxShadow="dark-lg"
             >
               <Image
+                draggable={false}
                 src={
                   RenderSettings.getPlayerAppearance(
                     props.activePlayer?.playerNumber,

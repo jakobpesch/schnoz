@@ -85,11 +85,11 @@ export function MaterialProvider({ children }: MaterialProviderProps) {
     transparent: true,
     color: "black",
   })
-  const stoneMaterial = new MeshStandardMaterial({ color: "gray" })
+  const stoneMaterial = new MeshStandardMaterial({ color: "#393646" })
   const stoneGeometry = new CircleGeometry(0.4, 5, 3)
-  const treeMaterial = new MeshStandardMaterial({ color: "darkgreen" })
+  const treeMaterial = new MeshStandardMaterial({ color: "#4F6F52" })
   const treeGeometry = new CircleGeometry(0.45, 3, 3)
-  const waterMaterial = new MeshStandardMaterial({ color: "blue" })
+  const waterMaterial = new MeshStandardMaterial({ color: "#6499E9" })
   const waterGeometry = new RingGeometry(0.1, 0.4, 12)
   const placeableHighlightGeometry = new RingGeometry(0.1, 0.4, 4)
   const placeableHighlightMaterial = new MeshStandardMaterial({

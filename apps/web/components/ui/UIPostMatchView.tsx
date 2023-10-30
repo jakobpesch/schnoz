@@ -15,7 +15,7 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
     router.push("/")
   }
   return (
-    <Center width="full">
+    <Center width="full" userSelect="none">
       <VStack
         padding="1vw"
         background="gray.800"
@@ -31,6 +31,7 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
         {props.winner ? (
           <HStack>
             <Image
+              draggable={false}
               src={
                 RenderSettings.getPlayerAppearance(props.winner.playerNumber)
                   .unit
@@ -61,6 +62,7 @@ export const UIPostMatchView = (props: UIPostMatchViewProps) => {
             _hover={{ bg: "#47d1ff" }}
             leftIcon={
               <Image
+                draggable={false}
                 src={KoFiLogo}
                 alt="Buy Me a Coffee at ko-fi.com"
                 width="36"

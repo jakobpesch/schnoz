@@ -49,7 +49,7 @@ export const UIScoreView = () => {
   )
 
   return (
-    <VStack position="fixed" top="0" right="0">
+    <VStack position="fixed" top="0" right="0" userSelect="none">
       <VStack
         background="blackAlpha.300"
         backdropFilter="auto"
@@ -69,6 +69,7 @@ export const UIScoreView = () => {
           >
             <Box position="relative">
               <Image
+                draggable={false}
                 alt=""
                 priority
                 src={
@@ -99,6 +100,7 @@ export const UIScoreView = () => {
             <Heading fontSize={scaled(30)}>{player2.score}</Heading>
             <Box position="relative">
               <Image
+                draggable={false}
                 priority
                 alt=""
                 src={
@@ -166,6 +168,7 @@ export const UIScoreView = () => {
                       <HoveredTooltip
                         trigger={
                           <Image
+                            draggable={false}
                             alt=""
                             src={RenderSettings.getRuleAppearance(
                               ruleEvaluations[0].type,
@@ -177,6 +180,7 @@ export const UIScoreView = () => {
                         header={
                           <HStack>
                             <Image
+                              draggable={false}
                               alt=""
                               src={RenderSettings.getRuleAppearance(
                                 ruleEvaluations[0].type,

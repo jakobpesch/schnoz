@@ -40,10 +40,10 @@ export const useScoreAnimation = () => {
         const center = calculateCenter(fulfillment)
         addAnimationObject({ id: v4(), position: center })
       }
-      for (const fulfillment of minus) {
-        const center = calculateCenter(fulfillment)
-        addAnimationObject({ id: v4(), position: center })
-      }
+      // for (const fulfillment of minus) {
+      //   const center = calculateCenter(fulfillment)
+      //   addAnimationObject({ id: v4(), position: center })
+      // }
       setFulfillments(null)
     }
   }, [fulfillmentDifference])

@@ -11,10 +11,10 @@ export const Animations = () => {
   // return (
   //   <PlusOneAnimation
   //     key={"1"}
-  //     animationObject={{ id: "1", position: [5, 5] }}
+  //     animationObject={{ id: "1", position: [15, 15] }}
   //   />
   // )
-  console.log(animationObjects)
+  // console.log(animationObjects)
 
   return Object.values(animationObjects).map((obj) => (
     <PlusOneAnimation
